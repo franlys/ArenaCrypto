@@ -1,0 +1,167 @@
+.page {
+  padding: 3rem 2rem 4rem;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.title {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+
+.goldText {
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+}
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  padding: 2.5rem;
+  border: 2px solid rgba(255, 215, 0, 0.35);
+  box-shadow: 0 0 50px rgba(255, 215, 0, 0.08);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.04) 0%,
+    transparent 60%
+  );
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.price {
+  text-align: center;
+}
+
+.priceAmount {
+  font-size: 3rem;
+  line-height: 1;
+  color: #ffd700;
+}
+
+.priceUnit {
+  font-size: 1rem;
+  color: hsl(var(--text-muted));
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin-left: 0.25rem;
+}
+
+/* ── Benefits list ── */
+.benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: hsl(var(--text-secondary));
+  line-height: 1.4;
+}
+
+.benefitIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.benefitText strong {
+  color: hsl(var(--text-primary));
+  font-weight: 700;
+}
+
+/* ── CTA ── */
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.btnGold {
+  width: 100%;
+  padding: 1rem;
+  background: #ffd700;
+  color: #09090b;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btnGold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 28px rgba(255, 215, 0, 0.4);
+  }
+}
+
+.btnGold:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+}
+
+.btnGold:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.activeBadge {
+  text-align: center;
+  padding: 0.9rem;
+  color: #ffd700;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 215, 0, 0.05);
+}
+
+.balanceNote {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btnGold:active   { transform: none; }
+  .btnGold:hover    { transform: none; }
+}

@@ -1,0 +1,325 @@
+/* ── Dashboard Layout ── */
+.page {
+  padding: 2.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  max-width: 1100px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.03em;
+}
+
+/* ── Wallet chip (compact, top-right) ── */
+.walletChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  background: rgba(0, 245, 255, 0.07);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #00F5FF;
+  margin-top: 0.75rem;
+  width: fit-content;
+}
+
+.walletDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00F5FF;
+  box-shadow: 0 0 6px rgba(0, 245, 255, 0.8);
+  flex-shrink: 0;
+}
+
+/* ── Main Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ── Arena Card ── */
+.arenaCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── Form Grid ── */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.fieldLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: hsl(var(--text-muted));
+  text-transform: uppercase;
+}
+
+.select,
+.input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: hsl(var(--text-primary));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  outline: none;
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2300F5FF' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2rem;
+}
+
+.select option {
+  background: #121219;
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .select:hover,
+  .input:hover {
+    border-color: rgba(0, 245, 255, 0.3);
+  }
+}
+
+.select:focus,
+.input:focus {
+  border-color: rgba(0, 245, 255, 0.6);
+  background: rgba(0, 245, 255, 0.04);
+}
+
+/* ── Category Tags ── */
+.categoryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.categoryTag {
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  transition: background 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+  text-transform: uppercase;
+}
+
+.categoryTag:active {
+  transform: scale(0.97);
+}
+
+.categoryTagActive {
+  background: rgba(0, 245, 255, 0.1);
+  border-color: rgba(0, 245, 255, 0.4);
+  color: #00F5FF;
+}
+
+/* ── CTA Button block ── */
+.ctaRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ctaHint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+/* ── Stats Panel ── */
+.statsCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.statsTitle {
+  font-size: 0.9rem;
+  line-height: 1;
+  color: hsl(var(--text-secondary));
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.statLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: hsl(var(--text-muted));
+  text-transform: uppercase;
+}
+
+/* ── Recent Matches placeholder ── */
+.recentMatches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.emptyState {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px dashed rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+}
+
+/* ── Stake quick-pick ── */
+.stakePills {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.stakePill {
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: background 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out;
+}
+
+.stakePill:active {
+  transform: scale(0.96);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .stakePill:hover {
+    background: rgba(0, 245, 255, 0.08);
+    border-color: rgba(0, 245, 255, 0.3);
+    color: #00F5FF;
+  }
+}
+
+/* ── Searching state ── */
+.searchingCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+
+.btnBack {
+  background: transparent;
+  border: none;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0;
+  transition: color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btnBack:hover { color: hsl(var(--text-primary)); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}

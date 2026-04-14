@@ -1,0 +1,212 @@
+.hubContainer {
+  margin: 1rem 0;
+}
+
+.hubCard {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+}
+
+.header h3 {
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+}
+
+.networkBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  background: hsla(182, 100%, 50%, 0.1);
+  color: hsl(var(--neon-cyan));
+  border: 1px solid hsla(182, 100%, 50%, 0.3);
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+
+.balances {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 2rem;
+}
+
+.balanceItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.symbol {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+}
+
+.progressBar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progressBar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--progress);
+  height: 100%;
+  background: linear-gradient(90deg, transparent, white);
+  opacity: 0.2;
+}
+
+.primaryBalance {
+  background: hsla(0, 0%, 100%, 0.02);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btnSecondary {
+  flex: 1;
+  background: transparent;
+  color: white;
+  border: 1px solid var(--glass-border);
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out, transform 160ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btnSecondary:hover {
+    background: var(--glass);
+    border-color: rgba(255,255,255,0.3);
+  }
+}
+
+.btnSecondary:active {
+  transform: scale(0.97);
+}
+
+/* ── Deposit / Withdraw panel ── */
+.txPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+}
+
+.txLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: hsl(var(--text-muted));
+  text-transform: uppercase;
+}
+
+.txRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.txInput {
+  flex: 1;
+  padding: 0.65rem 0.8rem;
+  background: rgba(255,255,255,0.04);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 150ms ease-out;
+}
+
+.txInput:focus {
+  border-color: rgba(0,245,255,0.5);
+}
+
+.txNote {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.txStatus {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  color: #00F5FF;
+  letter-spacing: 0.05em;
+}
+
+.txError {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: #ff4d4d;
+  letter-spacing: 0.02em;
+}
+
+.placeholder {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .balances {
+    grid-template-columns: 1fr;
+  }
+}

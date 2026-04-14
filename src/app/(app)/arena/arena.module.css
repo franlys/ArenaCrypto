@@ -1,0 +1,196 @@
+.page {
+  padding: 2.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.03em;
+}
+
+/* ── Mode Cards ── */
+.modesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.modeCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 10px;
+  position: relative;
+  text-decoration: none;
+  color: inherit;
+}
+
+.modeActive {
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out, transform 160ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .modeActive:hover {
+    background: rgba(0, 245, 255, 0.05);
+    border-color: rgba(0, 245, 255, 0.25);
+  }
+  .modeActive:hover .arrow {
+    transform: translateX(4px);
+    color: #00F5FF;
+  }
+}
+
+.modeActive:active {
+  transform: scale(0.98);
+}
+
+.modeDisabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.modeIcon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.modeLabel {
+  font-size: 0.8rem;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.modeDesc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.75rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+}
+
+.arrow {
+  margin-left: auto;
+  color: hsl(var(--text-muted));
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: transform 150ms ease-out, color 150ms ease-out;
+}
+
+.badgeHot {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(0, 245, 255, 0.12);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #00F5FF;
+  text-transform: uppercase;
+}
+
+.badgeSoon {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: hsl(var(--text-muted));
+  text-transform: uppercase;
+}
+
+/* ── Activity Bar ── */
+.activityBar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.9rem 1.5rem;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.activityDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00F5FF;
+  box-shadow: 0 0 6px rgba(0, 245, 255, 0.8);
+  flex-shrink: 0;
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.activityLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: hsl(var(--text-muted));
+  text-transform: uppercase;
+}
+
+.activityValue {
+  font-size: 0.85rem;
+}
+
+.activityDivider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .modesGrid {
+    grid-template-columns: 1fr;
+  }
+  .activityBar {
+    gap: 1rem;
+  }
+  .activityDivider {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activityDot { animation: none; }
+  .modeActive:active { transform: none; }
+}

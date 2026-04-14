@@ -1,0 +1,255 @@
+.page {
+  padding: 2.5rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Hero ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.heroTitle {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+
+.heroSub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+}
+
+/* ── Steps grid ── */
+.stepsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.stepCard {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-radius: 10px;
+}
+
+.stepTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepNum {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.1);
+  line-height: 1;
+}
+
+.stepIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.stepTitle {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
+  color: #00F5FF;
+}
+
+.stepDesc {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: hsl(var(--text-secondary));
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  flex: 1;
+}
+
+.stepDetail {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.68rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Commission box ── */
+.commBox {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 480px;
+  align-self: center;
+  width: 100%;
+}
+
+.commTitle {
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.commGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.commRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.commRow:last-child {
+  border-bottom: none;
+  padding-top: 0.75rem;
+}
+
+.commLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+}
+
+.commValue {
+  font-size: 0.9rem;
+}
+
+.commHighlight {
+  color: #00F5FF;
+  font-size: 1.1rem;
+}
+
+.commDim {
+  color: hsl(var(--text-muted));
+}
+
+/* ── FAQ ── */
+.faqSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.faqTitle {
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.faqItem {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.faqItem[open] {
+  background: rgba(0, 245, 255, 0.03);
+  border-color: rgba(0, 245, 255, 0.15);
+}
+
+.faqQ {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: hsl(var(--text-primary));
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.faqQ::before {
+  content: '▸';
+  color: #00F5FF;
+  font-size: 0.65rem;
+  transition: transform 200ms ease-out;
+  flex-shrink: 0;
+}
+
+.faqItem[open] .faqQ::before {
+  transform: rotate(90deg);
+}
+
+.faqA {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  color: hsl(var(--text-secondary));
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── CTA ── */
+.ctaRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.ctaBtn {
+  padding: 0.9rem 2.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+}
+
+.ctaSecondary {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: hsl(var(--text-muted));
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ctaSecondary:hover { color: hsl(var(--text-primary)); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .stepsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .stepsGrid { grid-template-columns: 1fr; }
+  .page { padding: 1.5rem 1rem 3rem; gap: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faqQ::before { transition: none; }
+}

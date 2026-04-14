@@ -1,0 +1,84 @@
+.adminNav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 2rem;
+}
+
+.header {
+  padding: 0 0.5rem;
+}
+
+.header h2 {
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  color: hsl(var(--text-muted));
+  text-decoration: none;
+  border-radius: 8px;
+  position: relative;
+  /* emilkowalski: specify exact properties, never "all" */
+  transition: background 160ms var(--ease-out),
+              color 160ms var(--ease-out);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+  }
+}
+
+.active {
+  color: white;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.1) 0%, transparent 100%);
+}
+
+.indicator {
+  position: absolute;
+  left: -1rem;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: #00F5FF;
+  box-shadow: 0 0 10px #00F5FF;
+  border-radius: 0 4px 4px 0;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.backLink:hover {
+  color: hsl(var(--neon-purple));
+}

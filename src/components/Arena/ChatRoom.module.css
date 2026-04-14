@@ -1,0 +1,113 @@
+.chatWrapper {
+  height: 600px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(10, 10, 15, 0.8);
+  border: 1px solid var(--glass-border);
+}
+
+.chatHeader {
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.statusIndicator {
+  width: 10px;
+  height: 10px;
+  background: hsl(var(--neon-cyan));
+  border-radius: 50%;
+  box-shadow: 0 0 10px hsl(var(--neon-cyan));
+}
+
+.chatHeader span {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+}
+
+.messageFeed {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.messageFeed::-webkit-scrollbar {
+  width: 4px;
+}
+.messageFeed::-webkit-scrollbar-track {
+  background: transparent;
+}
+.messageFeed::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.message {
+  max-width: 80%;
+  align-self: flex-start;
+}
+
+.ownMsg {
+  align-self: flex-end;
+}
+
+.msgContent {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.8rem 1.2rem;
+  border-radius: 4px 12px 12px 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border-left: 2px solid var(--glass-border);
+}
+
+.ownMsg .msgContent {
+  background: hsla(182, 100%, 50%, 0.1);
+  border-left: none;
+  border-right: 2px solid hsl(var(--neon-cyan));
+  border-radius: 12px 4px 12px 12px;
+}
+
+.timestamp {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+}
+
+.ownMsg .timestamp {
+  text-align: right;
+}
+
+.chatInput {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.chatInput input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  padding: 0.8rem 1.2rem;
+  border-radius: 4px;
+  color: white;
+  transition: all 0.3s;
+}
+
+.chatInput input:focus {
+  outline: none;
+  border-color: hsl(var(--neon-cyan));
+  background: rgba(255, 255, 255, 0.08);
+}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArenaCrypto | Visual Preview</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Orbitron:wght@400;700;900&display=swap');
+
+        :root {
+            --neon-cyan: 182, 100%, 50%;
+            --neon-purple: 263, 89%, 66%;
+            --bg-dark: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .neon-text-cyan { color: hsl(var(--neon-cyan)); text-shadow: 0 0 10px hsla(182, 100%, 50%, 0.5); }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* App Grid Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 240px 1fr 300px;
+            height: 100vh;
+        }
+
+        aside {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+        }
+
+        .main-content {
+            padding: 3rem;
+            overflow-y: auto;
+        }
+
+        /* Sidebar Nav */
+        .main-nav ul { list-style: none; padding: 0; margin-top: 3rem; }
+        .main-nav li { margin-bottom: 2rem; }
+        .main-nav a { 
+            color: #888; text-decoration: none; font-family: 'Orbitron'; font-size: 0.8rem; letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+        .main-nav li.active a { color: hsl(var(--neon-cyan)); }
+
+        /* Hero Dashboard Section */
+        .hub-header { margin-bottom: 3rem; }
+        .hub-header h1 { font-size: 3rem; margin: 0; }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 2rem;
+        }
+
+        /* Matchmaking UI Simulation */
+        .arena-card { 
+            text-align: center;
+            border: 1px solid hsla(182, 100%, 50%, 0.3);
+            box-shadow: 0 0 30px hsla(182, 100%, 50%, 0.1);
+        }
+
+        .orbit-container {
+            width: 150px;
+            height: 150px;
+            margin: 2rem auto;
+            border: 2px solid transparent;
+            border-top: 2px solid hsl(var(--neon-cyan));
+            border-radius: 50%;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .btn-primary {
+            background: hsl(var(--neon-cyan));
+            color: black;
+            border: none;
+            padding: 1rem 2rem;
+            font-family: 'Orbitron';
+            font-weight: 900;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 0 20px hsla(182, 100%, 50%, 0.4);
+        }
+
+        /* Ad Zones */
+        .ad-zone {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(45deg, #111, #222);
+            border: 1px dashed #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-grid">
+        <aside class="sidebar-left">
+            <div class="logo font-orbitron neon-text-cyan">ARENA<span>CRYPTO</span></div>
+            <nav class="main-nav">
+                <ul>
+                    <li class="active"><a href="#">HUB</a></li>
+                    <li><a href="#">ARENA</a></li>
+                    <li><a href="#">WALLETS</a></li>
+                    <li><a href="#">PREMIUM</a></li>
+                    <li><a href="#">TOURNEY</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="hub-header">
+                <h1 class="font-orbitron">TÚ <span class="neon-text-cyan">DASHBOARD</span></h1>
+                <p style="color: #666">Explora la arena, únete a torneos y gana cripto.</p>
+            </div>
+
+            <div class="glass-panel arena-card">
+                <h3 class="font-orbitron">BÚSQUEDA DE COMBATE</h3>
+                <div class="orbit-container"></div>
+                <button class="btn-primary">ENTRAR A LA ARENA</button>
+            </div>
+        </main>
+
+        <aside class="sidebar-right">
+            <div class="ad-zone">ADS ZONE (FREE TIER)</div>
+            <div class="glass-panel" style="margin-top:2rem">
+                <h4 class="font-orbitron" style="font-size:0.7rem; color:#666">ULTIMA AKTIVIDAD</h4>
+                <p style="font-size:0.8rem">Rival encontrado en Valorant...</p>
+            </div>
+        </aside>
+    </div>
+</body>
+</html>

@@ -1,0 +1,183 @@
+/* emilkowalski-design: premium nav with spring-driven floating indicator */
+/* ui-ux-pro-max: Orbitron, neon-cyan, dark-card palette */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ── Logo ── */
+.logoWrap {
+  padding: 1.5rem 1.25rem 0;
+  margin-bottom: 1.75rem;
+}
+
+.logo {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  color: #00F5FF;
+  text-shadow: 0 0 16px rgba(0, 245, 255, 0.45);
+  text-decoration: none;
+  line-height: 1;
+  padding-bottom: 1.25rem;
+}
+
+.logoDim {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.logoDivider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 245, 255, 0.5) 0%,
+    rgba(0, 245, 255, 0.1) 60%,
+    transparent 100%
+  );
+}
+
+/* ── Nav List ── */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.625rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listItem {
+  position: relative;
+}
+
+/* ── Nav Link ── */
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 7px;
+  text-decoration: none;
+  overflow: hidden;
+  /* emilkowalski: only transform, no "all" */
+  transition: color 150ms ease-out;
+}
+
+/* emilkowalski: scale on press — buttons must feel responsive */
+@media (hover: hover) and (pointer: fine) {
+  .link:hover .label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .link:hover .icon {
+    color: #00F5FF;
+  }
+}
+
+.link:active {
+  transform: scale(0.97);
+}
+
+/* ── Floating Pill (layoutId spring) ── */
+.activePill {
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  background: rgba(0, 245, 255, 0.08);
+  pointer-events: none;
+  /* emilkowalski: spring handles this — no CSS transition needed */
+}
+
+/* ── Neon Bar (layoutId spring) ── */
+.glowBar {
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 2.5px;
+  border-radius: 2px;
+  background: #00F5FF;
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.7), 0 0 16px rgba(0, 245, 255, 0.3);
+  pointer-events: none;
+}
+
+/* ── Icon ── */
+.icon {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.3);
+  transition: color 150ms ease-out;
+  flex-shrink: 0;
+  width: 1rem;
+  text-align: center;
+}
+
+.iconActive {
+  color: #00F5FF;
+  filter: drop-shadow(0 0 4px rgba(0, 245, 255, 0.6));
+}
+
+/* ── Label ── */
+.label {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: rgba(255, 255, 255, 0.35);
+  transition: color 150ms ease-out;
+}
+
+.labelActive {
+  color: #00F5FF;
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+}
+
+/* ── Bottom Status ── */
+.navFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: auto;
+}
+
+.networkDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00F5FF;
+  box-shadow: 0 0 6px rgba(0, 245, 255, 0.8);
+  flex-shrink: 0;
+  /* pulse animation */
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+.networkLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+}
+
+/* emilkowalski: pulse is decorative + rare enough to keep */
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(0, 245, 255, 0.8); }
+  50%       { opacity: 0.5; box-shadow: 0 0 2px rgba(0, 245, 255, 0.3); }
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .link:active {
+    transform: none;
+  }
+  .networkDot {
+    animation: none;
+  }
+}

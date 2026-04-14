@@ -1,0 +1,92 @@
+.adContainer {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar {
+  height: 400px;
+  margin-bottom: 2rem;
+}
+
+.footer {
+  height: 120px;
+  width: 100%;
+}
+
+.adBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.4) saturate(1.2);
+  transition: transform 0.8s ease;
+}
+
+.adContainer:hover .adBg {
+  transform: scale(1.1);
+}
+
+.adOverlay {
+  position: relative;
+  padding: 1.5rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adBadge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  width: fit-content;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.adOverlay h4 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  color: white;
+}
+
+.adOverlay p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.adBtn {
+  margin-top: 0.5rem;
+  background: hsla(182, 100%, 50%, 0.1);
+  border: 1px solid hsla(182, 100%, 50%, 0.3);
+  color: hsl(var(--neon-cyan));
+  padding: 0.4rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.adBtn:hover {
+  background: hsla(182, 100%, 50%, 0.2);
+  border-color: hsl(var(--neon-cyan));
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    height: 250px;
+  }
+}

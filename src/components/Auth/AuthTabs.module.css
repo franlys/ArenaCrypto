@@ -1,0 +1,213 @@
+/* ============================================================
+   AuthTabs — Login / Register form card
+   ============================================================ */
+
+.authCard {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.5),
+              0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: hsl(var(--text-muted));
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.65rem;
+  cursor: pointer;
+  z-index: 1;
+  position: relative;
+  transition: color 200ms var(--ease-out);
+}
+
+.tabActive {
+  color: hsl(var(--bg-main));
+}
+
+.tabIndicator {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: #00F5FF;
+  border-radius: 4px;
+  box-shadow: 0 0 18px rgba(0, 245, 255, 0.45);
+}
+
+/* ── Form header ──────────────────────────────────────────── */
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formTitle {
+  font-size: 1.3rem;
+  letter-spacing: 0.08em;
+}
+
+.formSub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: hsl(var(--text-muted));
+  line-height: 1.5;
+}
+
+/* ── Form body ────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.12em;
+}
+
+.input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  transition: border-color 160ms var(--ease-out),
+              background   160ms var(--ease-out),
+              box-shadow   160ms var(--ease-out);
+}
+
+.input:focus {
+  outline: none;
+  border-color: #00F5FF;
+  background: rgba(0, 245, 255, 0.03);
+  box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.08);
+}
+
+/* password field with eye toggle */
+.passwordWrap {
+  position: relative;
+}
+
+.inputPassword {
+  padding-right: 2.75rem;
+}
+
+.eyeBtn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: hsl(var(--text-muted));
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  transition: color 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .eyeBtn:hover { color: white; }
+}
+
+/* ── Error ────────────────────────────────────────────────── */
+.error {
+  color: #f87171;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+/* ── Switch hint ──────────────────────────────────────────── */
+.switchHint {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  color: hsl(var(--text-muted));
+  text-align: center;
+}
+
+.switchLink {
+  background: none;
+  border: none;
+  color: #00F5FF;
+  cursor: pointer;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .switchLink:hover { opacity: 0.75; }
+}
+
+/* ── Success state ────────────────────────────────────────── */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.successTitle {
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: #00F5FF;
+}
+
+.successMsg {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  color: hsl(var(--text-secondary));
+  line-height: 1.65;
+  max-width: 320px;
+}
+
+.successMsg strong {
+  color: white;
+}

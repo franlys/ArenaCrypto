@@ -1,0 +1,384 @@
+/* ============================================================
+   HOME — Full Landing Page
+   ============================================================ */
+
+.page { display: flex; flex-direction: column; }
+
+/* ── HERO ─────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: calc(100vh - 52px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.heroBg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -5%,  rgba(0, 245, 255, 0.14) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 45% at 85% 65%,  rgba(139, 92, 246, 0.11) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 55% at 5%  80%,  rgba(0, 245, 255, 0.06) 0%, transparent 50%),
+    #09090b;
+  z-index: 0;
+}
+
+.heroBgOverlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    170deg,
+    hsl(240 10% 3.5% / 0.45) 0%,
+    hsl(240 10% 3.5% / 0.75) 50%,
+    hsl(240 10% 3.5%)         100%
+  );
+  z-index: 1;
+}
+
+.heroBgOverlay::after {
+  content: ''; position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    hsl(0 0% 0% / 0.022) 2px, hsl(0 0% 0% / 0.022) 4px
+  );
+  pointer-events: none;
+}
+
+/* ── CYBER GRID FLOOR ─────────────────────────────────────── */
+.cyberGrid {
+  position: absolute;
+  bottom: -2px; left: -15%; right: -15%;
+  height: 55%;
+  background-image:
+    linear-gradient(rgba(0, 245, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.07) 1px, transparent 1px);
+  background-size: 52px 52px;
+  transform: perspective(320px) rotateX(58deg);
+  transform-origin: center bottom;
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 62%);
+  mask-image: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 62%);
+  z-index: 1;
+  pointer-events: none;
+  animation: gridPulse 4s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1;   }
+}
+
+/* ── DIAGONAL SCAN BEAM ───────────────────────────────────── */
+.scanBeam {
+  position: absolute;
+  top: 0; left: -40%; width: 30%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(0, 245, 255, 0.025) 50%, transparent);
+  transform: skewX(-15deg);
+  z-index: 2; pointer-events: none;
+  animation: scanSweep 9s linear infinite;
+}
+
+@keyframes scanSweep {
+  from { transform: skewX(-15deg) translateX(0vw);   }
+  to   { transform: skewX(-15deg) translateX(250vw); }
+}
+
+/* ── AMBIENT ORBS ─────────────────────────────────────────── */
+.orb1 {
+  position: absolute; top: 12%; right: 6%;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(0, 245, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%; filter: blur(50px); z-index: 1;
+  animation: orbFloat 9s ease-in-out infinite;
+}
+
+.orb2 {
+  position: absolute; bottom: 18%; left: 4%;
+  width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.09) 0%, transparent 70%);
+  border-radius: 50%; filter: blur(55px); z-index: 1;
+  animation: orbFloat 12s ease-in-out infinite reverse;
+}
+
+.orb3 {
+  position: absolute; top: 55%; right: 25%;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%);
+  border-radius: 50%; filter: blur(40px); z-index: 1;
+  animation: orbFloat 7s ease-in-out infinite 2s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px)   scale(1);    }
+  50%       { transform: translateY(-22px) scale(1.04); }
+}
+
+/* ── FLOATING LIVE CARDS ──────────────────────────────────── */
+.liveCard {
+  position: absolute; z-index: 4;
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  min-width: 230px; max-width: 260px;
+  animation: cardHover 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.lcTopRight  { top: 14%;    right: 6%; animation-delay: 0s;   }
+.lcMidLeft   { top: 44%;    left: 4%;  animation-delay: 1.5s; }
+.lcBotRight  { bottom: 22%; right: 8%; animation-delay: 0.8s; }
+
+@keyframes cardHover {
+  0%, 100% { transform: translateY(0px);  }
+  50%       { transform: translateY(-6px); }
+}
+
+.lcAvatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(139,92,246,0.2));
+  border: 1px solid rgba(0, 245, 255, 0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem; font-weight: 700; color: #00F5FF; flex-shrink: 0;
+}
+
+.lcBody { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
+
+.lcUser {
+  font-family: 'Orbitron', sans-serif; font-size: 0.62rem; font-weight: 700; color: white;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.lcGame {
+  font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; font-weight: 600;
+  color: hsl(var(--text-muted)); letter-spacing: 0.06em;
+}
+
+.lcRight { display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; flex-shrink: 0; }
+.lcResult { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; }
+.lcAmount { font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; font-weight: 600; color: hsl(var(--text-secondary)); }
+
+.lcPulse {
+  position: absolute; top: 8px; right: 8px;
+  width: 6px; height: 6px; border-radius: 50%;
+  animation: pulseDot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1;   transform: scale(1);   }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── HERO INNER ───────────────────────────────────────────── */
+.heroInner {
+  position: relative; z-index: 3;
+  width: 100%; display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  gap: 2rem; padding: 4rem 2rem 3.5rem;
+}
+
+.heroBadge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.35rem 1rem; border-radius: 20px;
+  background: rgba(0, 245, 255, 0.06);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; color: #00F5FF;
+}
+
+.heroTitle {
+  font-size: clamp(3rem, 6vw, 6.5rem);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: -0.01em; max-width: 700px;
+}
+
+.titleAccent {
+  color: #00F5FF;
+  text-shadow: 0 0 40px rgba(0,245,255,0.5), 0 0 80px rgba(0,245,255,0.2);
+}
+
+.heroSub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  color: hsl(var(--text-secondary));
+  max-width: 520px; line-height: 1.75; letter-spacing: 0.03em;
+}
+
+.heroActions  { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+.ctaPrimary   { font-size: 0.8rem; padding: 0.9rem 2.2rem; letter-spacing: 0.12em; gap: 0.5rem; }
+.ctaSecondary { padding: 0.9rem 2.2rem; font-size: 0.75rem; }
+
+.statsBar { display: flex; padding: 1.5rem 2rem; margin-top: 1rem; }
+
+.statItem {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.3rem; padding: 0 2rem;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.statItem:last-child { border-right: none; }
+
+.statVal  { font-size: 1.6rem; font-weight: 900; color: #00F5FF; text-shadow: 0 0 20px rgba(0,245,255,0.4); line-height: 1; }
+.statLbl  { font-family: 'Rajdhani', sans-serif; font-size: 0.68rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase; letter-spacing: 0.12em; }
+
+/* ── LIVE TICKER ──────────────────────────────────────────── */
+.tickerWrap {
+  display: flex; align-items: center; height: 38px;
+  background: rgba(0, 245, 255, 0.04);
+  border-top: 1px solid rgba(0,245,255,0.1);
+  border-bottom: 1px solid rgba(0,245,255,0.1);
+  overflow: hidden; position: relative;
+}
+
+.tickerLabel {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0 1.2rem; height: 100%; flex-shrink: 0;
+  font-family: 'Orbitron', sans-serif; font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.12em; color: #00F5FF; white-space: nowrap;
+  border-right: 1px solid rgba(0,245,255,0.15);
+  background: rgba(0,245,255,0.06);
+}
+
+.tickerWrap::after {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 80px; height: 100%;
+  background: linear-gradient(to right, transparent, #09090b);
+  pointer-events: none; z-index: 1;
+}
+
+.tickerTrack { overflow: hidden; flex: 1; height: 100%; display: flex; align-items: center; }
+
+.tickerInner {
+  display: flex; align-items: center; white-space: nowrap;
+  animation: tickerScroll 38s linear infinite;
+}
+
+@keyframes tickerScroll {
+  from { transform: translateX(0);    }
+  to   { transform: translateX(-50%); }
+}
+
+.tickerItem {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0 1.5rem; font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-secondary)); letter-spacing: 0.04em;
+}
+
+.tickerIcon { font-size: 0.9rem; }
+.tickerSep  { color: rgba(0,245,255,0.3); font-size: 1.2rem; margin-left: 1rem; }
+
+/* ── SHARED SECTIONS ──────────────────────────────────────── */
+.section {
+  padding: 5rem 3rem; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+
+.sectionDark {
+  background: rgba(15,23,42,0.35);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.sectionLabel { font-family: 'Rajdhani', sans-serif; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; color: #00F5FF; margin-bottom: 0.25rem; }
+.sectionTitle { font-size: clamp(1.6rem, 3vw, 2.6rem); font-weight: 900; text-align: center; margin-bottom: 2.5rem; line-height: 1.1; }
+
+/* ── FEATURES ─────────────────────────────────────────────── */
+.featuresGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; width: 100%; max-width: 960px; }
+
+.featureCard {
+  padding: 2rem; display: flex; flex-direction: column; gap: 1rem;
+  position: relative; overflow: hidden;
+  transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+
+.featureCard::before {
+  content: ''; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px;
+  background: radial-gradient(circle, var(--card-accent, rgba(0,245,255,0.15)) 0%, transparent 70%);
+  filter: blur(30px); pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .featureCard:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.12); }
+}
+
+.featureIconWrap {
+  width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+  border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+}
+
+.featureTitle { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; }
+.featureDesc  { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; color: hsl(var(--text-secondary)); line-height: 1.65; }
+
+/* ── STEPS ────────────────────────────────────────────────── */
+.stepsRow { display: grid; grid-template-columns: repeat(4,1fr); width: 100%; max-width: 900px; }
+
+.stepCard { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 1rem; position: relative; }
+
+.stepNumber { font-size: 2.8rem; font-weight: 900; color: rgba(0,245,255,0.12); line-height: 1; margin-bottom: 0.75rem; }
+.stepTitle  { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; color: white; margin-bottom: 0.5rem; }
+.stepDesc   { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; color: hsl(var(--text-secondary)); line-height: 1.6; }
+
+.stepArrow {
+  position: absolute; top: 2.6rem; right: -8px;
+  width: 14px; height: 14px;
+  border-top: 2px solid rgba(0,245,255,0.25); border-right: 2px solid rgba(0,245,255,0.25);
+  transform: rotate(45deg); z-index: 1;
+}
+
+/* ── GAMES ────────────────────────────────────────────────── */
+.gamesGrid { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; max-width: 880px; }
+
+.gameChip {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.55rem 1.1rem; border-radius: 8px; border: 1px solid;
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .gameChip:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+}
+
+.gameChipMore {
+  display: flex; align-items: center; padding: 0.55rem 1.1rem; border-radius: 8px;
+  border: 1px dashed rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);
+}
+
+.gameName { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; color: white; }
+.gameTag  { font-family: 'Rajdhani', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; color: hsl(var(--text-muted)); }
+
+/* ── CTA ──────────────────────────────────────────────────── */
+.ctaSection { position: relative; overflow: hidden; padding: 6rem 3rem; }
+
+.ctaBg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 50%, rgba(0,245,255,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 20% 50%, rgba(139,92,246,0.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.ctaInner  { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1.5rem; text-align: center; }
+.ctaTitle  { font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 900; line-height: 1; }
+.ctaSub    { font-family: 'Rajdhani', sans-serif; font-size: 1rem; color: hsl(var(--text-secondary)); max-width: 440px; line-height: 1.7; }
+.ctaActions{ display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 0.5rem; }
+
+/* ── RESPONSIVE ───────────────────────────────────────────── */
+@media (max-width: 1100px) { .liveCard { display: none; } }
+
+@media (max-width: 900px) {
+  .featuresGrid { grid-template-columns: 1fr; max-width: 480px; }
+  .stepsRow     { grid-template-columns: repeat(2,1fr); max-width: 520px; gap: 1rem; }
+  .stepArrow    { display: none; }
+  .statsBar     { flex-wrap: wrap; justify-content: center; padding: 1.5rem; }
+  .statItem     { border-right: none; padding: 0 1rem; }
+}
+
+@media (max-width: 640px) {
+  .stepsRow    { grid-template-columns: 1fr; }
+  .section     { padding: 3.5rem 1.5rem; }
+  .tickerLabel { display: none; }
+}
+
+/* ── REDUCED MOTION ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .orb1, .orb2, .orb3 { animation: none; }
+  .cyberGrid           { animation: none; }
+  .scanBeam            { display: none;   }
+  .tickerInner         { animation: none; }
+  .liveCard            { animation: none; }
+}
