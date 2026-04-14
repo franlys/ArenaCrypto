@@ -58,8 +58,8 @@ export default function PremiumPage() {
       >
         {/* Price */}
         <div className={styles.price}>
-          <span className={`font-orbitron ${styles.priceAmount}`}>5</span>
-          <span className={styles.priceUnit}>USDC / MES</span>
+          <span className={`font-orbitron ${styles.priceAmount}`}>20</span>
+          <span className={styles.priceUnit}>USDT · PAGO ÚNICO</span>
         </div>
 
         {/* Benefits */}
@@ -84,7 +84,7 @@ export default function PremiumPage() {
               onClick={handleUpgrade}
               disabled={loading}
             >
-              {loading ? "PROCESANDO…" : "ADQUIRIR MEMBRESÍA · 5 USDC"}
+              {loading ? "PROCESANDO…" : "ADQUIRIR MEMBRESÍA · 20 USDT"}
             </button>
           )}
           {error && (
@@ -93,8 +93,8 @@ export default function PremiumPage() {
             </p>
           )}
           <p className={styles.balanceNote}>
-            Tu saldo Arena: <strong>{Number(balance).toFixed(2)} USDC</strong>
-            {!isPremium && Number(balance) < 5 && (
+            Tu saldo Arena: <strong>{Number(balance).toFixed(2)} USDT</strong>
+            {!isPremium && Number(balance) < 20 && (
               <> · <span style={{ color: "#ff4d4d" }}>Saldo insuficiente</span></>
             )}
           </p>

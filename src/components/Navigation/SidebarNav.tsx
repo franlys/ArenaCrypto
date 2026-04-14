@@ -23,6 +23,7 @@ export function SidebarNav() {
     { href: "/arena",     label: "ARENA",   icon: "⚔" },
     { href: "/wallets",   label: "WALLET",  icon: "◎" },
     { href: "/premium",   label: "PREMIUM", icon: "◆" },
+    { href: "/profile",   label: "PERFIL",  icon: "◉" },
   ];
 
   if (isAdmin) {

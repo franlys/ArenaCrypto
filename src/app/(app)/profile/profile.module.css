@@ -1,0 +1,218 @@
+.page {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 680px;
+  width: 100%;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(0, 245, 255, 0.08);
+  border: 1px solid rgba(0, 245, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #00F5FF;
+  flex-shrink: 0;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.username {
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  color: hsl(var(--text-primary));
+}
+
+.email {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.04em;
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.badgePremium {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.badgeAdmin {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: hsl(var(--neon-purple));
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+/* ── Stats ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 1.25rem;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.75rem 0;
+}
+
+.statVal {
+  font-size: 1.4rem;
+  color: hsl(var(--text-primary));
+  line-height: 1;
+}
+
+.statLbl {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Balance ── */
+.balanceBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+}
+
+.balanceLbl {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: hsl(var(--text-muted));
+}
+
+.balanceVal {
+  font-size: 1.5rem;
+  color: #00F5FF;
+  text-shadow: 0 0 16px rgba(0, 245, 255, 0.4);
+}
+
+/* ── Match history ── */
+.matchSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionTitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  color: hsl(var(--text-muted));
+}
+
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.matchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+}
+
+.matchGame {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: hsl(var(--text-primary));
+}
+
+.matchStake {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+}
+
+.matchResult {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}
+
+.empty {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: hsl(var(--text-muted));
+  letter-spacing: 0.05em;
+  padding: 1rem 0;
+}
+
+/* ── Sign out ── */
+.btnSignOut {
+  width: 100%;
+  padding: 0.9rem;
+  background: rgba(248, 113, 113, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 10px;
+  color: #f87171;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btnSignOut:hover {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+}
+
+.btnSignOut:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 560px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .page { padding: 1.25rem; }
+}
