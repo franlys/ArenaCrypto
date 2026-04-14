@@ -63,7 +63,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     profile,
     isPremium: !!profile?.is_premium,
-    isAdmin: profile?.role === 'admin',
+    isAdmin: profile?.role?.toLowerCase() === 'admin',
     loading,
     refreshProfile: async () => {
       if (user) await fetchProfile(user.id);
