@@ -87,6 +87,10 @@ export default function LoginPage() {
         transition={{ duration: 0.6, delay: 0.1, ease: EASE_OUT }}
       >
         <AuthTabs />
+        <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", opacity: 0.4, userSelect: "none" }}>
+          <span className="font-orbitron" style={{ fontSize: "0.5rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)", textTransform: "uppercase" }}>Powered by</span>
+          <span className="font-orbitron" style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.2em", color: "#00F5FF", textTransform: "uppercase", marginTop: "0.2rem" }}>GonzalezLabs</span>
+        </div>
       </motion.div>
     </div>
   );

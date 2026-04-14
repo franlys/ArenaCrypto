@@ -11,8 +11,8 @@ export default function MarketingNav() {
   return (
     <nav className={styles.nav}>
       <Link href="/" className={styles.logo}>
-        <span className="font-orbitron">ARENA</span>
-        <span className={`font-orbitron ${styles.cyan}`}>CRYPTO</span>
+        <span className="font-orbitron">ARENA<span className={styles.cyan}>CRYPTO</span></span>
+        <span className={styles.logoSub}>by GonzalezLabs</span>
       </Link>
 
       <div className={styles.links}>

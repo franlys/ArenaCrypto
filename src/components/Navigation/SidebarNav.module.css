@@ -139,11 +139,44 @@
 /* ── Bottom Status ── */
 .navFooter {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 1rem 1.25rem 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   margin-top: auto;
+}
+
+.navFooter > :first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.glLogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+
+.glPowered {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+}
+
+.glName {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #00F5FF;
+  text-transform: uppercase;
 }
 
 .networkDot {

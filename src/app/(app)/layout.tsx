@@ -36,7 +36,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
             <footer className="main-footer">
               <div className="footer-content">
-                <p>&copy; 2025 ArenaCrypto. All rights reserved.</p>
+                <p className="font-orbitron" style={{ fontSize: "0.6rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)" }}>
+                  © 2026 ARENACRYPTO · KRONIX
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", opacity: 0.35 }}>
+                  <span className="font-orbitron" style={{ fontSize: "0.55rem", letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", textTransform: "uppercase" }}>Powered by</span>
+                  <span className="font-orbitron" style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.15em", color: "#00F5FF", textTransform: "uppercase" }}>GonzalezLabs</span>
+                </div>
                 <AdZone slot="footer" />
               </div>
             </footer>

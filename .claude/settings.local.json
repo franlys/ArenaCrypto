@@ -42,7 +42,8 @@
       "Bash(export PATH=\"/c/Users/elmae/AppData/Local/nvm/v22.18.0:/c/Users/elmae/AppData/Roaming/npm:$PATH\")",
       "Bash(cp -r '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/arena/[matchId]' '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/\\(app\\)/arena/')",
       "Bash(cp -r '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/arena/[matchId/]' '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/\\(app\\)/arena/')",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(wait)"
     ]
   }
 }

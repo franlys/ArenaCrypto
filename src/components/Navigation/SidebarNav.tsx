@@ -106,8 +106,14 @@ export function SidebarNav() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.4 }}
       >
-        <span className={styles.networkDot} />
-        <span className={styles.networkLabel}>Polygon · Mainnet</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span className={styles.networkDot} />
+          <span className={styles.networkLabel}>Polygon · Mainnet</span>
+        </div>
+        <div className={styles.glLogo}>
+          <span className={styles.glPowered}>Powered by</span>
+          <span className={styles.glName}>GonzalezLabs</span>
+        </div>
       </motion.div>
     </nav>
   );
