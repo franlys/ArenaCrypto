@@ -36,12 +36,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
             <footer className="main-footer">
               <div className="footer-content">
-                <p className="font-orbitron" style={{ fontSize: "0.6rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.2)" }}>
+                <p className="font-orbitron" style={{ fontSize: "0.6rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.35)" }}>
                   © 2026 ARENACRYPTO · KRONIX
                 </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", opacity: 0.35 }}>
-                  <span className="font-orbitron" style={{ fontSize: "0.55rem", letterSpacing: "0.15em", color: "rgba(255,255,255,0.6)", textTransform: "uppercase" }}>Powered by</span>
-                  <span className="font-orbitron" style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.15em", color: "#00F5FF", textTransform: "uppercase" }}>GonzalezLabs</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.3rem 0.7rem", borderRadius: "6px", background: "rgba(0,245,255,0.05)", border: "1px solid rgba(0,245,255,0.12)" }}>
+                  <span className="font-orbitron" style={{ fontSize: "0.5rem", letterSpacing: "0.12em", color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>Powered by</span>
+                  <span className="font-orbitron" style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.12em", color: "#00F5FF", textTransform: "uppercase", textShadow: "0 0 8px rgba(0,245,255,0.5)" }}>GonzalezLabs</span>
                 </div>
                 <AdZone slot="footer" />
               </div>
