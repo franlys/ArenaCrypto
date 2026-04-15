@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Calendar, ClipboardList, Wallet, ArrowLeft } from "lucide-react";
+import { BarChart3, Calendar, ClipboardList, Wallet, LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import styles from "./AdminSidebar.module.css";
 
 const ADMIN_NAV = [
@@ -15,6 +16,12 @@ const ADMIN_NAV = [
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   return (
     <nav className={styles.adminNav}>
@@ -45,10 +52,10 @@ export function AdminSidebar() {
       </ul>
 
       <div className={styles.footer}>
-        <Link href="/dashboard" className={styles.backLink}>
-          <ArrowLeft size={16} />
-          <span>VOLVER AL HUB</span>
-        </Link>
+        <button className={styles.backLink} onClick={handleSignOut}>
+          <LogOut size={16} />
+          <span>CERRAR SESIÓN</span>
+        </button>
       </div>
     </nav>
   );
