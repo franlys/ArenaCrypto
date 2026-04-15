@@ -76,7 +76,7 @@ export default async function TournamentDetailPage({ params }: Props) {
             </h1>
           </div>
           <a
-            href={`https://proyecto-torneos.vercel.app/t/${params.slug}`}
+            href={`https://proyecto-torneo-flcf.vercel.app/t/${params.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-secondary"

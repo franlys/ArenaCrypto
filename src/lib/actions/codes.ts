@@ -31,9 +31,11 @@ export async function validateStreamerCode(tournamentId: string, code: string) {
   const { error: unlockErr } = await supabase
     .from('tournament_unlocks')
     .insert({
-      user_id: user.id,
+      user_id:          user.id,
       pt_tournament_id: tournamentId,
-      code_id: validCode.id // We store the PT code ID for reference
+      streamer_code_id: null,           // código vive en Kronix, no en AC local
+      origin_platform:  'kronix',
+      origin_code:      code.trim().toUpperCase(),
     })
 
   if (unlockErr) {

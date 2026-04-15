@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import styles from "../admin.module.css";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
@@ -21,6 +22,12 @@ const STATUS_COLOR: Record<string, string> = {
   closed:   "#f59e0b",
   resolved: "#00F5FF",
   canceled: "#f87171",
+};
+
+const BETTING_STATUS_COLOR: Record<string, string> = {
+  open:   "#10b981",
+  closed: "#f87171",
+  paused: "#f59e0b",
 };
 
 type Market = {
@@ -45,44 +52,67 @@ type Revenue = {
   webhook_sent_at: string | null;
 };
 
-export default function MarketsPage() {
-  const [markets, setMarkets]   = useState<Market[]>([]);
-  const [revenue, setRevenue]   = useState<Revenue[]>([]);
-  const [syncing, setSyncing]   = useState(false);
-  const [loading, setLoading]   = useState(true);
-  const [tab, setTab]           = useState<"markets" | "revenue">("markets");
+type KronixTournament = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  arena_betting_enabled: boolean;
+  arena_betting_status: string;
+  total_live_viewers: number;
+};
 
-  useEffect(() => {
-    Promise.all([
+// Client-side bridge client (uses NEXT_PUBLIC_ vars)
+const ptClient = createClient(
+  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
+
+export default function MarketsPage() {
+  const [markets, setMarkets]             = useState<Market[]>([]);
+  const [revenue, setRevenue]             = useState<Revenue[]>([]);
+  const [kronixTournaments, setKronixT]   = useState<KronixTournament[]>([]);
+  const [syncing, setSyncing]             = useState(false);
+  const [loading, setLoading]             = useState(true);
+  const [tab, setTab]                     = useState<"kronix" | "markets" | "revenue">("kronix");
+
+  const fetchData = async () => {
+    const [{ data: m }, { data: r }, { data: kt }] = await Promise.all([
       supabase.from("bet_markets").select("*").order("opened_at", { ascending: false }).limit(50),
       supabase.from("kronix_revenue").select("*").order("period_end", { ascending: false }),
-    ]).then(([{ data: m }, { data: r }]) => {
-      setMarkets(m ?? []);
-      setRevenue(r ?? []);
-      setLoading(false);
-    });
-  }, []);
+      ptClient
+        .from("tournaments")
+        .select("id, name, slug, status, arena_betting_enabled, arena_betting_status, total_live_viewers")
+        .eq("arena_betting_enabled", true)
+        .order("created_at", { ascending: false }),
+    ]);
+    setMarkets(m ?? []);
+    setRevenue(r ?? []);
+    setKronixT(kt ?? []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const handleSync = async () => {
     setSyncing(true);
     try {
       await fetch("/api/markets/sync", {
         method: "POST",
-        headers: { "x-cron-secret": "" }, // admin call — protected by admin route
+        headers: { "x-cron-secret": "" },
       });
-      // Refetch after sync
-      const { data } = await supabase.from("bet_markets").select("*").order("opened_at", { ascending: false }).limit(50);
-      setMarkets(data ?? []);
+      await fetchData();
     } finally {
       setSyncing(false);
     }
   };
 
-  const totalOpen       = markets.filter(m => m.status === "open").length;
-  const totalVolume     = markets.reduce((s, m) => s + Number(m.total_volume), 0);
-  const totalKronix     = markets.reduce((s, m) => s + Number(m.kronix_volume), 0);
-  const pendingCommission = revenue.filter(r => r.status === "pending")
-                                   .reduce((s, r) => s + Number(r.commission_amount), 0);
+  const totalOpen          = markets.filter(m => m.status === "open").length;
+  const totalVolume        = markets.reduce((s, m) => s + Number(m.total_volume), 0);
+  const totalKronix        = markets.reduce((s, m) => s + Number(m.kronix_volume), 0);
+  const pendingCommission  = revenue.filter(r => r.status === "pending")
+                                    .reduce((s, r) => s + Number(r.commission_amount), 0);
 
   if (loading) return <p className={styles.loadingText}>CARGANDO MERCADOS...</p>;
 
@@ -111,10 +141,10 @@ export default function MarketsPage() {
       {/* KPI cards */}
       <div className={styles.statsGrid}>
         {[
-          { label: "Mercados Abiertos", value: totalOpen,               color: "#10b981" },
-          { label: "Volumen Total",     value: `$${totalVolume.toFixed(2)}`, color: "#00F5FF" },
-          { label: "Volumen Kronix",    value: `$${totalKronix.toFixed(2)}`, color: "#8b5cf6" },
-          { label: "Comisión Pendiente",value: `$${pendingCommission.toFixed(2)}`, color: "#f59e0b" },
+          { label: "Torneos Kronix",     value: kronixTournaments.length,         color: "#8b5cf6" },
+          { label: "Mercados Abiertos",  value: totalOpen,                        color: "#10b981" },
+          { label: "Volumen Total",      value: `$${totalVolume.toFixed(2)}`,     color: "#00F5FF" },
+          { label: "Comisión Pendiente", value: `$${pendingCommission.toFixed(2)}`, color: "#f59e0b" },
         ].map((k, i) => (
           <motion.div
             key={k.label}
@@ -137,7 +167,7 @@ export default function MarketsPage() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "0.5rem" }}>
-        {(["markets", "revenue"] as const).map(t => (
+        {(["kronix", "markets", "revenue"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -149,12 +179,92 @@ export default function MarketsPage() {
               borderRadius: "6px",
               color: tab === t ? "#00F5FF" : "var(--text-muted)",
               transition: "all 150ms ease-out",
-            } as any}
+            }}
           >
-            {t === "markets" ? "MERCADOS" : "REVENUE KRONIX"}
+            {t === "kronix" ? "TORNEOS KRONIX" : t === "markets" ? "MERCADOS" : "REVENUE KRONIX"}
           </button>
         ))}
       </div>
+
+      {/* Kronix Tournaments table */}
+      {tab === "kronix" && (
+        <motion.div
+          className="glass-panel"
+          style={{ overflow: "hidden" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ ease: EASE_OUT }}
+        >
+          {kronixTournaments.length === 0 ? (
+            <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "Rajdhani, sans-serif" }}>
+              No hay torneos con arena_betting_enabled en Kronix todavía.
+            </p>
+          ) : (
+            <table className={styles.withdrawalTable}>
+              <thead>
+                <tr>
+                  <th>TORNEO</th>
+                  <th>ESTADO</th>
+                  <th>APUESTAS</th>
+                  <th>VIEWERS</th>
+                  <th>MERCADOS AC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kronixTournaments.map(t => {
+                  const tourMarkets = markets.filter(m => m.pt_tournament_id === t.id);
+                  const openMarkets = tourMarkets.filter(m => m.status === "open").length;
+                  return (
+                    <tr key={t.id}>
+                      <td>
+                        <div style={{ fontFamily: "Orbitron, sans-serif", fontSize: "0.72rem", color: "white" }}>
+                          {t.name}
+                        </div>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.65rem", marginTop: "2px" }}>
+                          {t.slug}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={styles.statusBadge} style={{
+                          background: t.status === "active" ? "rgba(16,185,129,0.1)" : "rgba(100,100,100,0.1)",
+                          border: `1px solid ${t.status === "active" ? "rgba(16,185,129,0.3)" : "rgba(100,100,100,0.2)"}`,
+                          color: t.status === "active" ? "#10b981" : "var(--text-muted)",
+                        }}>
+                          {t.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles.statusBadge} style={{
+                          background: `${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}18`,
+                          border: `1px solid ${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}44`,
+                          color: BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888",
+                        }}>
+                          {t.arena_betting_status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ color: "var(--text-muted)" }}>
+                        {t.total_live_viewers ?? 0}
+                      </td>
+                      <td>
+                        {tourMarkets.length === 0 ? (
+                          <span style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Sin sync</span>
+                        ) : (
+                          <span style={{ color: openMarkets > 0 ? "#10b981" : "var(--text-muted)", fontSize: "0.72rem" }}>
+                            {openMarkets} abiertos / {tourMarkets.length} total
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", color: "var(--text-muted)", fontSize: "0.72rem" }}>
+            Para crear los mercados en AC presiona <strong style={{ color: "#00F5FF" }}>⟳ SYNC KRONIX</strong> — requiere que el torneo tenga <code>arena_betting_status = open</code>.
+          </div>
+        </motion.div>
+      )}
 
       {/* Markets table */}
       {tab === "markets" && (
