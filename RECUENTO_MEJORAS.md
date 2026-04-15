@@ -42,9 +42,17 @@
 - **2026-04-14**: RPC `place_tournament_bet` — transacción atómica PostgreSQL (apuesta + balance en un solo bloque).
 - **2026-04-14**: Fix admin DB — INSERT directo en `profiles` + `wallets` para `elmaestrogonzalez30@gmail.com`.
 
+- **2026-04-15**: Sistema de mercados de apuestas — `bet_markets` con 5 tipos y ciclo open/closed/resolved automático.
+- **2026-04-15**: Origin tracking — cada apuesta etiquetada como `'kronix'` o `'arena'` con el código de origen.
+- **2026-04-15**: Revenue share Kronix — `kronix_revenue`, función `calculate_tournament_revenue()`, comisión 1% volumen Kronix.
+- **2026-04-15**: `POST /api/markets/sync` — sincroniza con Kronix, resuelve mercados, dispara webhook automático (Opción A).
+- **2026-04-15**: `GET /api/admin/revenue` — endpoint consultable por Kronix con secreto compartido (Opción B).
+- **2026-04-15**: Receptor en Kronix — `revenue_reports` table + `POST /api/revenue-report`.
+- **2026-04-15**: Panel MERCADOS en admin — tabla de mercados + tab revenue Kronix con estado de webhooks.
+- **2026-04-15**: `AC_WEBHOOK_SECRET` + `KRONIX_WEBHOOK_URL` configuradas en Vercel ambos proyectos.
+
 ## Mejoras Pendientes 🚀
-- Supabase Site URL → cambiar a URL de Vercel en Authentication → URL Configuration (emails redirigen a localhost).
-- Registrar dominio en cloud.reown.com (WalletConnect) con la URL de Vercel de ArenaCrypto.
-- Verificar todas las env vars en Vercel dashboard (AC y PT).
+- Ejecutar migraciones `20240505000000` y `20240505000100` en Supabase de ArenaCrypto.
+- Ejecutar migración `20240505000000` en Supabase de Proyecto-Torneos.
 - Smart contract Polygon para escrow automatizado (actualmente escrow es wallet manual).
-- Trigger Supabase `handle_new_user` — crear profile automáticamente al registrarse nuevos usuarios.
+- Trigger `handle_new_user` — crear profile automáticamente al registrarse nuevos usuarios en AC.

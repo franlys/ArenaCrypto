@@ -121,6 +121,90 @@
 #### Diagnóstico y fix de acceso admin
 - **Problema raíz**: El trigger `handle_new_user` no estaba activo cuando el usuario se registró → `public.profiles` no tenía la fila del admin.
 - **Diagnóstico**: `SELECT id FROM auth.users` reveló email con typo (`gonzlaez` vs `gonzalez`) que hacía fallar los INSERT previos.
+- **Fix DB**: INSERT directo en `public.profiles (id, username, role)` + INSERT en `public.wallets` con el email correcto.
+- **Fix código**: `UserContext.tsx` — `profile?.role === 'admin'` → `profile?.role?.toLowerCase() === 'admin'`.
+- **Redirect admin**: `AuthGuard` y login page redirigen admin → `/admin`, usuario → `/dashboard`.
+
+#### Panel admin exclusivo — route group `(admin)`
+- Nuevo route group `src/app/(admin)/` independiente de `(app)` — sin sidebar de usuario, sin anuncios, sin ConnectButton.
+- `AdminShell.tsx` — guarda `isAdmin`, redirige a `/dashboard` si no autorizado.
+- `AdminSidebar`: footer cambiado de "VOLVER AL HUB" → botón CERRAR SESIÓN (`supabase.auth.signOut()`).
+- Admin item eliminado del `SidebarNav` de usuarios.
+
+#### Página de perfil de usuario `/profile`
+- Avatar con inicial, badges PREMIUM/ADMIN, stats grid, saldo USDT, últimas 10 partidas WIN/LOSS/EN CURSO.
+- Botón CERRAR SESIÓN con `signOut()` + `router.replace("/")`.
+
+#### Infraestructura
+- `.gitignore`, `.env.example`, fix `tsconfig.json`, fix imports rotos.
+- Todas las env vars configuradas en Vercel (8 variables AC, 4 variables PT).
+- Dominio registrado en cloud.reown.com (WalletConnect).
+- Supabase Site URL actualizada a URL de Vercel en ambos proyectos.
+
+### Estado:
+- **Resuelto**: Admin exclusivo funcional, perfil de usuario, deploy en Vercel.
+- **Pendiente**: Trigger `handle_new_user` para nuevos registros automáticos.
+
+---
+
+## 2026-04-15 — Sistema de Mercados de Apuestas y Revenue Share Kronix
+
+### Actividad del día:
+
+#### Análisis del modelo de ingresos
+- Definición del modelo: Kronix genera códigos → viewers apuestan en AC → AC paga comisión a Kronix.
+- Mapeo completo de datos disponibles en Kronix: torneos, partidas, submissions, standings, kills individuales.
+- Identificación de 5 tipos de mercado posibles con los datos existentes.
+
+#### Sistema de Mercados (`bet_markets`)
+- **`bet_markets`** — tabla que gestiona el ciclo de vida de cada mercado:
+  - Tipos: `tournament_winner`, `tournament_mvp`, `round_winner`, `round_top_fragger`, `round_top_placement`.
+  - Estados: `open → closed → resolved / canceled`.
+  - Tracking de volumen total y volumen Kronix por mercado.
+- Índices únicos para evitar mercados duplicados por torneo/ronda.
+
+#### Origin Tracking
+- `tournament_bets.origin_platform` — etiqueta cada apuesta como `'kronix'` o `'arena'`.
+- `tournament_bets.origin_code` — guarda el código literal usado.
+- `tournament_bets.market_id` — referencia al mercado específico.
+- `tournament_unlocks.origin_platform` — registra el origen al momento del unlock.
+- RPC `place_tournament_bet` actualizado: hereda el origen del unlock, valida que el mercado esté abierto, actualiza contadores de volumen atómicamente.
+
+#### Revenue Share
+- `kronix_revenue` — tabla de comisiones por torneo (1% del volumen Kronix).
+- `calculate_tournament_revenue()` — función PostgreSQL que calcula y hace upsert del reporte.
+- **Opción A (Webhook)**: `POST /api/markets/sync` — sincroniza mercados con Kronix, resuelve al completarse rondas/torneo, dispara webhook automático a Kronix.
+- **Opción B (Consulta)**: `GET /api/admin/revenue` — endpoint que Kronix consulta desde su panel con `x-ac-secret`.
+
+#### Integración Kronix (Proyecto-Torneos)
+- `revenue_reports` — tabla que recibe reportes de AC.
+- `POST /api/revenue-report` — endpoint receptor del webhook, valida `x-ac-secret`.
+
+#### Admin UI — Panel MERCADOS
+- Nueva sección MERCADOS en AdminSidebar.
+- Tab "MERCADOS": tabla de mercados activos con estado, volumen total, volumen Kronix.
+- Tab "REVENUE KRONIX": historial de comisiones con estado de webhook (pendiente/enviado).
+- Botón "SYNC KRONIX" para sincronización manual.
+- KPIs: mercados abiertos, volumen total, volumen Kronix, comisión pendiente.
+
+#### Variables de entorno nuevas
+- `AC_WEBHOOK_SECRET` — secreto compartido AC ↔ Kronix para autenticar webhooks.
+- `KRONIX_WEBHOOK_URL` — `https://proyecto-torneo-flcf.vercel.app`.
+
+### Estado:
+- **Resuelto**: Sistema completo de mercados, origin tracking y revenue share implementado.
+- **Pendiente**: Ejecutar 3 migraciones nuevas en Supabase (AC: `20240505000000`, `20240505000100` · PT: `20240505000000`).
+- **Pendiente**: Agregar `AC_WEBHOOK_SECRET` y `KRONIX_WEBHOOK_URL` en Vercel (ya documentado).
+
+---
+
+## 2026-04-14 (sesión 4) — Admin exclusivo, perfil de usuario, fix autenticación
+
+### Actividad del día:
+
+#### Diagnóstico y fix de acceso admin
+- **Problema raíz**: El trigger `handle_new_user` no estaba activo cuando el usuario se registró → `public.profiles` no tenía la fila del admin.
+- **Diagnóstico**: `SELECT id FROM auth.users` reveló email con typo (`gonzlaez` vs `gonzalez`) que hacía fallar los INSERT previos.
 - **Fix DB**: INSERT directo en `public.profiles (id, username, role)` + INSERT en `public.wallets` con el email correcto `elmaestrogonzalez30@gmail.com`.
 - **Fix código**: `UserContext.tsx` línea 66 — `profile?.role === 'admin'` → `profile?.role?.toLowerCase() === 'admin'` para tolerar mayúsculas del valor en DB.
 
