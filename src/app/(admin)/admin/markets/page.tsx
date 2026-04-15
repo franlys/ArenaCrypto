@@ -142,11 +142,11 @@ export default function MarketsPage() {
             onClick={() => setTab(t)}
             className="font-orbitron"
             style={{
-              background: "none", border: "none", cursor: "pointer",
+              background: tab === t ? "rgba(0,245,255,0.07)" : "transparent",
+              border: "none", cursor: "pointer",
               fontSize: "0.65rem", letterSpacing: "0.12em", padding: "0.4rem 1rem",
               borderRadius: "6px",
               color: tab === t ? "#00F5FF" : "var(--text-muted)",
-              background: tab === t ? "rgba(0,245,255,0.07)" : "transparent",
               transition: "all 150ms ease-out",
             } as any}
           >
