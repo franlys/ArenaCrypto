@@ -17,14 +17,13 @@ const TRUST = [
 ];
 
 export default function LoginPage() {
-  const { user, loading } = useUser();
+  const { user, loading, isAdmin } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace("/dashboard");
-    }
-  }, [user, loading, router]);
+    if (loading || !user) return;
+    router.replace(isAdmin ? "/admin" : "/dashboard");
+  }, [user, loading, isAdmin, router]);
 
   if (loading || user) return null;
 
