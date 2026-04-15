@@ -71,7 +71,12 @@ export async function POST(req: NextRequest) {
 
     for (const match of completedMatches ?? []) {
       // Open round markets if not yet open
-      const roundMarkets = ["round_winner", "round_top_fragger", "round_top_placement"];
+      const roundMarkets = [
+        "round_winner",
+        "round_top_fragger",
+        "round_top_placement",
+        "round_player_fragger",  // jugador individual con más kills en esta ronda
+      ];
       for (const mType of roundMarkets) {
         await acAdmin.from("bet_markets").insert({
           pt_tournament_id: t.id,
@@ -93,10 +98,20 @@ export async function POST(req: NextRequest) {
       if (submissions && submissions.length > 0) {
         // Winner = team with rank 1
         const winner = submissions.find((s: any) => s.rank === 1);
-        // Top fragger = team with highest kill_count
-        const topFragger = submissions.reduce((best: any, s: any) =>
+        // Top fragger (equipo) = equipo con mayor kill_count
+        const topFraggerTeam = submissions.reduce((best: any, s: any) =>
           (s.kill_count > (best?.kill_count ?? -1) ? s : best), null
         );
+        // Top fragger (jugador individual) = jugador con más kills en player_kills JSONB
+        const playerKillMap: Record<string, number> = {};
+        for (const s of submissions) {
+          const pk = (s.player_kills as Record<string, number>) ?? {};
+          for (const [pid, kills] of Object.entries(pk)) {
+            playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
+          }
+        }
+        const topPlayerId = Object.entries(playerKillMap)
+          .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
         if (winner) {
           await acAdmin.from("bet_markets").update({
@@ -105,12 +120,19 @@ export async function POST(req: NextRequest) {
             resolved_at: new Date().toISOString(),
           }).eq("pt_tournament_id", t.id).eq("market_type", "round_winner").eq("pt_match_id", match.id);
         }
-        if (topFragger) {
+        if (topFraggerTeam) {
           await acAdmin.from("bet_markets").update({
             status: "resolved",
-            result_pt_team_id: topFragger.team_id,
+            result_pt_team_id: topFraggerTeam.team_id,
             resolved_at: new Date().toISOString(),
           }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_fragger").eq("pt_match_id", match.id);
+        }
+        if (topPlayerId) {
+          await acAdmin.from("bet_markets").update({
+            status: "resolved",
+            result_pt_player_id: topPlayerId,   // ID del jugador individual ganador
+            resolved_at: new Date().toISOString(),
+          }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
         }
         log.actions.push(`resolved round ${match.match_number}`);
       }

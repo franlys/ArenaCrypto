@@ -9,10 +9,11 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 const MARKET_LABELS: Record<string, string> = {
   tournament_winner:    "Ganador del Torneo",
-  tournament_mvp:       "MVP / Top Fragger",
+  tournament_mvp:       "MVP / Top Fragger Torneo",
   round_winner:         "Ganador de Ronda",
-  round_top_fragger:    "Top Kills en Ronda",
+  round_top_fragger:    "Top Kills en Ronda (Equipo)",
   round_top_placement:  "Top Placement",
+  round_player_fragger: "Top Fragger Individual",
 };
 
 const STATUS_COLOR: Record<string, string> = {
