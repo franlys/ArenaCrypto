@@ -3,15 +3,16 @@
 import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { BarChart3, Calendar, ClipboardList, Wallet, LogOut } from "lucide-react";
+import { BarChart3, Calendar, ClipboardList, Wallet, TrendingUp, LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import styles from "./AdminSidebar.module.css";
 
 const ADMIN_NAV = [
-  { href: "/admin", label: "ECONOMÍA", icon: BarChart3 },
-  { href: "/admin/events", label: "EVENTOS", icon: Calendar },
-  { href: "/admin/disputes", label: "DISPUTAS", icon: ClipboardList },
-  { href: "/admin/withdrawals", label: "RETIROS", icon: Wallet },
+  { href: "/admin",             label: "ECONOMÍA", icon: BarChart3 },
+  { href: "/admin/markets",     label: "MERCADOS", icon: TrendingUp },
+  { href: "/admin/events",      label: "EVENTOS",  icon: Calendar },
+  { href: "/admin/disputes",    label: "DISPUTAS", icon: ClipboardList },
+  { href: "/admin/withdrawals", label: "RETIROS",  icon: Wallet },
 ];
 
 export function AdminSidebar() {
