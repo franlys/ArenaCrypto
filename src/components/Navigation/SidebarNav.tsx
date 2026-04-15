@@ -9,14 +9,11 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import styles from "./SidebarNav.module.css";
 
-import { useUser } from "../../contexts/UserContext";
-
 const EASE_OUT = [0.23, 1, 0.32, 1];
 
 export function SidebarNav() {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
-  const { isAdmin } = useUser();
 
   const navItems = [
     { href: "/dashboard", label: "HUB",     icon: "◈" },
@@ -26,9 +23,6 @@ export function SidebarNav() {
     { href: "/profile",   label: "PERFIL",  icon: "◉" },
   ];
 
-  if (isAdmin) {
-    navItems.push({ href: "/admin", label: "ADMIN", icon: "⚙" });
-  }
 
   return (
     <nav className={styles.nav}>
