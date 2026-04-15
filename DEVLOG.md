@@ -111,3 +111,51 @@
 ### Estado:
 - **Resuelto**: Integración de puente finalizada. Sistema de códigos centralizado en PT. Apuestas avanzadas operativas.
 - **Pendiente**: Configurar variables de entorno `NEXT_PUBLIC_PT_SUPABASE_URL` y `NEXT_PUBLIC_PT_SUPABASE_ANON_KEY` en producción.
+
+---
+
+## 2026-04-14 (sesión 4) — Admin exclusivo, perfil de usuario, fix autenticación
+
+### Actividad del día:
+
+#### Diagnóstico y fix de acceso admin
+- **Problema raíz**: El trigger `handle_new_user` no estaba activo cuando el usuario se registró → `public.profiles` no tenía la fila del admin.
+- **Diagnóstico**: `SELECT id FROM auth.users` reveló email con typo (`gonzlaez` vs `gonzalez`) que hacía fallar los INSERT previos.
+- **Fix DB**: INSERT directo en `public.profiles (id, username, role)` + INSERT en `public.wallets` con el email correcto `elmaestrogonzalez30@gmail.com`.
+- **Fix código**: `UserContext.tsx` línea 66 — `profile?.role === 'admin'` → `profile?.role?.toLowerCase() === 'admin'` para tolerar mayúsculas del valor en DB.
+
+#### Panel admin exclusivo — route group `(admin)`
+- **Problema**: `/admin` vivía dentro de `(app)`, heredando el layout de usuario (sidebar, ConnectButton, AdZone, footer). El admin veía doble sidebar y anuncios.
+- **Solución**: Nuevo route group `src/app/(admin)/` completamente independiente de `(app)`.
+  - `(admin)/layout.tsx` — provee `Web3Provider` + `UserProvider` + `AdminShell`.
+  - `(admin)/AdminShell.tsx` — guarda `isAdmin`, redirige a `/dashboard` si no es admin, renderiza solo `AdminSidebar` + `<main>`.
+  - `(admin)/admin-shell.module.css` — fondo `#04070f` con gradientes sutiles, sin elementos de usuario.
+- **Migración de páginas**: `(app)/admin/` eliminado. Páginas movidas a `(admin)/admin/` (mismas URLs `/admin`, `/admin/events`, `/admin/disputes`, `/admin/withdrawals`).
+- **Resultado**: Al entrar a `/admin` el admin ve únicamente el AdminSidebar (ADMINCORE) + contenido, sin ningún elemento del layout de usuario.
+
+#### Página de perfil de usuario
+- **`/profile/page.tsx`** creada: avatar con inicial, badges PREMIUM/ADMIN, stats grid (partidas/victorias/derrotas/ganado), saldo USDT, últimas 10 partidas con estado WIN/LOSS/EN CURSO.
+- **`/profile/profile.module.css`**: CSS module completo con responsive (2 columnas en mobile).
+- **Botón CERRAR SESIÓN**: `supabase.auth.signOut()` + `router.replace("/")`.
+- **Nav actualizado**: Item PERFIL agregado a `SidebarNav`.
+
+#### Branding GonzalezLabs
+- Pill con borde cyan y glow aplicado en 4 ubicaciones: footer del app layout, marketing nav, login page, SidebarNav footer.
+- Fix visual: opacidad aumentada (`rgba(255,255,255,0.45)` texto secundario, `#00F5FF` nombre principal con `text-shadow`).
+
+#### Fix precio Premium
+- `premium/page.tsx`: precio actualizado de **5 → 20 USDT**, label "PAGO ÚNICO".
+
+#### Infraestructura y deploy
+- `.gitignore` creado (faltaba, riesgo de seguridad crítico).
+- `.env.example` creado con los 8 vars requeridas documentadas.
+- `tsconfig.json`: eliminado `ignoreDeprecations: "6.0"` (inválido en TS 5.9).
+- Fix import roto en `submissions.ts`: `../services/ai-vision` → `@/lib/services/ai-vision`.
+- Repositorio creado en GitHub: `franlys/ArenaCrypto` y primer push realizado.
+- RPC `place_tournament_bet` — función PostgreSQL atómica que envuelve INSERT de apuesta + deducción de balance en una sola transacción con check de exclusividad.
+
+### Estado:
+- **Resuelto**: Admin exclusivo funcional, perfil de usuario, branding, precio premium, deploy en GitHub.
+- **Pendiente**: Configurar Supabase Site URL en producción (actualmente apunta a localhost → emails de confirmación redirigen mal).
+- **Pendiente**: Registrar dominio en cloud.reown.com (WalletConnect) con URL de Vercel.
+- **Pendiente**: Verificar env vars en Vercel para ambos proyectos (AC y PT).

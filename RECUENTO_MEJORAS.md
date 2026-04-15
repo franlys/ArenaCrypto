@@ -30,9 +30,21 @@
 - **2026-04-13**: Catálogo de 35 juegos en tabla `games` con categorías y emojis.
 - **2026-04-13**: Dashboard game selector carga de Supabase + pills de categoría + stake presets.
 
+- **2026-04-14**: Panel admin exclusivo — route group `(admin)` independiente de `(app)`, sin sidebar de usuario, sin anuncios.
+- **2026-04-14**: `AdminShell` — guarda `isAdmin`, redirige a `/dashboard` si no autorizado.
+- **2026-04-14**: Fix `UserContext` — comparación de rol normalizada con `.toLowerCase()`.
+- **2026-04-14**: Página `/profile` — avatar, badges, stats, historial de partidas, botón cerrar sesión.
+- **2026-04-14**: Branding GonzalezLabs — pill cyan con glow en 4 ubicaciones del UI.
+- **2026-04-14**: Precio Premium corregido 5 → 20 USDT.
+- **2026-04-14**: `.gitignore` creado — protección de secrets (`.env.local` excluido).
+- **2026-04-14**: `.env.example` documentado con las 8 variables requeridas.
+- **2026-04-14**: Primer push a `github.com/franlys/ArenaCrypto`.
+- **2026-04-14**: RPC `place_tournament_bet` — transacción atómica PostgreSQL (apuesta + balance en un solo bloque).
+- **2026-04-14**: Fix admin DB — INSERT directo en `profiles` + `wallets` para `elmaestrogonzalez30@gmail.com`.
+
 ## Mejoras Pendientes 🚀
-- Configurar 3 secrets: `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `NEXT_PUBLIC_ESCROW_ADDRESS`.
-- Ejecutar migraciones en Supabase SQL Editor: `20240428`, `20240429`, `20240430`.
-- WalletConnect dominio en cloud.reown.com al deployar a Vercel.
+- Supabase Site URL → cambiar a URL de Vercel en Authentication → URL Configuration (emails redirigen a localhost).
+- Registrar dominio en cloud.reown.com (WalletConnect) con la URL de Vercel de ArenaCrypto.
+- Verificar todas las env vars en Vercel dashboard (AC y PT).
 - Smart contract Polygon para escrow automatizado (actualmente escrow es wallet manual).
-- Auth flow: crear profile automáticamente al registrarse (trigger Supabase).
+- Trigger Supabase `handle_new_user` — crear profile automáticamente al registrarse nuevos usuarios.
