@@ -1,6 +1,7 @@
 import { tournamentDb } from '@/lib/supabase/tournament-db'
 import { Orbitron } from 'next/font/google'
 import Link from 'next/link'
+import AdZone from '@/components/Marketing/AdZone'
 
 const orbitron = Orbitron({ subsets: ['latin'] })
 
@@ -18,8 +19,11 @@ export default async function TournamentsPage() {
   }
 
   return (
-    <main style={{ minHeight: '100vh', padding: '2rem', background: 'hsl(var(--bg-primary))' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <main style={{ minHeight: '100vh', background: 'hsl(var(--bg-primary))' }}>
+      {/* Banner superior — solo a usuarios no-premium */}
+      <AdZone position="banner_top" />
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
           <div>
             <h1 className={`font-orbitron`} style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: 'hsl(var(--text-primary))' }}>
@@ -43,8 +47,14 @@ export default async function TournamentsPage() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {tournaments.map((t) => (
-              <TournamentCard key={t.id} tournament={t} />
+            {tournaments.map((t, i) => (
+              <>
+                <TournamentCard key={t.id} tournament={t} />
+                {/* Anuncio after card 3, then every 6 cards */}
+                {(i === 2 || (i > 2 && (i - 2) % 6 === 0)) && (
+                  <AdZone key={`ad-${i}`} position="between_tournaments" />
+                )}
+              </>
             ))}
           </div>
         )}
