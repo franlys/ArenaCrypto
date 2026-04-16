@@ -97,149 +97,90 @@
 
 ## 2026-04-14
 ### Actividad del día — Arquitectura de Puente y Exclusividad:
-- **Finalización de la Arquitectura de Puente (Bridge)**: Implementación de la conexión segura de lectura hacia Proyecto-Torneos para sincronizar torneos en tiempo real sin duplicación de datos.
-- **Sistema de Acceso Exclusivo (Gatekeeping)**:
-    - **Membresía Premium**: Actualizado el costo de activación de 5 USDT a **20 USDT** en la función RPC `upgrade_to_premium`.
-    - **Códigos de Streamers**: Creación de la tabla `streamer_codes` y lógica de desbloqueo. Los fans pueden usar códigos (ej: `ARENA2026`) para acceder gratis a las apuestas.
-    - **Persistencia de Desbloqueo**: Tabla `tournament_unlocks` para mantener el acceso de un usuario a un torneo específico tras usar un código.
-- **Apuestas Avanzadas (Winner vs MVP)**:
-    - **Tabs de Apuestas**: Refactorización de la UI de apuestas para permitir mercados múltiples.
-    - **MVP del Torneo**: Integración de apuestas por jugadores individuales (Top Fragger), extrayendo el roster de participantes directamente desde PT.
-    - **Payout Engine v2**: Actualizado el motor de pagos para resolver automáticamente apuestas por Ganador y MVP usando los standings y kills de la base de datos puente.
-- **Bridge Cleanup**: Eliminada la tabla local de `streamer_codes` en AC. Ahora AC lee los códigos directamente desde la DB de Proyecto-Torneos a través del puente, centralizando la gestión en el panel administrativo de PT.
-
-### Estado:
-- **Resuelto**: Integración de puente finalizada. Sistema de códigos centralizado en PT. Apuestas avanzadas operativas.
-- **Pendiente**: Configurar variables de entorno `NEXT_PUBLIC_PT_SUPABASE_URL` y `NEXT_PUBLIC_PT_SUPABASE_ANON_KEY` en producción.
+- **Finalización de la Arquitectura de Puente (Bridge)**: Implementación de la conexión segura de lectura hacia Proyecto-Torneos.
+- **Sistema de Acceso Exclusivo**: Membresía Premium 20 USDT, códigos de streamers, tabla `tournament_unlocks`.
+- **Apuestas Avanzadas**: Tabs Winner vs MVP, payout engine v2, roster de participantes desde PT.
+- **Bridge Cleanup**: Códigos centralizados en PT, AC lee via puente.
 
 ---
 
 ## 2026-04-14 (sesión 4) — Admin exclusivo, perfil de usuario, fix autenticación
 
 ### Actividad del día:
-
-#### Diagnóstico y fix de acceso admin
-- **Problema raíz**: El trigger `handle_new_user` no estaba activo cuando el usuario se registró → `public.profiles` no tenía la fila del admin.
-- **Diagnóstico**: `SELECT id FROM auth.users` reveló email con typo (`gonzlaez` vs `gonzalez`) que hacía fallar los INSERT previos.
-- **Fix DB**: INSERT directo en `public.profiles (id, username, role)` + INSERT en `public.wallets` con el email correcto.
-- **Fix código**: `UserContext.tsx` — `profile?.role === 'admin'` → `profile?.role?.toLowerCase() === 'admin'`.
-- **Redirect admin**: `AuthGuard` y login page redirigen admin → `/admin`, usuario → `/dashboard`.
-
-#### Panel admin exclusivo — route group `(admin)`
-- Nuevo route group `src/app/(admin)/` independiente de `(app)` — sin sidebar de usuario, sin anuncios, sin ConnectButton.
-- `AdminShell.tsx` — guarda `isAdmin`, redirige a `/dashboard` si no autorizado.
-- `AdminSidebar`: footer cambiado de "VOLVER AL HUB" → botón CERRAR SESIÓN (`supabase.auth.signOut()`).
-- Admin item eliminado del `SidebarNav` de usuarios.
-
-#### Página de perfil de usuario `/profile`
-- Avatar con inicial, badges PREMIUM/ADMIN, stats grid, saldo USDT, últimas 10 partidas WIN/LOSS/EN CURSO.
-- Botón CERRAR SESIÓN con `signOut()` + `router.replace("/")`.
-
-#### Infraestructura
-- `.gitignore`, `.env.example`, fix `tsconfig.json`, fix imports rotos.
-- Todas las env vars configuradas en Vercel (8 variables AC, 4 variables PT).
-- Dominio registrado en cloud.reown.com (WalletConnect).
-- Supabase Site URL actualizada a URL de Vercel en ambos proyectos.
+- Fix admin DB, route group `(admin)` independiente, `AdminShell`, página `/profile`, branding GonzalezLabs, precio Premium 20 USDT, `.gitignore`, `.env.example`, primer push a GitHub.
 
 ### Estado:
 - **Resuelto**: Admin exclusivo funcional, perfil de usuario, deploy en Vercel.
-- **Pendiente**: Trigger `handle_new_user` para nuevos registros automáticos.
 
 ---
 
 ## 2026-04-15 — Sistema de Mercados de Apuestas y Revenue Share Kronix
 
 ### Actividad del día:
-
-#### Análisis del modelo de ingresos
-- Definición del modelo: Kronix genera códigos → viewers apuestan en AC → AC paga comisión a Kronix.
-- Mapeo completo de datos disponibles en Kronix: torneos, partidas, submissions, standings, kills individuales.
-- Identificación de 5 tipos de mercado posibles con los datos existentes.
-
-#### Sistema de Mercados (`bet_markets`)
-- **`bet_markets`** — tabla que gestiona el ciclo de vida de cada mercado:
-  - Tipos: `tournament_winner`, `tournament_mvp`, `round_winner`, `round_top_fragger`, `round_top_placement`.
-  - Estados: `open → closed → resolved / canceled`.
-  - Tracking de volumen total y volumen Kronix por mercado.
-- Índices únicos para evitar mercados duplicados por torneo/ronda.
-
-#### Origin Tracking
-- `tournament_bets.origin_platform` — etiqueta cada apuesta como `'kronix'` o `'arena'`.
-- `tournament_bets.origin_code` — guarda el código literal usado.
-- `tournament_bets.market_id` — referencia al mercado específico.
-- `tournament_unlocks.origin_platform` — registra el origen al momento del unlock.
-- RPC `place_tournament_bet` actualizado: hereda el origen del unlock, valida que el mercado esté abierto, actualiza contadores de volumen atómicamente.
-
-#### Revenue Share
-- `kronix_revenue` — tabla de comisiones por torneo (1% del volumen Kronix).
-- `calculate_tournament_revenue()` — función PostgreSQL que calcula y hace upsert del reporte.
-- **Opción A (Webhook)**: `POST /api/markets/sync` — sincroniza mercados con Kronix, resuelve al completarse rondas/torneo, dispara webhook automático a Kronix.
-- **Opción B (Consulta)**: `GET /api/admin/revenue` — endpoint que Kronix consulta desde su panel con `x-ac-secret`.
-
-#### Integración Kronix (Proyecto-Torneos)
-- `revenue_reports` — tabla que recibe reportes de AC.
-- `POST /api/revenue-report` — endpoint receptor del webhook, valida `x-ac-secret`.
-
-#### Admin UI — Panel MERCADOS
-- Nueva sección MERCADOS en AdminSidebar.
-- Tab "MERCADOS": tabla de mercados activos con estado, volumen total, volumen Kronix.
-- Tab "REVENUE KRONIX": historial de comisiones con estado de webhook (pendiente/enviado).
-- Botón "SYNC KRONIX" para sincronización manual.
-- KPIs: mercados abiertos, volumen total, volumen Kronix, comisión pendiente.
-
-#### Variables de entorno nuevas
-- `AC_WEBHOOK_SECRET` — secreto compartido AC ↔ Kronix para autenticar webhooks.
-- `KRONIX_WEBHOOK_URL` — `https://proyecto-torneo-flcf.vercel.app`.
-
-### Estado:
-- **Resuelto**: Sistema completo de mercados, origin tracking y revenue share implementado.
-- **Pendiente**: Ejecutar 3 migraciones nuevas en Supabase (AC: `20240505000000`, `20240505000100` · PT: `20240505000000`).
-- **Pendiente**: Agregar `AC_WEBHOOK_SECRET` y `KRONIX_WEBHOOK_URL` en Vercel (ya documentado).
+- Sistema de mercados `bet_markets` (5 tipos, ciclo open/closed/resolved).
+- Origin tracking por apuesta (`'kronix'` / `'arena'`).
+- Revenue share: `kronix_revenue`, `calculate_tournament_revenue()`, comisión 1% volumen Kronix.
+- `POST /api/markets/sync` — sync + resolución + webhook automático.
+- Panel MERCADOS en admin con KPIs y botón SYNC.
 
 ---
 
-## 2026-04-14 (sesión 4) — Admin exclusivo, perfil de usuario, fix autenticación
+## 2026-04-16 — UX Apuestas, Anuncios, Tipos de Torneo, Retiros y EN VIVO
 
 ### Actividad del día:
 
-#### Diagnóstico y fix de acceso admin
-- **Problema raíz**: El trigger `handle_new_user` no estaba activo cuando el usuario se registró → `public.profiles` no tenía la fila del admin.
-- **Diagnóstico**: `SELECT id FROM auth.users` reveló email con typo (`gonzlaez` vs `gonzalez`) que hacía fallar los INSERT previos.
-- **Fix DB**: INSERT directo en `public.profiles (id, username, role)` + INSERT en `public.wallets` con el email correcto `elmaestrogonzalez30@gmail.com`.
-- **Fix código**: `UserContext.tsx` línea 66 — `profile?.role === 'admin'` → `profile?.role?.toLowerCase() === 'admin'` para tolerar mayúsculas del valor en DB.
+#### UX Mercados de Apuestas
+- **`BetForm` modo compacto**: Cada equipo/jugador es una fila expandible inline con montos rápidos ($5/$10/$25/$50) en lugar de tarjeta grande. Escala correctamente con 15+ equipos.
+- **`AdvancedBettingTabs` rediseñado**: Cada tipo de mercado es una sección colapsable (acordeón) con descripción y botón `i` que explica qué se está apostando.
+- **Botón `i` (info)**: Aparece en cada sección de mercado — oculto por defecto, muestra descripción al hacer clic. Aplica también a mercados de torneo (CAMPEÓN, MVP).
+- **Nombres clarificados**: GANADOR DE PARTIDA, EQUIPO MÁS LETAL, MEJOR POSICIONAMIENTO, JUGADOR MÁS LETAL, GANADOR DEL TORNEO, MVP DEL TORNEO.
 
-#### Panel admin exclusivo — route group `(admin)`
-- **Problema**: `/admin` vivía dentro de `(app)`, heredando el layout de usuario (sidebar, ConnectButton, AdZone, footer). El admin veía doble sidebar y anuncios.
-- **Solución**: Nuevo route group `src/app/(admin)/` completamente independiente de `(app)`.
-  - `(admin)/layout.tsx` — provee `Web3Provider` + `UserProvider` + `AdminShell`.
-  - `(admin)/AdminShell.tsx` — guarda `isAdmin`, redirige a `/dashboard` si no es admin, renderiza solo `AdminSidebar` + `<main>`.
-  - `(admin)/admin-shell.module.css` — fondo `#04070f` con gradientes sutiles, sin elementos de usuario.
-- **Migración de páginas**: `(app)/admin/` eliminado. Páginas movidas a `(admin)/admin/` (mismas URLs `/admin`, `/admin/events`, `/admin/disputes`, `/admin/withdrawals`).
-- **Resultado**: Al entrar a `/admin` el admin ve únicamente el AdminSidebar (ADMINCORE) + contenido, sin ningún elemento del layout de usuario.
+#### Sistema de Banners Publicitarios
+- **Migración `20240507000000_ads_system.sql`**: Tabla `ads` con posición, vigencia, toggle activo/inactivo. Bucket Storage `ads` público. RLS: lectura pública de activos, CRUD solo admin.
+- **Panel admin `/admin/ads`**: Listar, crear (con upload de imagen), activar/desactivar y eliminar anuncios. Upload directo a Supabase Storage.
+- **`AdZone` dinámico**: 4 layouts según posición (`banner_top`, `between_tournaments`, `sidebar`, `tournament_page`). Rotación automática cada 8s si hay varios anuncios. Oculto para usuarios Premium.
+- **Integrado en lobby de torneos**: Strip superior (`banner_top`) + tarjeta intercalada en el grid (`between_tournaments`, cada 3 torneos).
+- **ANUNCIOS agregado al `AdminSidebar`** con ícono `Megaphone`.
 
-#### Página de perfil de usuario
-- **`/profile/page.tsx`** creada: avatar con inicial, badges PREMIUM/ADMIN, stats grid (partidas/victorias/derrotas/ganado), saldo USDT, últimas 10 partidas con estado WIN/LOSS/EN CURSO.
-- **`/profile/profile.module.css`**: CSS module completo con responsive (2 columnas en mobile).
-- **Botón CERRAR SESIÓN**: `supabase.auth.signOut()` + `router.replace("/")`.
-- **Nav actualizado**: Item PERFIL agregado a `SidebarNav`.
+#### Adaptación por Tipo de Torneo
+- **Problema detectado**: `round_top_placement` no tiene sentido en un kill race (no hay mecánica de posicionamiento). El sync creaba los 4 mercados de ronda siempre.
+- **`ROUND_MARKETS_BY_TYPE`** en `sync/route.ts`: mapeo de tipo → mercados válidos.
+  - `kill_race`: solo `round_top_fragger` + `round_player_fragger`
+  - `battle_royale`: los 4 mercados
+  - `deathmatch`: 3 mercados (sin placement)
+  - `eliminacion_directa`: solo `round_winner`
+- **`resolveTournamentType()`**: normaliza `tournament_type` o `format` (enum de PT) al key del mapa.
+- **Resolución adaptada**: en kill_race el ganador se determina por `kill_count`, no por `rank === 1`.
+- **Comandos SQL para PT**: `tournament_type` TEXT, `rank` en submissions, `player_kills` JSONB, `is_warmup` en matches, políticas públicas de lectura.
+- **XVI COUP** marcado como `kill_race` en PT. Mercados inválidos (`round_winner`, `round_top_placement`) eliminados de AC.
 
-#### Branding GonzalezLabs
-- Pill con borde cyan y glow aplicado en 4 ubicaciones: footer del app layout, marketing nav, login page, SidebarNav footer.
-- Fix visual: opacidad aumentada (`rgba(255,255,255,0.45)` texto secundario, `#00F5FF` nombre principal con `text-shadow`).
+#### Panel de Retiros Mejorado
+- **Migración `20240508000000_withdrawal_paid_fields.sql`**: Columnas `paid_at`, `paid_by`, `notes` en `withdrawal_requests`.
+- **RPC `admin_complete_withdrawal`**: Admin marca retiro como completado + guarda TX hash de Polygon. Solo ejecutable por admins.
+- **RPC `admin_reject_withdrawal`**: Marca como fallido + devuelve saldo al usuario automáticamente. Solo ejecutable por admins.
+- **Panel rediseñado** con 4 pestañas (Pendientes / En proceso / Completados / Rechazados), resumen de USDC total por pagar, flujo paso a paso (copiar dirección → enviar en wallet → pegar TX hash → confirmar), link directo a Polygonscan.
 
-#### Fix precio Premium
-- `premium/page.tsx`: precio actualizado de **5 → 20 USDT**, label "PAGO ÚNICO".
-
-#### Infraestructura y deploy
-- `.gitignore` creado (faltaba, riesgo de seguridad crítico).
-- `.env.example` creado con los 8 vars requeridas documentadas.
-- `tsconfig.json`: eliminado `ignoreDeprecations: "6.0"` (inválido en TS 5.9).
-- Fix import roto en `submissions.ts`: `../services/ai-vision` → `@/lib/services/ai-vision`.
-- Repositorio creado en GitHub: `franlys/ArenaCrypto` y primer push realizado.
-- RPC `place_tournament_bet` — función PostgreSQL atómica que envuelve INSERT de apuesta + deducción de balance en una sola transacción con check de exclusividad.
+#### Indicador EN VIVO sincronizado con PT
+- **PT agrega `is_active BOOLEAN`** a la tabla `matches` — solo una partida activa por torneo a la vez.
+- **Sync actualizado**: al detectar `is_active = true` en una partida no completada, cierra sus mercados abiertos (ventana de apuestas cerrada).
+- **Página del torneo** fetcha el match activo desde PT y pasa `liveMatchIds` al componente.
+- **Tab de partida activa** muestra `🔴 PARTIDA N` en rojo en lugar de `⚔️ PARTIDA N` verde.
+- **Banner EN VIVO** dentro del tab con punto pulsante (`@keyframes pulse-dot`) y mensaje explicativo.
 
 ### Estado:
-- **Resuelto**: Admin exclusivo funcional, perfil de usuario, branding, precio premium, deploy en GitHub.
-- **Pendiente**: Configurar Supabase Site URL en producción (actualmente apunta a localhost → emails de confirmación redirigen mal).
-- **Pendiente**: Registrar dominio en cloud.reown.com (WalletConnect) con URL de Vercel.
-- **Pendiente**: Verificar env vars en Vercel para ambos proyectos (AC y PT).
+- **Resuelto**: UX apuestas escalable, anuncios dinámicos, adaptación por tipo de torneo, retiros con TX hash, indicador EN VIVO.
+- **Resuelto (sesión posterior)**: Migración `20240508000000` ejecutada en AC. 6 SQL de PT ejecutados en Kronix. Dominio autorizado en cloud.reown.com.
+
+---
+
+## 2026-04-16 (sesión 2) — Seguridad de sesión y cierre por inactividad
+
+### Actividad del día:
+- **Timeout de autenticación**: `getSession()` tiene ahora un cap de 6 segundos. Si Supabase no responde (token expirado, red lenta, sesión colgada), `loading` se fuerza a `false` y el usuario ve la pantalla de login en lugar de quedarse en "AUTENTICANDO…" indefinidamente.
+- **Cierre de sesión por inactividad**: `UserContext` ahora rastrea actividad del usuario (mouse, teclado, scroll, touch). Si pasan 30 minutos sin ninguna acción, se ejecuta `supabase.auth.signOut()` automáticamente. El timer se cancela al desloguearse y se reactiva al volver a autenticarse.
+- **Implementación limpia**: handler almacenado en `useRef` para mantener referencia estable entre renders. `ACTIVITY_EVENTS` const tipado. Sin stale closures.
+
+### Estado:
+- **Resuelto**: Sesión nunca se queda colgada. Inactividad >30min cierra sesión automáticamente.
+- **Pendiente**: Smart contract Polygon para escrow automatizado.
+- **Pendiente**: Trigger `handle_new_user` para profiles automáticos.

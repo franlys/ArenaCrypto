@@ -11,7 +11,11 @@ import styles from "./SidebarNav.module.css";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
 
-export function SidebarNav() {
+interface SidebarNavProps {
+  onItemClick?: () => void;
+}
+
+export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
 
@@ -62,7 +66,7 @@ export function SidebarNav() {
                 ease: EASE_OUT,
               }}
             >
-              <Link href={item.href} className={styles.link}>
+              <Link href={item.href} className={styles.link} onClick={onItemClick}>
                 {/* emilkowalski: layoutId floating pill — springs between items */}
                 {isActive && (
                   <motion.div

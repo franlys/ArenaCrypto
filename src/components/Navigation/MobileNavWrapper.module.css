@@ -1,0 +1,70 @@
+/* ── Hamburger button — hidden on desktop, visible on tablet/mobile ── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  /* emilkowalski: precise transition, scale on press */
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hamburger:hover {
+    border-color: rgba(0, 245, 255, 0.35);
+    background: rgba(0, 245, 255, 0.05);
+  }
+}
+
+.hamburger:active {
+  transform: scale(0.95);
+}
+
+.bar {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  transform-origin: center;
+}
+
+@media (max-width: 1024px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+/* ── Backdrop ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99;
+}
+
+/* ── Drawer ── */
+.drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 240px;
+  background: #0b0b0f;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 100;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 245, 255, 0.15) transparent;
+}

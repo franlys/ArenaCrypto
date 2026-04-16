@@ -51,8 +51,32 @@
 - **2026-04-15**: Panel MERCADOS en admin — tabla de mercados + tab revenue Kronix con estado de webhooks.
 - **2026-04-15**: `AC_WEBHOOK_SECRET` + `KRONIX_WEBHOOK_URL` configuradas en Vercel ambos proyectos.
 
+- **2026-04-16**: `BetForm` modo compacto — fila expandible inline con montos rápidos ($5/$10/$25/$50), reemplaza grid de 45 tarjetas.
+- **2026-04-16**: `AdvancedBettingTabs` rediseñado — mercados como acordeón colapsable con sección por tipo.
+- **2026-04-16**: Botón `i` (info) — muestra descripción del mercado al hacer clic; oculto por defecto.
+- **2026-04-16**: Nombres de mercados clarificados (GANADOR DE PARTIDA, EQUIPO MÁS LETAL, MEJOR POSICIONAMIENTO, etc.).
+- **2026-04-16**: `ROUND_MARKETS_BY_TYPE` — mapeo tipo de torneo → mercados válidos (kill_race, battle_royale, deathmatch, eliminacion_directa).
+- **2026-04-16**: `resolveTournamentType()` — normaliza `tournament_type` / `format` de PT al key del mapa.
+- **2026-04-16**: Sync adaptado — en kill_race el ganador se determina por `kill_count`, no por `rank === 1`.
+- **2026-04-16**: Indicador EN VIVO — PT agrega `is_active` a matches; sync cierra mercados cuando la partida inicia; UI muestra `🔴 PARTIDA N`.
+- **2026-04-16**: Banner EN VIVO dentro del tab con punto pulsante (`@keyframes pulse-dot`) y mensaje explicativo.
+- **2026-04-16**: Tabla `ads` — posición, vigencia, toggle activo/inactivo; migración `20240507000000_ads_system.sql`.
+- **2026-04-16**: Bucket Storage `ads` público con RLS — lectura pública de activos, CRUD solo admin.
+- **2026-04-16**: Panel admin `/admin/ads` — listar, crear con upload de imagen a Storage, activar/desactivar, eliminar.
+- **2026-04-16**: `AdZone` dinámico — 4 layouts (banner_top, between_tournaments, sidebar, tournament_page); oculto para Premium; rotación cada 8s.
+- **2026-04-16**: `AdZone` integrado en lobby de torneos — strip superior + tarjeta intercalada cada 3 torneos.
+- **2026-04-16**: ANUNCIOS agregado al `AdminSidebar` con ícono `Megaphone`.
+- **2026-04-16**: Columnas `paid_at`, `paid_by`, `notes` en `withdrawal_requests`; migración `20240508000000_withdrawal_paid_fields.sql`.
+- **2026-04-16**: RPC `admin_complete_withdrawal` — admin marca completado + guarda TX hash de Polygon.
+- **2026-04-16**: RPC `admin_reject_withdrawal` — marca fallido + devuelve saldo al usuario atómicamente.
+- **2026-04-16**: Panel de retiros rediseñado — 4 pestañas, flujo paso a paso, input TX hash, link Polygonscan.
+
+- **2026-04-16**: Migración `20240508000000_withdrawal_paid_fields.sql` ejecutada en Supabase AC ✅
+- **2026-04-16**: 6 SQL de PT ejecutados en Kronix (tournament_type, rank, player_kills, is_warmup, is_active, políticas) ✅
+- **2026-04-16**: Dominio `arena-crypto.vercel.app` autorizado en cloud.reown.com — WalletConnect projectId activo ✅
+- **2026-04-16**: Timeout de autenticación — `getSession()` capped a 6s, nunca se queda colgado en "AUTENTICANDO…".
+- **2026-04-16**: Cierre de sesión por inactividad — 30 min sin actividad hace `signOut()` automáticamente; timer se resetea con mouse/teclado/scroll/touch.
+
 ## Mejoras Pendientes 🚀
-- Ejecutar migraciones `20240505000000` y `20240505000100` en Supabase de ArenaCrypto.
-- Ejecutar migración `20240505000000` en Supabase de Proyecto-Torneos.
 - Smart contract Polygon para escrow automatizado (actualmente escrow es wallet manual).
 - Trigger `handle_new_user` — crear profile automáticamente al registrarse nuevos usuarios en AC.
