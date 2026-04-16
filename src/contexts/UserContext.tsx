@@ -40,12 +40,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Hard timeout: if Supabase doesn't respond in 3s, stop loading anyway
-    const timeout = setTimeout(() => setLoading(false), 3000);
+    let mounted = true;
 
+    // Read session from storage immediately — no lock issue with createBrowserClient singleton.
+    // This resolves loading fast even when the token needs a background refresh.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!mounted) return;
+      const currentUser = session?.user ?? null;
+      setUser(currentUser as User);
+      if (currentUser) await fetchProfile(currentUser.id);
+      setLoading(false);
+    });
+
+    // Keep listening for token refreshes, sign-in/out events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        clearTimeout(timeout);
+        if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser as User);
         if (currentUser) {
@@ -58,7 +68,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => {
-      clearTimeout(timeout);
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
