@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
 
   // Merge email from auth into profiles
-  const emailMap = new Map(authData.users.map(u => [u.id, u.email ?? ""]));
+  const emailMap = new Map(authData.users.map(u => [u.id, u.email ?? ""] as [string, string]));
 
   const users = (profiles ?? []).map((p: any) => ({
     id:               p.id,
