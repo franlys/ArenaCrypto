@@ -31,9 +31,14 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleSignOut = async () => {
+    if (signingOut) return;
     setSigningOut(true);
-    await supabase.auth.signOut();
-    router.replace("/");
+    try {
+      await supabase.auth.signOut();
+      // onAuthStateChange sets user=null → middleware redirects automatically
+    } catch {
+      setSigningOut(false);
+    }
   };
 
   const wins   = matches.filter((m) => m.winner_id === user?.id).length;

@@ -1,6 +1,6 @@
 // GET /api/admin/users
 // Lists all users with profile + wallet data for the admin panel.
-// Requires service role — never exposed to the client directly.
+// Auth: verifies the caller's JWT and confirms admin role.
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -10,13 +10,29 @@ const adminClient = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-function isAuthorized(req: NextRequest) {
-  const secret = req.headers.get("x-admin-secret");
-  return secret === process.env.SUPABASE_SERVICE_ROLE_KEY;
+async function getAdminUser(req: NextRequest) {
+  const auth = req.headers.get("Authorization") ?? "";
+  const token = auth.replace("Bearer ", "").trim();
+  if (!token) return null;
+
+  // Verify JWT and get the user
+  const { data: { user }, error } = await adminClient.auth.getUser(token);
+  if (error || !user) return null;
+
+  // Confirm admin role in profiles
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role?.toLowerCase() !== "admin") return null;
+  return user;
 }
 
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  const adminUser = await getAdminUser(req);
+  if (!adminUser) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

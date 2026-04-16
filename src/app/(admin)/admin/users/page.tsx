@@ -27,39 +27,22 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const res = await fetch("/api/admin/users", {
-      headers: { "x-admin-secret": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "" },
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/users", {
+        headers: { "Authorization": `Bearer ${session?.access_token ?? ""}` },
+      });
 
-    // API requires service role — call via server-side proxy pattern using anon+RLS
-    // Fallback: read profiles directly with admin session
-    if (!res.ok) {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, role, is_premium, is_test_user, balance, created_at, wallets(balance_stablecoin, test_balance)")
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        setUsers(data.map((p: any) => ({
-          id:           p.id,
-          email:        "",
-          username:     p.username,
-          role:         p.role,
-          is_premium:   p.is_premium,
-          is_test_user: p.is_test_user ?? false,
-          balance:      p.balance ?? 0,
-          balance_usdc: p.wallets?.balance_stablecoin ?? 0,
-          test_balance: p.wallets?.test_balance ?? 0,
-          created_at:   p.created_at,
-        })));
+      if (!res.ok) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    const { users: list } = await res.json();
-    setUsers(list ?? []);
-    setLoading(false);
+      const { users: list } = await res.json();
+      setUsers(list ?? []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchUsers(); }, []);
