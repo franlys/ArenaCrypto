@@ -150,7 +150,7 @@ export function AdvancedBettingTabs({
     })),
     ...roundNumbers.map(r => ({
       key: `round_${r}`,
-      label: `⚔️ RONDA ${r}`,
+      label: `⚔️ ENCUENTRO ${r}`,
       color: '#10b981',
       textColor: '#fff',
     })),
@@ -229,7 +229,7 @@ export function AdvancedBettingTabs({
       {roundNumbers.map(r => currentTab === `round_${r}` && (
         <div key={r}>
           <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'hsl(var(--text-muted))', marginBottom: '1.25rem', letterSpacing: '0.05em' }}>
-            Mercados de la Ronda {r} — apuesta antes de que comience.
+            Encuentro {r} — apuesta antes de que comience.
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {roundGroups[r].map(market => (

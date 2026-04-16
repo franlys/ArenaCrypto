@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
             pt_tournament_id: t.id,
             market_type:  mType,
             pt_match_id:  match.id,
-            round_number: match.round_number ?? match.match_number,
+            round_number: match.match_number,   // use match_number so each encounter gets its own tab
             status: "open",
           }).select().maybeSingle();
           // Unique index silently ignores duplicates
