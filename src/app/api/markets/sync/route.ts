@@ -62,79 +62,92 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 3. Fetch completed matches from Kronix for this tournament ──────────
-    const { data: completedMatches } = await ptAnon
+    // ── 3. Fetch ALL matches from Kronix for this tournament ──────────────
+    // BETTING HAPPENS BEFORE ROUNDS — open markets for pending matches,
+    // resolve markets for completed matches.
+    const { data: allMatches } = await ptAnon
       .from("matches")
-      .select("id, match_number, is_completed, completed_at")
+      .select("id, match_number, round_number, is_completed, completed_at")
       .eq("tournament_id", t.id)
-      .eq("is_completed", true);
+      .eq("is_warmup", false)
+      .order("match_number");
 
-    for (const match of completedMatches ?? []) {
-      // Open round markets if not yet open
-      const roundMarkets = [
-        "round_winner",
-        "round_top_fragger",
-        "round_top_placement",
-        "round_player_fragger",  // jugador individual con más kills en esta ronda
-      ];
-      for (const mType of roundMarkets) {
-        await acAdmin.from("bet_markets").insert({
-          pt_tournament_id: t.id,
-          market_type: mType,
-          pt_match_id: match.id,
-          round_number: match.match_number,
-          status: "closed", // Round is already done — create as closed
-          closed_at: match.completed_at,
-        }).select().maybeSingle();
-      }
+    const roundMarketTypes = [
+      "round_winner",
+      "round_top_fragger",
+      "round_top_placement",
+      "round_player_fragger",
+    ];
 
-      // Resolve round markets using Kronix submission data
-      const { data: submissions } = await ptAnon
-        .from("submissions")
-        .select("team_id, kill_count, rank, pot_top, player_kills, status")
-        .eq("match_id", match.id)
-        .eq("status", "approved");
+    for (const match of allMatches ?? []) {
+      if (!match.is_completed) {
+        // ── Pending match: create OPEN markets so viewers can bet before it starts
+        for (const mType of roundMarketTypes) {
+          await acAdmin.from("bet_markets").insert({
+            pt_tournament_id: t.id,
+            market_type:  mType,
+            pt_match_id:  match.id,
+            round_number: match.round_number ?? match.match_number,
+            status: "open",
+          }).select().maybeSingle();
+          // Unique index silently ignores duplicates
+        }
+        log.actions.push(`opened round markets: match ${match.match_number}`);
+      } else {
+        // ── Completed match: close open markets, then resolve with results
+        await acAdmin.from("bet_markets").update({
+          status: "closed",
+          closed_at: match.completed_at ?? new Date().toISOString(),
+        })
+          .eq("pt_tournament_id", t.id)
+          .eq("pt_match_id", match.id)
+          .eq("status", "open");
 
-      if (submissions && submissions.length > 0) {
-        // Winner = team with rank 1
-        const winner = submissions.find((s: any) => s.rank === 1);
-        // Top fragger (equipo) = equipo con mayor kill_count
-        const topFraggerTeam = submissions.reduce((best: any, s: any) =>
-          (s.kill_count > (best?.kill_count ?? -1) ? s : best), null
-        );
-        // Top fragger (jugador individual) = jugador con más kills en player_kills JSONB
-        const playerKillMap: Record<string, number> = {};
-        for (const s of submissions) {
-          const pk = (s.player_kills as Record<string, number>) ?? {};
-          for (const [pid, kills] of Object.entries(pk)) {
-            playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
+        // Resolve using Kronix submission data
+        const { data: submissions } = await ptAnon
+          .from("submissions")
+          .select("team_id, kill_count, rank, pot_top, player_kills, status")
+          .eq("match_id", match.id)
+          .eq("status", "approved");
+
+        if (submissions && submissions.length > 0) {
+          const winner         = submissions.find((s: any) => s.rank === 1);
+          const topFraggerTeam = submissions.reduce((best: any, s: any) =>
+            (s.kill_count > (best?.kill_count ?? -1) ? s : best), null
+          );
+          const playerKillMap: Record<string, number> = {};
+          for (const s of submissions) {
+            const pk = (s.player_kills as Record<string, number>) ?? {};
+            for (const [pid, kills] of Object.entries(pk)) {
+              playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
+            }
           }
-        }
-        const topPlayerId = Object.entries(playerKillMap)
-          .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+          const topPlayerId = Object.entries(playerKillMap)
+            .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
-        if (winner) {
-          await acAdmin.from("bet_markets").update({
-            status: "resolved",
-            result_pt_team_id: winner.team_id,
-            resolved_at: new Date().toISOString(),
-          }).eq("pt_tournament_id", t.id).eq("market_type", "round_winner").eq("pt_match_id", match.id);
+          if (winner) {
+            await acAdmin.from("bet_markets").update({
+              status: "resolved",
+              result_pt_team_id: winner.team_id,
+              resolved_at: new Date().toISOString(),
+            }).eq("pt_tournament_id", t.id).eq("market_type", "round_winner").eq("pt_match_id", match.id);
+          }
+          if (topFraggerTeam) {
+            await acAdmin.from("bet_markets").update({
+              status: "resolved",
+              result_pt_team_id: topFraggerTeam.team_id,
+              resolved_at: new Date().toISOString(),
+            }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_fragger").eq("pt_match_id", match.id);
+          }
+          if (topPlayerId) {
+            await acAdmin.from("bet_markets").update({
+              status: "resolved",
+              result_pt_player_id: topPlayerId,
+              resolved_at: new Date().toISOString(),
+            }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
+          }
+          log.actions.push(`resolved round ${match.match_number}`);
         }
-        if (topFraggerTeam) {
-          await acAdmin.from("bet_markets").update({
-            status: "resolved",
-            result_pt_team_id: topFraggerTeam.team_id,
-            resolved_at: new Date().toISOString(),
-          }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_fragger").eq("pt_match_id", match.id);
-        }
-        if (topPlayerId) {
-          await acAdmin.from("bet_markets").update({
-            status: "resolved",
-            result_pt_player_id: topPlayerId,   // ID del jugador individual ganador
-            resolved_at: new Date().toISOString(),
-          }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
-        }
-        log.actions.push(`resolved round ${match.match_number}`);
       }
     }
 
