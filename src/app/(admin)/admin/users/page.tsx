@@ -28,18 +28,23 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch("/api/admin/users", {
-        headers: { "Authorization": `Bearer ${session?.access_token ?? ""}` },
-      });
-
-      if (!res.ok) {
-        setLoading(false);
-        return;
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) {
+        console.error("[admin_list_users]", error.message);
+      } else {
+        setUsers((data ?? []).map((p: any) => ({
+          id:           p.id,
+          email:        p.email ?? "",
+          username:     p.username,
+          role:         p.role,
+          is_premium:   p.is_premium,
+          is_test_user: p.is_test_user ?? false,
+          balance:      p.balance ?? 0,
+          balance_usdc: p.balance_usdc ?? 0,
+          test_balance: p.test_balance ?? 0,
+          created_at:   p.created_at,
+        })));
       }
-
-      const { users: list } = await res.json();
-      setUsers(list ?? []);
     } finally {
       setLoading(false);
     }
