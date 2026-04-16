@@ -40,8 +40,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    // Hard timeout: if Supabase doesn't respond in 3s, stop loading anyway
+    const timeout = setTimeout(() => setLoading(false), 3000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        clearTimeout(timeout);
         const currentUser = session?.user ?? null;
         setUser(currentUser as User);
         if (currentUser) {
@@ -54,6 +58,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => {
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

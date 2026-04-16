@@ -25,7 +25,15 @@ export default function LoginPage() {
     router.replace(isAdmin ? "/admin" : "/dashboard");
   }, [user, loading, isAdmin, router]);
 
-  if (loading || user) return null;
+  if (user) return null; // redirect is handled by the useEffect above
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090b' }}>
+      <span className="font-orbitron" style={{ fontSize: '0.65rem', letterSpacing: '0.2em', color: '#00F5FF', opacity: 0.6 }}>
+        CARGANDO...
+      </span>
+    </div>
+  );
 
   return (
     <div className={styles.wrapper}>
