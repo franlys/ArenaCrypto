@@ -56,6 +56,13 @@ export default async function TournamentDetailPage({ params }: Props) {
     }
   }
 
+  // Fetch all open bet markets for this tournament from AC
+  const { data: betMarkets } = await supabase
+    .from('bet_markets')
+    .select('id, market_type, round_number, pt_match_id, status, total_volume, kronix_volume')
+    .eq('pt_tournament_id', tournament.id)
+    .order('opened_at')
+
   return (
     <main style={{ minHeight: '100vh', background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' }}>
       <div style={{ position: 'relative', height: '40vh', overflow: 'hidden' }}>
@@ -96,6 +103,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           isLoggedIn={!!user}
           isPremium={profile?.is_premium || false}
           isUnlocked={isUnlocked}
+          betMarkets={betMarkets || []}
         />
       </div>
     </main>
