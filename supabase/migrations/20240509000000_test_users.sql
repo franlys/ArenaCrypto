@@ -81,6 +81,8 @@ $$;
 GRANT EXECUTE ON FUNCTION public.admin_reset_test_balance TO authenticated;
 
 -- ── 5. Update place_tournament_bet: support test users ───────────────────────
+-- Drop first to allow changing signature/return type if needed
+DROP FUNCTION IF EXISTS public.place_tournament_bet(uuid, uuid, numeric, bet_target_type, uuid, text, uuid, text);
 -- Test users:
 --   - Skip exclusivity check (can always bet)
 --   - Use test_balance from wallets instead of profiles.balance
@@ -236,6 +238,7 @@ REVOKE ALL ON FUNCTION public.place_tournament_bet FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.place_tournament_bet TO authenticated;
 
 -- ── 6. Block withdrawals for test users ──────────────────────────────────────
+DROP FUNCTION IF EXISTS public.request_withdrawal(numeric, text);
 
 CREATE OR REPLACE FUNCTION public.request_withdrawal(
   p_amount     NUMERIC,
@@ -285,10 +288,21 @@ GRANT EXECUTE ON FUNCTION public.request_withdrawal TO authenticated;
 
 -- ── 7. RLS: admins can read all profiles for the users panel ─────────────────
 
-CREATE POLICY IF NOT EXISTS "Admins can read all profiles"
-ON public.profiles FOR SELECT
-TO authenticated
-USING (
-  (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
-  OR auth.uid() = id
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename  = 'profiles'
+      AND policyname = 'Admins can read all profiles'
+  ) THEN
+    CREATE POLICY "Admins can read all profiles"
+    ON public.profiles FOR SELECT
+    TO authenticated
+    USING (
+      (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
+      OR auth.uid() = id
+    );
+  END IF;
+END;
+$$;
