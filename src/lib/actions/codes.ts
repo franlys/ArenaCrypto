@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { tournamentDb } from '../supabase/tournament-db'
 import { revalidatePath } from 'next/cache'
 
@@ -27,8 +27,11 @@ export async function validateStreamerCode(tournamentId: string, code: string) {
     return { error: 'Código inválido o expirado' }
   }
 
-  // 3. Insert unlock record locally in ArenaCrypto
-  const { error: unlockErr } = await supabase
+  // 3. Use admin client to bypass RLS — the code was already validated above,
+  //    so we write the unlock record with service-role privileges.
+  const adminClient = await createAdminClient()
+
+  const { error: unlockErr } = await adminClient
     .from('tournament_unlocks')
     .insert({
       user_id:          user.id,
