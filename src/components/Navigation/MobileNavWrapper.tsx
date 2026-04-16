@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { SidebarNav } from "./SidebarNav";
@@ -8,18 +9,50 @@ import styles from "./MobileNavWrapper.module.css";
 
 export function MobileNavWrapper() {
   const [open, setOpen] = useState(false);
+  // Portal needs document — wait until mounted on client
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
 
+  useEffect(() => { setMounted(true); }, []);
+
   // Close drawer whenever the route changes
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+  useEffect(() => { setOpen(false); }, [pathname]);
 
   // Lock body scroll while drawer is open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+
+  // Backdrop-filter on .top-bar creates a stacking context that traps
+  // position:fixed children — portal to document.body to escape it.
+  const overlay = (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            key="backdrop"
+            className={styles.backdrop}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setOpen(false)}
+          />
+          <motion.div
+            key="drawer"
+            className={styles.drawer}
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", duration: 0.38, bounce: 0.08 }}
+          >
+            <SidebarNav onItemClick={() => setOpen(false)} />
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <>
@@ -46,31 +79,7 @@ export function MobileNavWrapper() {
         />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              key="backdrop"
-              className={styles.backdrop}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setOpen(false)}
-            />
-            <motion.div
-              key="drawer"
-              className={styles.drawer}
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", duration: 0.38, bounce: 0.08 }}
-            >
-              <SidebarNav onItemClick={() => setOpen(false)} />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {mounted && createPortal(overlay, document.body)}
     </>
   );
 }
