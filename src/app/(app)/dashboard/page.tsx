@@ -2,10 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import MatchmakingQueue from "@/components/Arena/MatchmakingQueue";
 import styles from "./dashboard.module.css";
+
+const ptClient = createClient(
+  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false } }
+);
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -36,8 +44,8 @@ export default function DashboardPage() {
   const [selectedGame, setGame]         = useState(FALLBACK_GAMES[0].slug);
   const [stake, setStake]               = useState(10);
   const [isSearching, setSearching]     = useState(false);
+  const [liveTournaments, setLiveT]     = useState<any[]>([]);
 
-  // Load games from DB
   useEffect(() => {
     supabase
       .from("games")
@@ -50,6 +58,16 @@ export default function DashboardPage() {
           setGame(data[0].slug);
         }
       });
+
+    ptClient
+      .from("tournaments")
+      .select("id, name, slug, status, arena_betting_status, arena_betting_enabled, total_live_viewers")
+      .eq("arena_betting_enabled", true)
+      .eq("arena_betting_status", "open")
+      .in("status", ["active", "draft"])
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => setLiveT(data ?? []));
   }, []);
 
   const visibleGames =
@@ -83,6 +101,41 @@ export default function DashboardPage() {
           </div>
         )}
       </motion.header>
+
+      {/* ── Live tournaments strip ── */}
+      {liveTournaments.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.05, ease: EASE_OUT }}
+          style={{ marginBottom: "1.5rem" }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981", display: "inline-block" }} />
+              <span className="font-orbitron" style={{ fontSize: "0.65rem", letterSpacing: "0.15em", color: "#10b981" }}>TORNEOS EN VIVO</span>
+            </div>
+            <Link href="/tournaments" className="font-orbitron" style={{ fontSize: "0.6rem", letterSpacing: "0.12em", color: "#00F5FF", textDecoration: "none" }}>
+              VER TODOS →
+            </Link>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "0.75rem" }}>
+            {liveTournaments.map((t) => (
+              <Link key={t.id} href={`/tournaments/${t.slug}`} style={{ textDecoration: "none" }}>
+                <div className="glass-panel" style={{ padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "border-color 150ms ease-out", cursor: "pointer" }}>
+                  <div>
+                    <div className="font-orbitron" style={{ fontSize: "0.78rem", color: "white", marginBottom: "4px" }}>{t.name}</div>
+                    <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontFamily: "Rajdhani, sans-serif" }}>
+                      {t.total_live_viewers ?? 0} viewers · Apuestas abiertas
+                    </div>
+                  </div>
+                  <span className="font-orbitron" style={{ fontSize: "0.6rem", color: "#00F5FF", letterSpacing: "0.1em" }}>APOSTAR →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       <div className={styles.grid}>
         {/* ── Left: Arena matchmaking ── */}
