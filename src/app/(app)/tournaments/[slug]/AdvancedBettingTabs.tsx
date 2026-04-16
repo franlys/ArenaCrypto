@@ -25,32 +25,289 @@ interface Props {
   betMarkets: BetMarket[]
 }
 
-const MARKET_LABELS: Record<string, string> = {
-  tournament_winner:    '🏆 GANADOR TORNEO',
-  tournament_mvp:       '🎖️ MVP TORNEO',
-  round_winner:         '⚔️ GANADOR RONDA',
-  round_top_fragger:    '💥 TOP KILLS (EQUIPO)',
-  round_top_placement:  '📍 TOP PLACEMENT',
-  round_player_fragger: '🎯 TOP FRAGGER',
+// ── Static metadata per market type ─────────────────────────────────────────
+
+const MARKET_META: Record<string, {
+  icon: string
+  label: string
+  description: string
+  color: string
+  accentRgb: string
+}> = {
+  tournament_winner: {
+    icon: '🏆',
+    label: 'GANADOR DEL TORNEO',
+    description: 'Apuesta al equipo que saldrá campeón al finalizar todos los encuentros. Solo se resuelve al terminar el torneo.',
+    color: '#00F5FF',
+    accentRgb: '0,245,255',
+  },
+  tournament_mvp: {
+    icon: '🎖️',
+    label: 'MVP DEL TORNEO',
+    description: 'El jugador con el mayor número de kills acumuladas en todos los encuentros del torneo.',
+    color: '#8b5cf6',
+    accentRgb: '139,92,246',
+  },
+  round_winner: {
+    icon: '🥇',
+    label: 'GANADOR DE PARTIDA',
+    description: 'El equipo que termine en 1° lugar (mejor posición/ranking) en este encuentro específico.',
+    color: '#10b981',
+    accentRgb: '16,185,129',
+  },
+  round_top_fragger: {
+    icon: '💥',
+    label: 'EQUIPO MÁS LETAL',
+    description: 'El equipo cuyos jugadores sumen la mayor cantidad de kills entre todos en este encuentro.',
+    color: '#f59e0b',
+    accentRgb: '245,158,11',
+  },
+  round_top_placement: {
+    icon: '📍',
+    label: 'MEJOR POSICIONAMIENTO',
+    description: 'El equipo que acumule más puntos por posición (zonas / sobrevivencia) en este encuentro.',
+    color: '#ec4899',
+    accentRgb: '236,72,153',
+  },
+  round_player_fragger: {
+    icon: '🎯',
+    label: 'JUGADOR MÁS LETAL',
+    description: 'El jugador individual con más kills en este encuentro, sin importar a qué equipo pertenece.',
+    color: '#f97316',
+    accentRgb: '249,115,22',
+  },
 }
 
 const TAB_BG: Record<string, string> = {
   tournament_winner:    '#00F5FF',
   tournament_mvp:       '#8b5cf6',
-  round_winner:         '#10b981',
-  round_top_fragger:    '#f59e0b',
-  round_top_placement:  '#ec4899',
-  round_player_fragger: '#f97316',
 }
 
 const TAB_COLOR: Record<string, string> = {
   tournament_winner:    '#000',
   tournament_mvp:       '#fff',
-  round_winner:         '#fff',
-  round_top_fragger:    '#000',
-  round_top_placement:  '#fff',
-  round_player_fragger: '#fff',
 }
+
+// ── Tournament-level market header (with info toggle) ───────────────────────
+
+function TournamentMarketSection({
+  meta, label, children,
+}: {
+  meta: { icon: string; label: string; description: string; color: string; accentRgb: string }
+  label: string
+  children: React.ReactNode
+}) {
+  const [showInfo, setInfo] = useState(false)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Header bar */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+        padding: '0.75rem 1rem', borderRadius: '10px',
+        background: `rgba(${meta.accentRgb},0.06)`,
+        border: `1px solid rgba(${meta.accentRgb},0.2)`,
+      }}>
+        <span style={{ fontSize: '1.1rem' }}>{meta.icon}</span>
+        <span className="font-orbitron" style={{ flex: 1, fontSize: '0.65rem', letterSpacing: '0.12em', color: meta.color }}>
+          {label}
+        </span>
+        {/* Info button */}
+        <button
+          onClick={() => setInfo(v => !v)}
+          title="¿Qué significa esta apuesta?"
+          style={{
+            width: '22px', height: '22px', borderRadius: '50%', cursor: 'pointer',
+            background: showInfo ? `rgba(${meta.accentRgb},0.25)` : 'rgba(255,255,255,0.07)',
+            border: `1px solid ${showInfo ? meta.color : 'rgba(255,255,255,0.12)'}`,
+            color: showInfo ? meta.color : 'hsl(var(--text-muted))',
+            fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: '0.7rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 150ms, border-color 150ms, color 150ms',
+          }}
+        >
+          i
+        </button>
+      </div>
+      {/* Description panel */}
+      {showInfo && (
+        <div style={{
+          padding: '0.6rem 0.85rem', borderRadius: '8px',
+          background: `rgba(${meta.accentRgb},0.07)`,
+          border: `1px solid rgba(${meta.accentRgb},0.2)`,
+        }}>
+          <p style={{
+            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem',
+            color: 'hsl(var(--text-primary))', lineHeight: 1.5, letterSpacing: '0.02em', margin: 0,
+          }}>
+            {meta.description}
+          </p>
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
+
+// ── CollapsibleMarket section ────────────────────────────────────────────────
+
+function MarketSection({
+  market, teams, participants, tournamentId, userBalance, isLoggedIn,
+}: {
+  market: BetMarket
+  teams: any[]
+  participants: any[]
+  tournamentId: string
+  userBalance: number
+  isLoggedIn: boolean
+}) {
+  const [open, setOpen]       = useState(true)
+  const [showInfo, setInfo]   = useState(false)
+  const meta = MARKET_META[market.market_type] ?? {
+    icon: '❓', label: market.market_type, description: '', color: '#00F5FF', accentRgb: '0,245,255',
+  }
+
+  const isTeamMarket   = ['round_winner', 'round_top_fragger', 'round_top_placement'].includes(market.market_type)
+  const isPlayerMarket = market.market_type === 'round_player_fragger'
+  const items          = isTeamMarket ? teams : (isPlayerMarket ? participants : [])
+
+  const betType: 'top_fragger_match' = 'top_fragger_match'
+
+  return (
+    <div style={{
+      border: `1px solid rgba(${meta.accentRgb},0.2)`,
+      borderRadius: '12px',
+      overflow: 'hidden',
+      background: 'rgba(0,0,0,0.2)',
+    }}>
+      {/* Section header */}
+      <div style={{
+        padding: '0.85rem 1rem',
+        display: 'flex', alignItems: 'center', gap: '0.75rem',
+      }}>
+        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{meta.icon}</span>
+
+        {/* Label + meta — clickable to collapse */}
+        <button
+          onClick={() => setOpen(v => !v)}
+          style={{
+            flex: 1, textAlign: 'left', cursor: 'pointer',
+            background: 'transparent', border: 'none', padding: 0,
+            display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap',
+            minWidth: 0,
+          }}
+        >
+          <span className="font-orbitron" style={{ fontSize: '0.65rem', letterSpacing: '0.12em', color: meta.color }}>
+            {meta.label}
+          </span>
+          <span style={{ fontSize: '0.6rem', fontFamily: 'Rajdhani, sans-serif', color: 'hsl(var(--text-muted))', letterSpacing: '0.05em' }}>
+            Vol: ${Number(market.total_volume).toFixed(2)} · {items.length} opciones
+          </span>
+          {market.status !== 'open' && (
+            <span style={{
+              fontSize: '0.55rem', fontFamily: 'Orbitron, sans-serif',
+              letterSpacing: '0.1em', color: '#f87171',
+              background: 'rgba(248,113,113,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px',
+            }}>
+              {market.status.toUpperCase()}
+            </span>
+          )}
+        </button>
+
+        {/* Info toggle */}
+        <button
+          onClick={e => { e.stopPropagation(); setInfo(v => !v) }}
+          title="¿Qué significa esta apuesta?"
+          style={{
+            flexShrink: 0, width: '22px', height: '22px', borderRadius: '50%',
+            background: showInfo ? `rgba(${meta.accentRgb},0.25)` : 'rgba(255,255,255,0.07)',
+            border: `1px solid ${showInfo ? meta.color : 'rgba(255,255,255,0.12)'}`,
+            color: showInfo ? meta.color : 'hsl(var(--text-muted))',
+            fontFamily: 'Rajdhani, sans-serif', fontWeight: 700, fontSize: '0.7rem',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 150ms, border-color 150ms, color 150ms',
+          }}
+        >
+          i
+        </button>
+
+        {/* Collapse arrow */}
+        <button
+          onClick={() => setOpen(v => !v)}
+          style={{
+            flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer',
+            padding: '0 0.25rem',
+            fontSize: '0.6rem', fontFamily: 'Orbitron, sans-serif', letterSpacing: '0.08em',
+            color: 'hsl(var(--text-muted))',
+            transition: 'transform 200ms', display: 'inline-block',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        >
+          ▼
+        </button>
+      </div>
+
+      {/* Info panel */}
+      {showInfo && (
+        <div style={{
+          margin: '0 1rem 0.75rem',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '8px',
+          background: `rgba(${meta.accentRgb},0.07)`,
+          border: `1px solid rgba(${meta.accentRgb},0.2)`,
+        }}>
+          <p style={{
+            fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem',
+            color: 'hsl(var(--text-primary))', lineHeight: 1.5, letterSpacing: '0.02em',
+            margin: 0,
+          }}>
+            {meta.description}
+          </p>
+        </div>
+      )}
+
+
+      {/* Items list */}
+      {open && (
+        <div style={{ borderTop: `1px solid rgba(${meta.accentRgb},0.15)` }}>
+          {market.status !== 'open' ? (
+            <div style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{
+                fontSize: '0.7rem', fontFamily: 'Orbitron, sans-serif',
+                color: 'hsl(var(--text-muted))', letterSpacing: '0.1em',
+              }}>
+                MERCADO CERRADO — ya no se aceptan apuestas
+              </span>
+            </div>
+          ) : items.length === 0 ? (
+            <div style={{ padding: '1rem', textAlign: 'center' }}>
+              <span style={{
+                fontSize: '0.75rem', fontFamily: 'Rajdhani, sans-serif',
+                color: 'hsl(var(--text-muted))',
+              }}>
+                Sin {isTeamMarket ? 'equipos' : 'jugadores'} registrados aún.
+              </span>
+            </div>
+          ) : (
+            items.map((item: any) => (
+              <BetForm
+                key={item.id}
+                team={isTeamMarket ? item : null}
+                player={isPlayerMarket ? item : undefined}
+                tournamentId={tournamentId}
+                userBalance={userBalance}
+                isLoggedIn={isLoggedIn}
+                type={betType}
+                compact
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 
 export function AdvancedBettingTabs({
   tournament, teams, participants, userBalance,
@@ -121,9 +378,8 @@ export function AdvancedBettingTabs({
     )
   }
 
-  // ── UNLOCKED — show all markets ──────────────────────────────────────────
+  // ── UNLOCKED ─────────────────────────────────────────────────────────────
 
-  // Split markets by level
   const tournamentMarkets = betMarkets.filter(m =>
     m.market_type === 'tournament_winner' || m.market_type === 'tournament_mvp'
   )
@@ -140,17 +396,18 @@ export function AdvancedBettingTabs({
   }
   const roundNumbers = Object.keys(roundGroups).map(Number).sort((a, b) => a - b)
 
-  // Available tabs = tournament markets + one tab per round
   const tabs: { key: string; label: string; color: string; textColor: string }[] = [
     ...tournamentMarkets.map(m => ({
       key: m.market_type,
-      label: MARKET_LABELS[m.market_type] ?? m.market_type,
+      label: MARKET_META[m.market_type]?.icon
+        ? `${MARKET_META[m.market_type].icon} ${m.market_type === 'tournament_winner' ? 'CAMPEÓN' : 'MVP'}`
+        : m.market_type,
       color: TAB_BG[m.market_type] ?? '#00F5FF',
       textColor: TAB_COLOR[m.market_type] ?? '#000',
     })),
     ...roundNumbers.map(r => ({
       key: `round_${r}`,
-      label: `⚔️ ENCUENTRO ${r}`,
+      label: `⚔️ PARTIDA ${r}`,
       color: '#10b981',
       textColor: '#fff',
     })),
@@ -161,7 +418,7 @@ export function AdvancedBettingTabs({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-      {/* Tab bar */}
+      {/* ── Tab bar ── */}
       {tabs.length > 0 ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', padding: '0.25rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: 'fit-content' }}>
           {tabs.map(t => (
@@ -194,77 +451,55 @@ export function AdvancedBettingTabs({
       )}
 
       {/* ── Tournament winner ── */}
-      {currentTab === 'tournament_winner' && (
-        <div>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'hsl(var(--text-muted))', marginBottom: '1rem', letterSpacing: '0.05em' }}>
-            Apuesta al equipo que ganará el torneo completo.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.25rem' }}>
-            {teams.length > 0 ? teams.map(team => (
-              <BetForm key={team.id} team={team} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="winner" />
-            )) : (
-              <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin equipos registrados aún.</p>
-            )}
-          </div>
-        </div>
-      )}
+      {currentTab === 'tournament_winner' && (() => {
+        const meta = MARKET_META.tournament_winner
+        return (
+          <TournamentMarketSection meta={meta} label={meta.label}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+              {teams.length > 0 ? teams.map(team => (
+                <BetForm key={team.id} team={team} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="winner" />
+              )) : (
+                <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin equipos registrados aún.</p>
+              )}
+            </div>
+          </TournamentMarketSection>
+        )
+      })()}
 
       {/* ── Tournament MVP ── */}
-      {currentTab === 'tournament_mvp' && (
-        <div>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'hsl(var(--text-muted))', marginBottom: '1rem', letterSpacing: '0.05em' }}>
-            Apuesta al jugador con más kills acumuladas en todo el torneo.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
-            {participants.length > 0 ? participants.map(player => (
-              <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="top_fragger_tournament" />
-            )) : (
-              <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin participantes registrados aún.</p>
-            )}
-          </div>
-        </div>
-      )}
+      {currentTab === 'tournament_mvp' && (() => {
+        const meta = MARKET_META.tournament_mvp
+        return (
+          <TournamentMarketSection meta={meta} label={meta.label}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
+              {participants.length > 0 ? participants.map(player => (
+                <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="top_fragger_tournament" />
+              )) : (
+                <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin participantes registrados aún.</p>
+              )}
+            </div>
+          </TournamentMarketSection>
+        )
+      })()}
 
       {/* ── Round markets ── */}
       {roundNumbers.map(r => currentTab === `round_${r}` && (
-        <div key={r}>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', color: 'hsl(var(--text-muted))', marginBottom: '1.25rem', letterSpacing: '0.05em' }}>
-            Encuentro {r} — apuesta antes de que comience.
+        <div key={r} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: 'hsl(var(--text-muted))', letterSpacing: '0.04em', lineHeight: 1.5 }}>
+            <span style={{ color: '#10b981', fontWeight: 600 }}>Partida {r}</span> — Elige en cuál mercado quieres apostar. Cada uno evalúa un aspecto distinto. Puedes apostar en todos si quieres.
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {roundGroups[r].map(market => (
-              <div key={market.id}>
-                <h4 className="font-orbitron" style={{ fontSize: '0.7rem', letterSpacing: '0.12em', color: '#10b981', marginBottom: '0.75rem' }}>
-                  {MARKET_LABELS[market.market_type] ?? market.market_type}
-                  <span style={{ marginLeft: '0.75rem', fontSize: '0.6rem', color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>
-                    Vol: ${Number(market.total_volume).toFixed(2)}
-                  </span>
-                </h4>
-                {market.status !== 'open' ? (
-                  <div className="glass-panel" style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{ fontSize: '0.7rem', fontFamily: 'Orbitron, sans-serif', color: 'hsl(var(--text-muted))', letterSpacing: '0.1em' }}>
-                      MERCADO {market.status.toUpperCase()} — no se aceptan más apuestas
-                    </span>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                    {/* round_winner / round_top_fragger → bet on teams */}
-                    {(market.market_type === 'round_winner' || market.market_type === 'round_top_fragger' || market.market_type === 'round_top_placement') &&
-                      teams.map(team => (
-                        <BetForm key={team.id} team={team} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="top_fragger_match" />
-                      ))
-                    }
-                    {/* round_player_fragger → bet on individual players */}
-                    {market.market_type === 'round_player_fragger' &&
-                      participants.map(player => (
-                        <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="top_fragger_match" />
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+
+          {roundGroups[r].map(market => (
+            <MarketSection
+              key={market.id}
+              market={market}
+              teams={teams}
+              participants={participants}
+              tournamentId={tournament.id}
+              userBalance={userBalance}
+              isLoggedIn={isLoggedIn}
+            />
+          ))}
         </div>
       ))}
 
