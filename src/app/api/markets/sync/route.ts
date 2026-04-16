@@ -21,6 +21,32 @@ const ptAnon = createClient(
   process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!
 );
 
+// ── Mercados válidos según el tipo de torneo ─────────────────────────────────
+// kill_race:         solo kills (no hay placement mecánico)
+// battle_royale:     kills + posición + jugador individual
+// deathmatch:        kills + ganador, sin placement
+// eliminacion_directa: solo ganador por partida
+// custom:            mínimo seguro (ganador + top fragger)
+
+const ROUND_MARKETS_BY_TYPE: Record<string, string[]> = {
+  kill_race:           ["round_top_fragger", "round_player_fragger"],
+  battle_royale:       ["round_winner", "round_top_fragger", "round_top_placement", "round_player_fragger"],
+  deathmatch:          ["round_winner", "round_top_fragger", "round_player_fragger"],
+  eliminacion_directa: ["round_winner"],
+  custom:              ["round_winner", "round_top_fragger"],
+};
+
+// Normaliza el campo format (enum de PT) o tournament_type al key del mapa
+function resolveTournamentType(t: any): string {
+  const raw = (t.tournament_type ?? t.format ?? "").toString().toLowerCase();
+  if (raw.includes("kill_race") || raw.includes("killrace")) return "kill_race";
+  if (raw.includes("battle_royale") || raw.includes("clasico"))  return "battle_royale";
+  if (raw.includes("deathmatch"))                                return "deathmatch";
+  if (raw.includes("eliminacion"))                               return "eliminacion_directa";
+  if (raw.includes("custom") || raw.includes("custom_rooms"))    return "custom";
+  return "battle_royale"; // fallback seguro
+}
+
 // Only allow calls with the service key or internal cron secret
 function isAuthorized(req: NextRequest) {
   const secret = req.headers.get("x-cron-secret");
@@ -37,7 +63,7 @@ export async function POST(req: NextRequest) {
   // ── 1. Fetch active betting-enabled tournaments from Kronix ──────────────
   const { data: tournaments, error: tErr } = await ptAnon
     .from("tournaments")
-    .select("id, name, status, arena_betting_enabled, arena_betting_status, start_date, end_date, total_matches, matches_completed")
+    .select("id, name, status, arena_betting_enabled, arena_betting_status, start_date, end_date, total_matches, matches_completed, tournament_type, format")
     .eq("arena_betting_enabled", true)
     .in("status", ["active", "finished"]);
 
@@ -72,12 +98,9 @@ export async function POST(req: NextRequest) {
       .eq("is_warmup", false)
       .order("match_number");
 
-    const roundMarketTypes = [
-      "round_winner",
-      "round_top_fragger",
-      "round_top_placement",
-      "round_player_fragger",
-    ];
+    const tournamentType  = resolveTournamentType(t);
+    const roundMarketTypes = ROUND_MARKETS_BY_TYPE[tournamentType] ?? ROUND_MARKETS_BY_TYPE.battle_royale;
+    log.actions.push(`tournament_type: ${tournamentType} → markets: [${roundMarketTypes.join(", ")}]`);
 
     for (const match of allMatches ?? []) {
       if (!match.is_completed) {
@@ -111,42 +134,66 @@ export async function POST(req: NextRequest) {
           .eq("status", "approved");
 
         if (submissions && submissions.length > 0) {
-          const winner         = submissions.find((s: any) => s.rank === 1);
-          const topFraggerTeam = submissions.reduce((best: any, s: any) =>
-            (s.kill_count > (best?.kill_count ?? -1) ? s : best), null
-          );
-          const playerKillMap: Record<string, number> = {};
-          for (const s of submissions) {
-            const pk = (s.player_kills as Record<string, number>) ?? {};
-            for (const [pid, kills] of Object.entries(pk)) {
-              playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
-            }
-          }
-          const topPlayerId = Object.entries(playerKillMap)
-            .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+          const resolvedAt = new Date().toISOString();
 
-          if (winner) {
+          // ── round_winner
+          // kill_race: ganador = equipo con más kill_count
+          // battle_royale / resto: ganador = rank === 1
+          const winner = tournamentType === "kill_race"
+            ? submissions.reduce((best: any, s: any) =>
+                (s.kill_count > (best?.kill_count ?? -1) ? s : best), null)
+            : submissions.find((s: any) => s.rank === 1);
+
+          if (winner && roundMarketTypes.includes("round_winner")) {
             await acAdmin.from("bet_markets").update({
-              status: "resolved",
-              result_pt_team_id: winner.team_id,
-              resolved_at: new Date().toISOString(),
+              status: "resolved", result_pt_team_id: winner.team_id, resolved_at: resolvedAt,
             }).eq("pt_tournament_id", t.id).eq("market_type", "round_winner").eq("pt_match_id", match.id);
           }
-          if (topFraggerTeam) {
+
+          // ── round_top_fragger (siempre por kill_count)
+          const topFraggerTeam = submissions.reduce((best: any, s: any) =>
+            (s.kill_count > (best?.kill_count ?? -1) ? s : best), null);
+
+          if (topFraggerTeam && roundMarketTypes.includes("round_top_fragger")) {
             await acAdmin.from("bet_markets").update({
-              status: "resolved",
-              result_pt_team_id: topFraggerTeam.team_id,
-              resolved_at: new Date().toISOString(),
+              status: "resolved", result_pt_team_id: topFraggerTeam.team_id, resolved_at: resolvedAt,
             }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_fragger").eq("pt_match_id", match.id);
           }
-          if (topPlayerId) {
-            await acAdmin.from("bet_markets").update({
-              status: "resolved",
-              result_pt_player_id: topPlayerId,
-              resolved_at: new Date().toISOString(),
-            }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
+
+          // ── round_top_placement (solo battle_royale: equipo con mejor rank / menor número)
+          if (roundMarketTypes.includes("round_top_placement")) {
+            const topPlacement = submissions
+              .filter((s: any) => s.rank != null)
+              .reduce((best: any, s: any) =>
+                (best == null || s.rank < best.rank ? s : best), null);
+
+            if (topPlacement) {
+              await acAdmin.from("bet_markets").update({
+                status: "resolved", result_pt_team_id: topPlacement.team_id, resolved_at: resolvedAt,
+              }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_placement").eq("pt_match_id", match.id);
+            }
           }
-          log.actions.push(`resolved round ${match.match_number}`);
+
+          // ── round_player_fragger (kills individuales del JSONB player_kills)
+          if (roundMarketTypes.includes("round_player_fragger")) {
+            const playerKillMap: Record<string, number> = {};
+            for (const s of submissions) {
+              const pk = (s.player_kills as Record<string, number>) ?? {};
+              for (const [pid, kills] of Object.entries(pk)) {
+                playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
+              }
+            }
+            const topPlayerId = Object.entries(playerKillMap)
+              .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+            if (topPlayerId) {
+              await acAdmin.from("bet_markets").update({
+                status: "resolved", result_pt_player_id: topPlayerId, resolved_at: resolvedAt,
+              }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
+            }
+          }
+
+          log.actions.push(`resolved round ${match.match_number} (type: ${tournamentType})`);
         }
       }
     }
