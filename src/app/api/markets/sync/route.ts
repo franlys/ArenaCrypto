@@ -60,12 +60,14 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, any>[] = [];
 
-  // ── 1. Fetch active betting-enabled tournaments from Kronix ──────────────
+  // ── 1. Fetch betting-enabled tournaments from Kronix ────────────────────
+  // Include "pending" so tournament_winner markets open BEFORE the event starts.
+  // Users bet on the champion before any match is played — closes when first match goes live.
   const { data: tournaments, error: tErr } = await ptAnon
     .from("tournaments")
     .select("id, name, status, arena_betting_enabled, arena_betting_status, start_date, end_date, total_matches, matches_completed, tournament_type, format")
     .eq("arena_betting_enabled", true)
-    .in("status", ["active", "finished"]);
+    .in("status", ["pending", "upcoming", "active", "finished"]);
 
   if (tErr) {
     return NextResponse.json({ error: tErr.message }, { status: 500 });
@@ -74,8 +76,11 @@ export async function POST(req: NextRequest) {
   for (const t of tournaments ?? []) {
     const log: Record<string, any> = { tournament_id: t.id, name: t.name, actions: [] };
 
-    // ── 2. Open tournament-level markets if they don't exist ────────────────
-    if (t.arena_betting_status === "open" && t.status === "active") {
+    // ── 2. Open tournament-level markets (BEFORE tournament starts) ──────────
+    // Opens as soon as arena_betting_enabled = true, regardless of whether the
+    // tournament is pending or already active — as long as no match has started yet.
+    // These markets close the moment the FIRST MATCH goes live (step 3.5 below).
+    if (t.arena_betting_status !== "closed" && t.status !== "finished") {
       const marketTypes = ["tournament_winner", "tournament_mvp"];
       for (const mType of marketTypes) {
         const { error } = await acAdmin
@@ -83,7 +88,7 @@ export async function POST(req: NextRequest) {
           .insert({ pt_tournament_id: t.id, market_type: mType, status: "open" })
           .select()
           .maybeSingle();
-        // Unique index will prevent duplicates silently
+        // Unique constraint silently ignores duplicates
         if (!error) log.actions.push(`opened market: ${mType}`);
       }
     }
@@ -213,20 +218,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 3.5 Auto-close tournament_winner/mvp when ≤2 matches remain ────────
-    // Purpose: it's unfair to let users bet on the champion when the outcome
-    // is almost certain (only 1-2 matches left). Close betting early.
-    const totalMatches     = (allMatches ?? []).filter((m: any) => !m.is_completed).length +
-                             (allMatches ?? []).filter((m: any) => m.is_completed).length;
-    const completedMatches = (allMatches ?? []).filter((m: any) => m.is_completed).length;
-    const remainingMatches = totalMatches - completedMatches;
-    const CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING = 2;
+    // ── 3.5 Close tournament_winner/mvp when the FIRST MATCH goes live ───────
+    // Betting on who wins the whole tournament is only valid BEFORE any match
+    // is played. The moment the first match is live (is_active=true) or the
+    // first match completes, we close these markets permanently.
+    // This mirrors how real sports books handle pre-tournament outrights.
+    const firstMatchIsLive    = (allMatches ?? []).some((m: any) => m.is_active && !m.is_completed);
+    const anyMatchIsCompleted = (allMatches ?? []).some((m: any) => m.is_completed);
 
-    if (
-      t.status === "active" &&
-      totalMatches > 0 &&
-      remainingMatches <= CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING
-    ) {
+    if (firstMatchIsLive || anyMatchIsCompleted) {
       const { data: closedTournamentMarkets } = await acAdmin
         .from("bet_markets")
         .update({ status: "closed", closed_at: new Date().toISOString() })
@@ -237,7 +237,9 @@ export async function POST(req: NextRequest) {
 
       if (closedTournamentMarkets && closedTournamentMarkets.length > 0) {
         log.actions.push(
-          `auto-closed tournament markets (${remainingMatches} partidas restantes ≤ ${CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING})`
+          firstMatchIsLive
+            ? "closed tournament markets (primera partida EN VIVO)"
+            : "closed tournament markets (ya hay partidas completadas)"
         );
       }
     }
