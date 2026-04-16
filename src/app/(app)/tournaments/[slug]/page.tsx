@@ -1,5 +1,6 @@
 import { tournamentDb } from '@/lib/supabase/tournament-db'
 import { createClient } from '@/lib/supabase/server'
+import { createClient as ptClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { AdvancedBettingTabs } from './AdvancedBettingTabs'
@@ -63,6 +64,22 @@ export default async function TournamentDetailPage({ params }: Props) {
     .eq('pt_tournament_id', tournament.id)
     .order('opened_at')
 
+  // Fetch active match from PT to show live indicator
+  const pt = ptClient(
+    process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } }
+  )
+  const { data: liveMatches } = await pt
+    .from('matches')
+    .select('id, match_number')
+    .eq('tournament_id', tournament.id)
+    .eq('is_active', true)
+    .eq('is_completed', false)
+    .eq('is_warmup', false)
+
+  const liveMatchIds = (liveMatches ?? []).map((m: any) => m.id as string)
+
   return (
     <main style={{ minHeight: '100vh', background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' }}>
       <div style={{ position: 'relative', height: '40vh', overflow: 'hidden' }}>
@@ -104,6 +121,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           isPremium={profile?.is_premium || false}
           isUnlocked={isUnlocked}
           betMarkets={betMarkets || []}
+          liveMatchIds={liveMatchIds}
         />
       </div>
     </main>

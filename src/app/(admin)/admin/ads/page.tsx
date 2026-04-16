@@ -326,13 +326,12 @@ export default function AdsAdminPage() {
                           onClick={() => toggleActive(ad)}
                           title={ad.is_active ? 'Desactivar' : 'Activar'}
                           style={{
-                            background: 'transparent', border: 'none', cursor: 'pointer',
+                            background: ad.is_active ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', cursor: 'pointer',
                             display: 'flex', alignItems: 'center', gap: '0.35rem',
                             fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem', letterSpacing: '0.08em',
                             color: ad.is_active ? '#10b981' : 'hsl(var(--text-muted))',
                             padding: '0.4rem 0.75rem',
                             borderRadius: '6px',
-                            background: ad.is_active ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)',
                             border: `1px solid ${ad.is_active ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`,
                             transition: 'all 150ms',
                           } as any}

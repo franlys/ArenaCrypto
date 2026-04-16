@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     // resolve markets for completed matches.
     const { data: allMatches } = await ptAnon
       .from("matches")
-      .select("id, match_number, round_number, is_completed, completed_at")
+      .select("id, match_number, round_number, is_completed, is_active, completed_at")
       .eq("tournament_id", t.id)
       .eq("is_warmup", false)
       .order("match_number");
@@ -103,7 +103,18 @@ export async function POST(req: NextRequest) {
     log.actions.push(`tournament_type: ${tournamentType} → markets: [${roundMarketTypes.join(", ")}]`);
 
     for (const match of allMatches ?? []) {
-      if (!match.is_completed) {
+      if (!match.is_completed && match.is_active) {
+        // ── Match EN VIVO: cerrar mercados abiertos (ventana de apuestas cerrada)
+        const { data } = await acAdmin
+          .from("bet_markets")
+          .update({ status: "closed", closed_at: new Date().toISOString() })
+          .eq("pt_tournament_id", t.id)
+          .eq("pt_match_id", match.id)
+          .eq("status", "open")
+          .select("id");
+        if (data && data.length > 0) log.actions.push(`closed markets (match ${match.match_number} is live)`);
+
+      } else if (!match.is_completed && !match.is_active) {
         // ── Pending match: create OPEN markets so viewers can bet before it starts
         for (const mType of roundMarketTypes) {
           await acAdmin.from("bet_markets").insert({

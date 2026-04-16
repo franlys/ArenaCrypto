@@ -43,7 +43,12 @@
       "Bash(cp -r '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/arena/[matchId]' '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/\\(app\\)/arena/')",
       "Bash(cp -r '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/arena/[matchId/]' '/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/src/app/\\(app\\)/arena/')",
       "Bash(xargs grep:*)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(node -e ' *)",
+      "Bash(cmd.exe /c \"node --version\")",
+      "Bash(cmd.exe /c \"where node\")",
+      "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/elmae/AppData/Roaming/npm\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

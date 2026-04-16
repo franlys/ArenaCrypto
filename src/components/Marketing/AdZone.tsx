@@ -17,7 +17,7 @@ interface Ad {
 type Position = 'banner_top' | 'between_tournaments' | 'sidebar' | 'tournament_page'
 
 interface AdZoneProps {
-  position: Position
+  position?: Position
   // Fallback para compatibilidad con el prop "slot" antiguo
   slot?: 'sidebar' | 'footer'
 }

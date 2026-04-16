@@ -23,6 +23,7 @@ interface Props {
   isPremium: boolean
   isUnlocked: boolean
   betMarkets: BetMarket[]
+  liveMatchIds?: string[]
 }
 
 // ── Static metadata per market type ─────────────────────────────────────────
@@ -311,7 +312,7 @@ function MarketSection({
 
 export function AdvancedBettingTabs({
   tournament, teams, participants, userBalance,
-  isLoggedIn, isPremium, isUnlocked, betMarkets,
+  isLoggedIn, isPremium, isUnlocked, betMarkets, liveMatchIds = [],
 }: Props) {
   const [code, setCode]           = useState('')
   const [isUnlocking, setUnlock]  = useState(false)
@@ -405,12 +406,17 @@ export function AdvancedBettingTabs({
       color: TAB_BG[m.market_type] ?? '#00F5FF',
       textColor: TAB_COLOR[m.market_type] ?? '#000',
     })),
-    ...roundNumbers.map(r => ({
-      key: `round_${r}`,
-      label: `⚔️ PARTIDA ${r}`,
-      color: '#10b981',
-      textColor: '#fff',
-    })),
+    ...roundNumbers.map(r => {
+      const matchIds = roundGroups[r].map(m => m.pt_match_id).filter(Boolean) as string[]
+      const isLive   = matchIds.some(id => liveMatchIds.includes(id))
+      return {
+        key: `round_${r}`,
+        label: isLive ? `🔴 PARTIDA ${r}` : `⚔️ PARTIDA ${r}`,
+        color: isLive ? '#f87171' : '#10b981',
+        textColor: '#fff',
+        isLive,
+      }
+    }),
   ]
 
   const currentTab = activeTab || tabs[0]?.key || ''
@@ -483,25 +489,59 @@ export function AdvancedBettingTabs({
       })()}
 
       {/* ── Round markets ── */}
-      {roundNumbers.map(r => currentTab === `round_${r}` && (
-        <div key={r} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: 'hsl(var(--text-muted))', letterSpacing: '0.04em', lineHeight: 1.5 }}>
-            <span style={{ color: '#10b981', fontWeight: 600 }}>Partida {r}</span> — Elige en cuál mercado quieres apostar. Cada uno evalúa un aspecto distinto. Puedes apostar en todos si quieres.
-          </p>
+      {roundNumbers.map(r => {
+        if (currentTab !== `round_${r}`) return null
+        const matchIds = roundGroups[r].map(m => m.pt_match_id).filter(Boolean) as string[]
+        const isLive   = matchIds.some(id => liveMatchIds.includes(id))
 
-          {roundGroups[r].map(market => (
-            <MarketSection
-              key={market.id}
-              market={market}
-              teams={teams}
-              participants={participants}
-              tournamentId={tournament.id}
-              userBalance={userBalance}
-              isLoggedIn={isLoggedIn}
-            />
-          ))}
-        </div>
-      ))}
+        return (
+          <div key={r} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+            {/* Live banner */}
+            {isLive && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.75rem 1rem', borderRadius: '10px',
+                background: 'rgba(248,113,113,0.08)',
+                border: '1px solid rgba(248,113,113,0.3)',
+              }}>
+                <span style={{
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  background: '#f87171', flexShrink: 0,
+                  boxShadow: '0 0 0 0 rgba(248,113,113,0.4)',
+                  animation: 'pulse-dot 1.5s infinite',
+                }} />
+                <div>
+                  <p className="font-orbitron" style={{ fontSize: '0.65rem', letterSpacing: '0.12em', color: '#f87171' }}>
+                    PARTIDA EN CURSO
+                  </p>
+                  <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'hsl(var(--text-muted))', marginTop: '0.15rem' }}>
+                    Las apuestas están cerradas mientras la partida está activa. Puedes seguirla en vivo en Kronix.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!isLive && (
+              <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.82rem', color: 'hsl(var(--text-muted))', letterSpacing: '0.04em', lineHeight: 1.5 }}>
+                <span style={{ color: '#10b981', fontWeight: 600 }}>Partida {r}</span> — Elige en cuál mercado quieres apostar. Cada uno evalúa un aspecto distinto. Puedes apostar en todos si quieres.
+              </p>
+            )}
+
+            {roundGroups[r].map(market => (
+              <MarketSection
+                key={market.id}
+                market={market}
+                teams={teams}
+                participants={participants}
+                tournamentId={tournament.id}
+                userBalance={userBalance}
+                isLoggedIn={isLoggedIn}
+              />
+            ))}
+          </div>
+        )
+      })}
 
     </div>
   )
