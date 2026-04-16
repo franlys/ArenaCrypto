@@ -1,18 +1,18 @@
 import type { ReactNode } from "react";
-import { Web3Provider } from "@/lib/web3/Web3Provider";
 import { UserProvider } from "@/contexts/UserContext";
 import MarketingNav from "./nav";
 import styles from "./marketing.module.css";
 
+// Web3Provider is NOT needed on marketing/login pages — it causes a Reown 403
+// on unauthenticated domains and freezes the page. WalletConnect is only needed
+// inside the (app) layout where users are already logged in.
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <Web3Provider>
-      <UserProvider>
-        <div className={styles.shell}>
-          <MarketingNav />
-          <main className={styles.main}>{children}</main>
-        </div>
-      </UserProvider>
-    </Web3Provider>
+    <UserProvider>
+      <div className={styles.shell}>
+        <MarketingNav />
+        <main className={styles.main}>{children}</main>
+      </div>
+    </UserProvider>
   );
 }

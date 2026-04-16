@@ -40,21 +40,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Garantiza que loading=false incluso si onAuthStateChange tarda
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser as User | null);
-      if (currentUser) {
-        fetchProfile(currentUser.id).finally(() => setLoading(false));
-      } else {
-        setLoading(false);
-      }
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const currentUser = session?.user ?? null;
-        setUser(currentUser as User | null);
+        setUser(currentUser as User);
         if (currentUser) {
           await fetchProfile(currentUser.id);
         } else {
