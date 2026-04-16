@@ -213,6 +213,35 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── 3.5 Auto-close tournament_winner/mvp when ≤2 matches remain ────────
+    // Purpose: it's unfair to let users bet on the champion when the outcome
+    // is almost certain (only 1-2 matches left). Close betting early.
+    const totalMatches     = (allMatches ?? []).filter((m: any) => !m.is_completed).length +
+                             (allMatches ?? []).filter((m: any) => m.is_completed).length;
+    const completedMatches = (allMatches ?? []).filter((m: any) => m.is_completed).length;
+    const remainingMatches = totalMatches - completedMatches;
+    const CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING = 2;
+
+    if (
+      t.status === "active" &&
+      totalMatches > 0 &&
+      remainingMatches <= CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING
+    ) {
+      const { data: closedTournamentMarkets } = await acAdmin
+        .from("bet_markets")
+        .update({ status: "closed", closed_at: new Date().toISOString() })
+        .eq("pt_tournament_id", t.id)
+        .in("market_type", ["tournament_winner", "tournament_mvp"])
+        .eq("status", "open")
+        .select("id");
+
+      if (closedTournamentMarkets && closedTournamentMarkets.length > 0) {
+        log.actions.push(
+          `auto-closed tournament markets (${remainingMatches} partidas restantes ≤ ${CLOSE_TOURNAMENT_MARKET_WHEN_REMAINING})`
+        );
+      }
+    }
+
     // ── 4. Tournament finished: resolve tournament-level markets + revenue ──
     if (t.status === "finished") {
       const { data: standings } = await ptAnon

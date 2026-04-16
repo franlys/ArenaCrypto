@@ -1,0 +1,329 @@
+.page {
+  padding: 2rem;
+  max-width: 900px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+  color: #fff;
+}
+
+.count {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+}
+
+.search {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 0.65rem 1rem;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  transition: border-color 150ms ease-out;
+}
+
+.search:focus {
+  outline: none;
+  border-color: rgba(0,245,255,0.4);
+}
+
+.search::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.loading {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.3);
+  padding: 2rem 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── User card ── */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+  transition: border-color 200ms ease-out;
+}
+
+.card:hover {
+  border-color: rgba(255,255,255,0.14);
+}
+
+.cardTest {
+  border-color: rgba(255,200,0,0.2);
+  background: rgba(255,200,0,0.03);
+}
+
+.cardTest:hover {
+  border-color: rgba(255,200,0,0.35);
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.userInfo {
+  flex: 1;
+}
+
+.username {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.3rem;
+}
+
+.email {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 0.2rem;
+}
+
+.joined {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.04em;
+}
+
+/* ── Badges ── */
+.testBadge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: rgba(255,200,0,0.15);
+  border: 1px solid rgba(255,200,0,0.4);
+  color: #ffc800;
+}
+
+.premiumBadge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: rgba(139,92,246,0.15);
+  border: 1px solid rgba(139,92,246,0.35);
+  color: #a78bfa;
+}
+
+.adminBadge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: rgba(0,245,255,0.1);
+  border: 1px solid rgba(0,245,255,0.3);
+  color: #00F5FF;
+}
+
+/* ── Balances ── */
+.balances {
+  display: flex;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.balanceItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.balLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+.balValue {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+}
+
+.testBalance .balValue {
+  color: #ffc800;
+}
+
+/* ── Actions ── */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.btnMakeTest {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.45rem 0.9rem;
+  border-radius: 5px;
+  background: rgba(255,200,0,0.1);
+  border: 1px solid rgba(255,200,0,0.3);
+  color: #ffc800;
+  cursor: pointer;
+  transition: background 150ms ease-out, border-color 150ms ease-out;
+}
+
+.btnMakeTest:hover {
+  background: rgba(255,200,0,0.18);
+  border-color: rgba(255,200,0,0.5);
+}
+
+.btnMakeTest:active { transform: scale(0.97); }
+
+.btnRemoveTest {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.45rem 0.9rem;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.btnRemoveTest:hover { background: rgba(255,255,255,0.08); }
+.btnRemoveTest:active { transform: scale(0.97); }
+
+.creditRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.creditInput {
+  width: 100px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,200,0,0.25);
+  border-radius: 5px;
+  padding: 0.4rem 0.6rem;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+}
+
+.creditInput:focus {
+  outline: none;
+  border-color: rgba(255,200,0,0.5);
+}
+
+.btnCredit {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.45rem 0.9rem;
+  border-radius: 5px;
+  background: rgba(255,200,0,0.12);
+  border: 1px solid rgba(255,200,0,0.35);
+  color: #ffc800;
+  cursor: pointer;
+  transition: background 150ms ease-out;
+}
+
+.btnCredit:hover { background: rgba(255,200,0,0.2); }
+.btnCredit:active { transform: scale(0.97); }
+.btnCredit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnReset {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  padding: 0.4rem 0.7rem;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.25);
+  color: rgba(255,80,80,0.6);
+  cursor: pointer;
+  transition: border-color 150ms ease-out, color 150ms ease-out;
+}
+
+.btnReset:hover {
+  border-color: rgba(255,80,80,0.5);
+  color: rgba(255,80,80,0.9);
+}
+
+.btnReset:active { transform: scale(0.97); }
+
+/* ── Flash message ── */
+.flash {
+  margin-top: 0.6rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  color: #00F5FF;
+  letter-spacing: 0.05em;
+}
+
+.empty {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.3);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .cardTop {
+    flex-direction: column;
+  }
+
+  .balances {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
