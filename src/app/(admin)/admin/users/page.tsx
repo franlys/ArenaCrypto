@@ -11,7 +11,6 @@ interface UserRow {
   role: string;
   is_premium: boolean;
   is_test_user: boolean;
-  balance: number;
   balance_usdc: number;
   test_balance: number;
   created_at: string;
@@ -39,7 +38,6 @@ export default function AdminUsersPage() {
           role:         p.role,
           is_premium:   p.is_premium,
           is_test_user: p.is_test_user ?? false,
-          balance:      p.balance ?? 0,
           balance_usdc: p.balance_usdc ?? 0,
           test_balance: p.test_balance ?? 0,
           created_at:   p.created_at,
@@ -141,11 +139,7 @@ export default function AdminUsersPage() {
 
                 <div className={styles.balances}>
                   <div className={styles.balanceItem}>
-                    <span className={styles.balLabel}>SALDO REAL</span>
-                    <span className={styles.balValue}>${user.balance.toFixed(2)}</span>
-                  </div>
-                  <div className={styles.balanceItem}>
-                    <span className={styles.balLabel}>USDC WALLET</span>
+                    <span className={styles.balLabel}>USDC</span>
                     <span className={styles.balValue}>${user.balance_usdc.toFixed(2)}</span>
                   </div>
                   {user.is_test_user && (
