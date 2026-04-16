@@ -40,7 +40,24 @@ export function AdvancedBettingTabs({
     setIsUnlocking(false)
   }
 
-  if (!isUnlocked && !isPremium && isLoggedIn) {
+  if (!isLoggedIn) {
+    return (
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 2rem', gap: '1.5rem', maxWidth: '480px', margin: '0 auto' }}>
+        <div style={{ fontSize: '2.5rem' }}>⚡</div>
+        <h2 className="font-orbitron" style={{ fontSize: '1.4rem', letterSpacing: '0.1em', textAlign: 'center' }}>
+          INICIA SESIÓN PARA <span className="neon-text-cyan">APOSTAR</span>
+        </h2>
+        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.9rem', color: 'hsl(var(--text-muted))', textAlign: 'center', lineHeight: 1.6 }}>
+          Crea una cuenta o inicia sesión para ingresar tu código de streamer y acceder a los mercados de apuestas.
+        </p>
+        <a href="/login" className="btn-primary" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', textDecoration: 'none', padding: '0.85rem 2rem' }}>
+          ENTRAR / REGISTRARSE
+        </a>
+      </div>
+    )
+  }
+
+  if (!isUnlocked && !isPremium) {
     return (
       <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 2rem', gap: '1.5rem', maxWidth: '480px', margin: '0 auto' }}>
         <div style={{ fontSize: '2.5rem' }}>🔒</div>
@@ -84,6 +101,7 @@ export function AdvancedBettingTabs({
     )
   }
 
+  // Unlocked or premium — show betting UI
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', padding: '0.25rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', width: 'fit-content' }}>
