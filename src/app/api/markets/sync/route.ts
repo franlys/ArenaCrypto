@@ -128,7 +128,9 @@ export async function POST(req: NextRequest) {
         }
         log.actions.push(`opened round markets: match ${match.match_number}`);
       } else {
-        // ── Completed match: close open markets, then resolve with results
+        // ── Completed match: close any remaining open markets, then resolve
+        // Markets may already be "closed" if the match went through is_active=true.
+        // We close any that are still "open" (safety net) then resolve all non-resolved.
         await acAdmin.from("bet_markets").update({
           status: "closed",
           closed_at: match.completed_at ?? new Date().toISOString(),
@@ -155,10 +157,18 @@ export async function POST(req: NextRequest) {
                 (s.kill_count > (best?.kill_count ?? -1) ? s : best), null)
             : submissions.find((s: any) => s.rank === 1);
 
+          // Helper: resolve a market that may be "closed" or (edge case) still "open"
+          const resolveMarket = (marketType: string, update: Record<string, unknown>) =>
+            acAdmin.from("bet_markets").update({
+              status: "resolved", resolved_at: resolvedAt, ...update,
+            })
+              .eq("pt_tournament_id", t.id)
+              .eq("market_type", marketType)
+              .eq("pt_match_id", match.id)
+              .in("status", ["open", "closed"]); // closed = went through is_active; open = edge case
+
           if (winner && roundMarketTypes.includes("round_winner")) {
-            await acAdmin.from("bet_markets").update({
-              status: "resolved", result_pt_team_id: winner.team_id, resolved_at: resolvedAt,
-            }).eq("pt_tournament_id", t.id).eq("market_type", "round_winner").eq("pt_match_id", match.id);
+            await resolveMarket("round_winner", { result_pt_team_id: winner.team_id });
           }
 
           // ── round_top_fragger (siempre por kill_count)
@@ -166,9 +176,7 @@ export async function POST(req: NextRequest) {
             (s.kill_count > (best?.kill_count ?? -1) ? s : best), null);
 
           if (topFraggerTeam && roundMarketTypes.includes("round_top_fragger")) {
-            await acAdmin.from("bet_markets").update({
-              status: "resolved", result_pt_team_id: topFraggerTeam.team_id, resolved_at: resolvedAt,
-            }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_fragger").eq("pt_match_id", match.id);
+            await resolveMarket("round_top_fragger", { result_pt_team_id: topFraggerTeam.team_id });
           }
 
           // ── round_top_placement (solo battle_royale: equipo con mejor rank / menor número)
@@ -179,9 +187,7 @@ export async function POST(req: NextRequest) {
                 (best == null || s.rank < best.rank ? s : best), null);
 
             if (topPlacement) {
-              await acAdmin.from("bet_markets").update({
-                status: "resolved", result_pt_team_id: topPlacement.team_id, resolved_at: resolvedAt,
-              }).eq("pt_tournament_id", t.id).eq("market_type", "round_top_placement").eq("pt_match_id", match.id);
+              await resolveMarket("round_top_placement", { result_pt_team_id: topPlacement.team_id });
             }
           }
 
@@ -198,9 +204,7 @@ export async function POST(req: NextRequest) {
               .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
             if (topPlayerId) {
-              await acAdmin.from("bet_markets").update({
-                status: "resolved", result_pt_player_id: topPlayerId, resolved_at: resolvedAt,
-              }).eq("pt_tournament_id", t.id).eq("market_type", "round_player_fragger").eq("pt_match_id", match.id);
+              await resolveMarket("round_player_fragger", { result_pt_player_id: topPlayerId });
             }
           }
 
@@ -276,8 +280,8 @@ export async function POST(req: NextRequest) {
 }
 
 async function sendKronixWebhook(revenue: any) {
-  const KRONIX_URL = process.env.NEXT_PUBLIC_PT_SUPABASE_URL?.replace(".supabase.co", ".vercel.app") ?? "";
-  const webhookUrl = `${process.env.KRONIX_WEBHOOK_URL ?? "https://arena-crypto.vercel.app"}/api/revenue-report`;
+  // KRONIX_WEBHOOK_URL must point to the PT deployment, e.g. https://proyecto-torneos.vercel.app
+  const webhookUrl = `${process.env.KRONIX_WEBHOOK_URL ?? "https://proyecto-torneos.vercel.app"}/api/revenue-report`;
 
   try {
     const res = await fetch(webhookUrl, {
