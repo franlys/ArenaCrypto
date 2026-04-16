@@ -107,9 +107,26 @@ export async function POST(req: NextRequest) {
     const roundMarketTypes = ROUND_MARKETS_BY_TYPE[tournamentType] ?? ROUND_MARKETS_BY_TYPE.battle_royale;
     log.actions.push(`tournament_type: ${tournamentType} → markets: [${roundMarketTypes.join(", ")}]`);
 
+    // ── 3.5 Close tournament-level markets when the FIRST match goes live ──────
+    // tournament_winner and tournament_mvp are for pre-tournament betting.
+    // Once any match starts (is_active=true), that window closes forever.
+    const hasLiveMatch = (allMatches ?? []).some(m => m.is_active && !m.is_completed);
+    if (hasLiveMatch) {
+      const { data: closedTournamentMarkets } = await acAdmin
+        .from("bet_markets")
+        .update({ status: "closed", closed_at: new Date().toISOString() })
+        .eq("pt_tournament_id", t.id)
+        .in("market_type", ["tournament_winner", "tournament_mvp"])
+        .eq("status", "open")
+        .select("id");
+      if (closedTournamentMarkets && closedTournamentMarkets.length > 0) {
+        log.actions.push(`closed tournament markets (first match is live)`);
+      }
+    }
+
     for (const match of allMatches ?? []) {
       if (!match.is_completed && match.is_active) {
-        // ── Match EN VIVO: cerrar mercados abiertos (ventana de apuestas cerrada)
+        // ── Match EN VIVO: cerrar mercados de ronda abiertos
         const { data } = await acAdmin
           .from("bet_markets")
           .update({ status: "closed", closed_at: new Date().toISOString() })
