@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Web3Provider } from "@/lib/web3/Web3Provider";
-import { UserProvider } from "@/contexts/UserContext";
 import { SidebarNav } from "@/components/Navigation/SidebarNav";
 import { MobileNavWrapper } from "@/components/Navigation/MobileNavWrapper";
 import AdZone from "@/components/Marketing/AdZone";
@@ -11,7 +10,6 @@ import AuthGuard from "./AuthGuard";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Web3Provider>
-      <UserProvider>
         <AuthGuard>
           <div className="app-grid">
             {/* Desktop sidebar — hidden on tablet/mobile via CSS */}
@@ -61,7 +59,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </footer>
           </div>
         </AuthGuard>
-      </UserProvider>
     </Web3Provider>
   );
 }

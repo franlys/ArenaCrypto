@@ -67,6 +67,17 @@
   background: rgba(245, 158, 11, 0.08);
 }
 
+.badgeTest {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.15em;
+  color: #ffc800;
+  border: 1px solid rgba(255, 200, 0, 0.35);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(255, 200, 0, 0.08);
+}
+
 .badgeAdmin {
   font-family: 'Orbitron', sans-serif;
   font-size: 0.55rem;

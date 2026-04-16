@@ -18,6 +18,7 @@ interface UserContextType {
   profile: any | null;
   isPremium: boolean;
   isAdmin: boolean;
+  isTestUser: boolean;
   loading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -27,6 +28,7 @@ const UserContext = createContext<UserContextType>({
   profile: null,
   isPremium: false,
   isAdmin: false,
+  isTestUser: false,
   loading: true,
   refreshProfile: async () => {},
 });
@@ -51,7 +53,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("*, wallets(balance_stablecoin)")
+        .select("*, wallets(balance_stablecoin, test_balance)")
         .eq("id", userId)
         .single();
       if (!error && data) setProfile(data);
@@ -127,8 +129,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const value = {
     user,
     profile,
-    isPremium: !!profile?.is_premium,
-    isAdmin:   profile?.role?.toLowerCase() === "admin",
+    isPremium:  !!profile?.is_premium,
+    isAdmin:    profile?.role?.toLowerCase() === "admin",
+    isTestUser: !!profile?.is_test_user,
     loading,
     refreshProfile: async () => {
       if (user) await fetchProfile(user.id);

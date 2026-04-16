@@ -10,7 +10,7 @@ import styles from "./profile.module.css";
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 export default function ProfilePage() {
-  const { user, profile, isPremium, isAdmin } = useUser();
+  const { user, profile, isPremium, isAdmin, isTestUser } = useUser();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
@@ -47,8 +47,9 @@ export default function ProfilePage() {
     .filter((m) => m.winner_id === user?.id)
     .reduce((acc, m) => acc + (m.stake_amount * 1.99 || 0), 0);
 
-  const username = profile?.username || user?.email?.split("@")[0] || "jugador";
-  const balance  = profile?.wallets?.balance_stablecoin ?? 0;
+  const username    = profile?.username || user?.email?.split("@")[0] || "jugador";
+  const balance     = profile?.wallets?.balance_stablecoin ?? 0;
+  const testBalance = profile?.wallets?.test_balance ?? 0;
 
   return (
     <div className={styles.page}>
@@ -66,8 +67,9 @@ export default function ProfilePage() {
           <h1 className={`font-orbitron ${styles.username}`}>{username.toUpperCase()}</h1>
           <p className={styles.email}>{user?.email}</p>
           <div className={styles.badges}>
-            {isPremium && <span className={styles.badgePremium}>✦ PREMIUM</span>}
-            {isAdmin  && <span className={styles.badgeAdmin}>⚙ ADMIN</span>}
+            {isPremium   && <span className={styles.badgePremium}>✦ PREMIUM</span>}
+            {isAdmin     && <span className={styles.badgeAdmin}>⚙ ADMIN</span>}
+            {isTestUser  && <span className={styles.badgeTest}>⚗ TEST</span>}
           </div>
         </div>
       </motion.div>
@@ -99,9 +101,10 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.14, ease: EASE_OUT }}
       >
-        <span className={styles.balanceLbl}>SALDO ARENA</span>
+        <span className={styles.balanceLbl}>{isTestUser ? "SALDO TEST" : "SALDO ARENA"}</span>
         <span className={`font-orbitron ${styles.balanceVal}`}>
-          {Number(balance).toFixed(2)} <span style={{ color: "hsl(var(--text-muted))", fontSize: "0.8em" }}>USDT</span>
+          {Number(isTestUser ? testBalance : balance).toFixed(2)}{" "}
+          <span style={{ color: "hsl(var(--text-muted))", fontSize: "0.8em" }}>USDT</span>
         </span>
       </motion.div>
 

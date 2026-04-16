@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { UserProvider } from "@/contexts/UserContext";
 import MarketingNav from "./nav";
 import styles from "./marketing.module.css";
 
@@ -8,11 +7,9 @@ import styles from "./marketing.module.css";
 // inside the (app) layout where users are already logged in.
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <UserProvider>
-      <div className={styles.shell}>
-        <MarketingNav />
-        <main className={styles.main}>{children}</main>
-      </div>
-    </UserProvider>
+    <div className={styles.shell}>
+      <MarketingNav />
+      <main className={styles.main}>{children}</main>
+    </div>
   );
 }
