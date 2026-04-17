@@ -47,10 +47,17 @@ function resolveTournamentType(t: any): string {
   return "battle_royale"; // fallback seguro
 }
 
-// Only allow calls with the service key or internal cron secret
+// Allow calls from:
+// - Vercel Cron: Authorization: Bearer <CRON_SECRET>
+// - Manual admin / webhook: x-cron-secret: <CRON_SECRET> or <SERVICE_ROLE_KEY>
 function isAuthorized(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  return secret === process.env.CRON_SECRET || secret === process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const xSecret = req.headers.get("x-cron-secret");
+  const bearer  = req.headers.get("authorization")?.replace("Bearer ", "");
+  const token   = xSecret ?? bearer ?? "";
+  return (
+    token === process.env.CRON_SECRET ||
+    token === process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 }
 
 export async function POST(req: NextRequest) {
