@@ -288,7 +288,8 @@ export async function POST(req: NextRequest) {
           result_pt_team_id: champion.team_id,
           closed_at: new Date().toISOString(),
           resolved_at: new Date().toISOString(),
-        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_winner").eq("status", "open");
+        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_winner")
+          .in("status", ["open", "closed"]);  // closed = ya pasó por is_active
 
         log.actions.push(`resolved tournament_winner → team ${champion.team_id}`);
       }
@@ -314,7 +315,9 @@ export async function POST(req: NextRequest) {
           result_pt_player_id: mvpId,
           closed_at: new Date().toISOString(),
           resolved_at: new Date().toISOString(),
-        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_mvp").eq("status", "open");
+        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_mvp")
+          .in("status", ["open", "closed"]);  // closed = ya pasó por is_active
+
         log.actions.push(`resolved tournament_mvp → player ${mvpId}`);
       }
 
