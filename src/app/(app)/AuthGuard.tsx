@@ -11,7 +11,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      router.replace("/login");
+      // Debounce the redirect — Supabase can briefly set user=null during token
+      // refresh (tab switch, focus regain). Without this, the app redirects to
+      // /login mid-session and looks broken.
+      const t = setTimeout(() => router.replace("/login"), 400);
+      return () => clearTimeout(t);
     }
   }, [user, loading, router]);
 

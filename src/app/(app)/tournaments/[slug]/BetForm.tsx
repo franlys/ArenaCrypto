@@ -13,11 +13,13 @@ interface BetFormProps {
   isLoggedIn: boolean
   type: 'winner' | 'top_fragger_tournament' | 'top_fragger_match'
   compact?: boolean
+  existingBet?: { amount: number } | null
+  marketLocked?: boolean
 }
 
 const QUICK_AMOUNTS = [5, 10, 25, 50]
 
-export function BetForm({ team, player, tournamentId, marketId, userBalance, isTestUser, isLoggedIn, type, compact }: BetFormProps) {
+export function BetForm({ team, player, tournamentId, marketId, userBalance, isTestUser, isLoggedIn, type, compact, existingBet, marketLocked }: BetFormProps) {
   const [amount, setAmount]     = useState(10)
   const [expanded, setExpanded] = useState(false)
   const [isLoading, setLoading] = useState(false)
@@ -43,6 +45,71 @@ export function BetForm({ team, player, tournamentId, marketId, userBalance, isT
     if ('error' in res) setMessage({ type: 'error', text: res.error })
     else { setMessage({ type: 'success', text: '¡Apuesta confirmada!' }); setExpanded(false) }
     setLoading(false)
+  }
+
+  // ── COMPACT ROW — already bet on this item ───────────────────────────────
+  if (compact && existingBet) {
+    return (
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          padding: '0.65rem 1rem',
+          background: 'rgba(16,185,129,0.04)',
+        }}>
+          <div style={{
+            width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+            background: 'rgba(16,185,129,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Orbitron, sans-serif', fontWeight: 700,
+            color: '#10b981', fontSize: '0.7rem',
+          }}>
+            {initial}
+          </div>
+          <span style={{
+            flex: 1, fontFamily: 'Rajdhani, sans-serif', fontWeight: 600,
+            fontSize: '0.9rem', letterSpacing: '0.04em',
+            color: '#10b981', textTransform: 'uppercase',
+          }}>
+            {label}
+          </span>
+          <span style={{ fontSize: '0.65rem', fontFamily: 'Orbitron, sans-serif', color: '#10b981', letterSpacing: '0.08em' }}>
+            ✓ APOSTADO ${existingBet.amount}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── COMPACT ROW — market taken by another selection ──────────────────────
+  if (compact && marketLocked) {
+    return (
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+          padding: '0.65rem 1rem', opacity: 0.35,
+        }}>
+          <div style={{
+            width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
+            background: 'rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Orbitron, sans-serif', fontWeight: 700,
+            color: 'hsl(var(--text-muted))', fontSize: '0.7rem',
+          }}>
+            {initial}
+          </div>
+          <span style={{
+            flex: 1, fontFamily: 'Rajdhani, sans-serif', fontWeight: 600,
+            fontSize: '0.9rem', letterSpacing: '0.04em',
+            color: 'hsl(var(--text-muted))', textTransform: 'uppercase',
+          }}>
+            {label}
+          </span>
+          <span style={{ fontSize: '0.6rem', fontFamily: 'Orbitron, sans-serif', letterSpacing: '0.1em', color: 'hsl(var(--text-muted))' }}>
+            NO DISPONIBLE
+          </span>
+        </div>
+      </div>
+    )
   }
 
   // ── COMPACT ROW MODE ────────────────────────────────────────────────────────
@@ -154,6 +221,80 @@ export function BetForm({ team, player, tournamentId, marketId, userBalance, isT
             )}
           </div>
         )}
+      </div>
+    )
+  }
+
+  // ── CARD MODE — already bet on this item ────────────────────────────────────
+  if (existingBet) {
+    return (
+      <div className="glass-panel" style={{
+        padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem',
+        border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0,
+            background: 'rgba(16,185,129,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Orbitron, sans-serif', fontWeight: 700,
+            color: '#10b981', fontSize: '1rem',
+          }}>
+            {initial}
+          </div>
+          <div>
+            <h4 style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '0.08em', color: '#10b981' }}>
+              {label}
+            </h4>
+            <p style={{ fontSize: '0.65rem', fontFamily: 'Rajdhani, sans-serif', color: 'hsl(var(--text-muted))', letterSpacing: '0.05em' }}>
+              {player ? 'JUGADOR' : 'EQUIPO'}
+            </p>
+          </div>
+        </div>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0.6rem', borderRadius: '8px',
+          background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)',
+        }}>
+          <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '0.12em', color: '#10b981' }}>
+            ✓ APOSTADO ${existingBet.amount} USDT
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // ── CARD MODE — market taken ──────────────────────────────────────────────
+  if (marketLocked) {
+    return (
+      <div className="glass-panel" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', opacity: 0.4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{
+            width: '44px', height: '44px', borderRadius: '10px', flexShrink: 0,
+            background: 'rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'Orbitron, sans-serif', fontWeight: 700,
+            color: 'hsl(var(--text-muted))', fontSize: '1rem',
+          }}>
+            {initial}
+          </div>
+          <div>
+            <h4 style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.75rem', letterSpacing: '0.08em', color: 'hsl(var(--text-primary))' }}>
+              {label}
+            </h4>
+            <p style={{ fontSize: '0.65rem', fontFamily: 'Rajdhani, sans-serif', color: 'hsl(var(--text-muted))', letterSpacing: '0.05em' }}>
+              {player ? 'JUGADOR' : 'EQUIPO'}
+            </p>
+          </div>
+        </div>
+        <div style={{
+          padding: '0.6rem', borderRadius: '8px', textAlign: 'center',
+          background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)',
+        }}>
+          <span style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'hsl(var(--text-muted))' }}>
+            NO DISPONIBLE
+          </span>
+        </div>
       </div>
     )
   }

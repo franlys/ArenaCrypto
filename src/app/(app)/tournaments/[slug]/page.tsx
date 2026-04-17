@@ -12,74 +12,90 @@ interface Props {
 }
 
 export default async function TournamentDetailPage({ params }: Props) {
-  const { data: tournament, error: tErr } = await tournamentDb
-    .from('tournaments')
-    .select('*')
-    .eq('slug', params.slug)
-    .single()
-
-  if (tErr || !tournament) return notFound()
-
-  const { data: teams } = await tournamentDb
-    .from('teams')
-    .select('*, participants(*)')
-    .eq('tournament_id', tournament.id)
-
-  const { data: participants } = await tournamentDb
-    .from('participants')
-    .select('id, display_name, team_id')
-    .eq('tournament_id', tournament.id)
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  let profile = null
-  let isUnlocked = false
-
-  if (user) {
-    const { data: p } = await supabase
-      .from('profiles')
-      .select('id, username, is_premium, is_test_user, wallets(balance_stablecoin, test_balance)')
-      .eq('id', user.id)
-      .single()
-    profile = p
-
-    // Test users bypass the exclusivity gate entirely
-    if (p?.is_premium || p?.is_test_user) {
-      isUnlocked = true
-    } else {
-      const { data: unlock } = await supabase
-        .from('tournament_unlocks')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('pt_tournament_id', tournament.id)
-        .single()
-      isUnlocked = !!unlock
-    }
-  }
-
-  // Fetch all open bet markets for this tournament from AC
-  const { data: betMarkets } = await supabase
-    .from('bet_markets')
-    .select('id, market_type, round_number, pt_match_id, status, total_volume, kronix_volume')
-    .eq('pt_tournament_id', tournament.id)
-    .order('opened_at')
-
-  // Fetch active match from PT to show live indicator
+  // PT client is synchronous — create it upfront
   const pt = ptClient(
     process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } }
   )
-  const { data: liveMatches } = await pt
-    .from('matches')
-    .select('id, match_number')
-    .eq('tournament_id', tournament.id)
-    .eq('is_active', true)
-    .eq('is_completed', false)
-    .eq('is_warmup', false)
+
+  // Phase 1: tournament + AC supabase client in parallel (completely independent)
+  const [{ data: tournament, error: tErr }, supabase] = await Promise.all([
+    tournamentDb.from('tournaments').select('*').eq('slug', params.slug).single(),
+    createClient(),
+  ])
+
+  if (tErr || !tournament) return notFound()
+
+  // Phase 2: everything that depends on tournament.id — all in parallel
+  const [
+    { data: teams },
+    { data: participants },
+    { data: betMarkets },
+    { data: liveMatches },
+    { data: { user } },
+  ] = await Promise.all([
+    tournamentDb
+      .from('teams')
+      .select('*, participants(*)')
+      .eq('tournament_id', tournament.id),
+    tournamentDb
+      .from('participants')
+      .select('id, display_name, team_id')
+      .eq('tournament_id', tournament.id),
+    supabase
+      .from('bet_markets')
+      .select('id, market_type, round_number, pt_match_id, status, total_volume, kronix_volume')
+      .eq('pt_tournament_id', tournament.id)
+      .order('opened_at'),
+    pt
+      .from('matches')
+      .select('id, match_number')
+      .eq('tournament_id', tournament.id)
+      .eq('is_active', true)
+      .eq('is_completed', false)
+      .eq('is_warmup', false),
+    supabase.auth.getUser(),
+  ])
 
   const liveMatchIds = (liveMatches ?? []).map((m: any) => m.id as string)
+
+  // Phase 3: user-specific queries — all in parallel (only if logged in)
+  let profile: any = null
+  let isUnlocked = false
+  let userBets: { market_id: string; pt_team_id: string | null; pt_target_id: string | null; amount: number; pt_target_name: string | null }[] = []
+
+  if (user) {
+    const [profileResult, unlockResult, betsResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, username, is_premium, is_test_user, wallets(balance_stablecoin, test_balance)')
+        .eq('id', user.id)
+        .single(),
+      supabase
+        .from('tournament_unlocks')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('pt_tournament_id', tournament.id)
+        .maybeSingle(),
+      supabase
+        .from('tournament_bets')
+        .select('market_id, pt_team_id, pt_target_id, amount, pt_target_name')
+        .eq('user_id', user.id)
+        .eq('pt_tournament_id', tournament.id),
+    ])
+
+    profile = profileResult.data
+
+    // Test users bypass the exclusivity gate entirely
+    if (profile?.is_premium || profile?.is_test_user) {
+      isUnlocked = true
+    } else {
+      isUnlocked = !!unlockResult.data
+    }
+
+    userBets = (betsResult.data ?? []).filter((b: any) => b.market_id)
+  }
 
   return (
     <main style={{ minHeight: '100vh', background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' }}>
@@ -128,6 +144,7 @@ export default async function TournamentDetailPage({ params }: Props) {
           isUnlocked={isUnlocked}
           betMarkets={betMarkets || []}
           liveMatchIds={liveMatchIds}
+          userBets={userBets}
         />
       </div>
     </main>

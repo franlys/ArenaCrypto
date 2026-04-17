@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 // If onAuthStateChange never fires (network failure), release the spinner after this
-const AUTH_LOADING_TIMEOUT_MS = 6_000;
+const AUTH_LOADING_TIMEOUT_MS = 12_000;
 // Sign out after 30 min of zero activity
 const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
 
@@ -84,7 +84,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         clearTimeout(loadingTimeout);
 
         const currentUser = session?.user ?? null;
-        setUser(currentUser as User);
+        setUser(currentUser as User | null);
+
+        // TOKEN_REFRESHED: the session is silently renewed in the background.
+        // The user object hasn't changed — skip re-fetching the profile to avoid
+        // a brief null flash that would trigger AuthGuard redirects.
+        if (event === 'TOKEN_REFRESHED') {
+          if (mounted) setLoading(false);
+          return;
+        }
 
         try {
           if (currentUser) {
@@ -120,8 +128,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     handler(); // start timer on login
     ACTIVITY_EVENTS.forEach(e => window.addEventListener(e, handler, { passive: true }));
 
+    // Reset inactivity timer when the user comes back to the tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handler();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
       ACTIVITY_EVENTS.forEach(e => window.removeEventListener(e, handler));
+      document.removeEventListener('visibilitychange', handleVisibility);
       if (inactivityTimer.current) {
         clearTimeout(inactivityTimer.current);
         inactivityTimer.current = null;

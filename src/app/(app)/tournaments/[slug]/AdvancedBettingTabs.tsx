@@ -14,6 +14,14 @@ interface BetMarket {
   kronix_volume: number
 }
 
+interface UserBet {
+  market_id: string
+  pt_team_id: string | null
+  pt_target_id: string | null
+  amount: number
+  pt_target_name: string | null
+}
+
 interface Props {
   tournament: any
   teams: any[]
@@ -25,6 +33,7 @@ interface Props {
   isUnlocked: boolean
   betMarkets: BetMarket[]
   liveMatchIds?: string[]
+  userBets?: UserBet[]
 }
 
 // ── Static metadata per market type ─────────────────────────────────────────
@@ -153,7 +162,7 @@ function TournamentMarketSection({
 // ── CollapsibleMarket section ────────────────────────────────────────────────
 
 function MarketSection({
-  market, teams, participants, tournamentId, userBalance, isTestUser, isLoggedIn,
+  market, teams, participants, tournamentId, userBalance, isTestUser, isLoggedIn, userBets = [],
 }: {
   market: BetMarket
   teams: any[]
@@ -162,6 +171,7 @@ function MarketSection({
   userBalance: number
   isTestUser: boolean
   isLoggedIn: boolean
+  userBets?: UserBet[]
 }) {
   const [open, setOpen]       = useState(true)
   const [showInfo, setInfo]   = useState(false)
@@ -291,20 +301,29 @@ function MarketSection({
               </span>
             </div>
           ) : (
-            items.map((item: any) => (
-              <BetForm
-                key={item.id}
-                team={isTeamMarket ? item : null}
-                player={isPlayerMarket ? item : undefined}
-                tournamentId={tournamentId}
-                marketId={market.id}
-                userBalance={userBalance}
-                isTestUser={isTestUser}
-                isLoggedIn={isLoggedIn}
-                type={betType}
-                compact
-              />
-            ))
+            (() => {
+              const betForMarket = userBets.find(b => b.market_id === market.id)
+              return items.map((item: any) => {
+                const existingBet = betForMarket?.pt_target_id === item.id ? { amount: betForMarket.amount } : null
+                const marketLocked = !!betForMarket && !existingBet
+                return (
+                  <BetForm
+                    key={item.id}
+                    team={isTeamMarket ? item : null}
+                    player={isPlayerMarket ? item : undefined}
+                    tournamentId={tournamentId}
+                    marketId={market.id}
+                    userBalance={userBalance}
+                    isTestUser={isTestUser}
+                    isLoggedIn={isLoggedIn}
+                    type={betType}
+                    compact
+                    existingBet={existingBet}
+                    marketLocked={marketLocked}
+                  />
+                )
+              })
+            })()
           )}
         </div>
       )}
@@ -316,7 +335,7 @@ function MarketSection({
 
 export function AdvancedBettingTabs({
   tournament, teams, participants, userBalance, isTestUser,
-  isLoggedIn, isPremium, isUnlocked, betMarkets, liveMatchIds = [],
+  isLoggedIn, isPremium, isUnlocked, betMarkets, liveMatchIds = [], userBets = [],
 }: Props) {
   const [code, setCode]           = useState('')
   const [isUnlocking, setUnlock]  = useState(false)
@@ -467,9 +486,14 @@ export function AdvancedBettingTabs({
         return (
           <TournamentMarketSection meta={meta} label={meta.label}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
-              {teams.length > 0 ? teams.map(team => (
-                <BetForm key={team.id} team={team} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="winner" />
-              )) : (
+              {teams.length > 0 ? (() => {
+                const betForMarket = userBets.find(b => b.market_id === market?.id)
+                return teams.map(team => {
+                  const existingBet = betForMarket?.pt_target_id === team.id ? { amount: betForMarket.amount } : null
+                  const marketLocked = !!betForMarket && !existingBet
+                  return <BetForm key={team.id} team={team} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="winner" existingBet={existingBet} marketLocked={marketLocked} />
+                })
+              })() : (
                 <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin equipos registrados aún.</p>
               )}
             </div>
@@ -484,9 +508,14 @@ export function AdvancedBettingTabs({
         return (
           <TournamentMarketSection meta={meta} label={meta.label}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
-              {participants.length > 0 ? participants.map(player => (
-                <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="top_fragger_tournament" />
-              )) : (
+              {participants.length > 0 ? (() => {
+                const betForMarket = userBets.find(b => b.market_id === market?.id)
+                return participants.map(player => {
+                  const existingBet = betForMarket?.pt_target_id === player.id ? { amount: betForMarket.amount } : null
+                  const marketLocked = !!betForMarket && !existingBet
+                  return <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="top_fragger_tournament" existingBet={existingBet} marketLocked={marketLocked} />
+                })
+              })() : (
                 <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin participantes registrados aún.</p>
               )}
             </div>
@@ -544,6 +573,7 @@ export function AdvancedBettingTabs({
                 userBalance={userBalance}
                 isTestUser={isTestUser}
                 isLoggedIn={isLoggedIn}
+                userBets={userBets}
               />
             ))}
           </div>
