@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@supabase/supabase-js";
 import styles from "../admin.module.css";
@@ -30,6 +30,9 @@ const BETTING_STATUS_COLOR: Record<string, string> = {
   paused: "#f59e0b",
 };
 
+// Player markets use pt_target_id = player.id; team markets use team.id
+const PLAYER_MARKETS = new Set(["tournament_mvp", "round_player_fragger"]);
+
 type Market = {
   id: string;
   pt_tournament_id: string;
@@ -40,6 +43,8 @@ type Market = {
   kronix_volume: number;
   opened_at: string;
   resolved_at: string | null;
+  result_pt_team_id: string | null;
+  result_pt_player_id: string | null;
 };
 
 type Revenue = {
@@ -62,7 +67,17 @@ type KronixTournament = {
   total_live_viewers: number;
 };
 
-// Client-side bridge client (uses NEXT_PUBLIC_ vars)
+type PtOption = { id: string; label: string };
+
+type ResolveState = {
+  market: Market;
+  options: PtOption[];
+  selectedId: string;
+  loading: boolean;
+  result: { won: number; lost: number; pool: string } | null;
+  error: string;
+};
+
 const ptClient = createClient(
   process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
@@ -70,16 +85,17 @@ const ptClient = createClient(
 );
 
 export default function MarketsPage() {
-  const [markets, setMarkets]             = useState<Market[]>([]);
-  const [revenue, setRevenue]             = useState<Revenue[]>([]);
-  const [kronixTournaments, setKronixT]   = useState<KronixTournament[]>([]);
-  const [syncing, setSyncing]             = useState(false);
-  const [loading, setLoading]             = useState(true);
-  const [tab, setTab]                     = useState<"kronix" | "markets" | "revenue">("kronix");
+  const [markets, setMarkets]         = useState<Market[]>([]);
+  const [revenue, setRevenue]         = useState<Revenue[]>([]);
+  const [kronixTournaments, setKronixT] = useState<KronixTournament[]>([]);
+  const [syncing, setSyncing]         = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [tab, setTab]                 = useState<"kronix" | "markets" | "revenue">("kronix");
+  const [resolveState, setResolve]    = useState<ResolveState | null>(null);
 
   const fetchData = async () => {
     const [{ data: m }, { data: r }, { data: kt }] = await Promise.all([
-      supabase.from("bet_markets").select("*").order("opened_at", { ascending: false }).limit(50),
+      supabase.from("bet_markets").select("*").order("opened_at", { ascending: false }).limit(100),
       supabase.from("kronix_revenue").select("*").order("period_end", { ascending: false }),
       ptClient
         .from("tournaments")
@@ -98,21 +114,75 @@ export default function MarketsPage() {
   const handleSync = async () => {
     setSyncing(true);
     try {
-      await fetch("/api/markets/sync", {
-        method: "POST",
-        headers: { "x-cron-secret": "" },
-      });
+      await fetch("/api/markets/sync", { method: "POST", headers: { "x-cron-secret": "" } });
       await fetchData();
     } finally {
       setSyncing(false);
     }
   };
 
-  const totalOpen          = markets.filter(m => m.status === "open").length;
-  const totalVolume        = markets.reduce((s, m) => s + Number(m.total_volume), 0);
-  const totalKronix        = markets.reduce((s, m) => s + Number(m.kronix_volume), 0);
-  const pendingCommission  = revenue.filter(r => r.status === "pending")
-                                    .reduce((s, r) => s + Number(r.commission_amount), 0);
+  // Open resolve modal: load teams or participants from PT
+  const openResolve = async (market: Market) => {
+    setResolve({ market, options: [], selectedId: "", loading: true, result: null, error: "" });
+
+    const isPlayer = PLAYER_MARKETS.has(market.market_type);
+    let options: PtOption[] = [];
+
+    if (isPlayer) {
+      const { data } = await ptClient
+        .from("participants")
+        .select("id, display_name")
+        .eq("tournament_id", market.pt_tournament_id);
+      options = (data ?? []).map((p: any) => ({ id: p.id, label: p.display_name ?? p.id }));
+    } else {
+      const { data } = await ptClient
+        .from("teams")
+        .select("id, name")
+        .eq("tournament_id", market.pt_tournament_id);
+      options = (data ?? []).map((t: any) => ({ id: t.id, label: t.name ?? t.id }));
+    }
+
+    setResolve(prev => prev ? { ...prev, options, loading: false } : null);
+  };
+
+  const handleResolve = async () => {
+    if (!resolveState || !resolveState.selectedId) return;
+    const { market, selectedId } = resolveState;
+    const isPlayer = PLAYER_MARKETS.has(market.market_type);
+
+    setResolve(prev => prev ? { ...prev, loading: true, error: "" } : null);
+
+    const { data, error } = await supabase.rpc("resolve_bet_market", {
+      p_market_id:             market.id,
+      p_result_pt_team_id:     isPlayer ? null : selectedId,
+      p_result_pt_player_id:   isPlayer ? selectedId : null,
+    });
+
+    if (error || data?.error) {
+      setResolve(prev => prev ? { ...prev, loading: false, error: error?.message ?? data?.error } : null);
+      return;
+    }
+
+    setResolve(prev => prev ? {
+      ...prev,
+      loading: false,
+      result: {
+        won:  data.won_count,
+        lost: data.lost_count,
+        pool: `$${Number(data.total_pool).toFixed(2)}`,
+      },
+    } : null);
+    await fetchData();
+  };
+
+  const totalOpen         = markets.filter(m => m.status === "open").length;
+  const totalVolume       = markets.reduce((s, m) => s + Number(m.total_volume), 0);
+  const totalKronix       = markets.reduce((s, m) => s + Number(m.kronix_volume), 0);
+  const pendingCommission = revenue.filter(r => r.status === "pending")
+                                   .reduce((s, r) => s + Number(r.commission_amount), 0);
+
+  const tournamentName = (ptId: string) =>
+    kronixTournaments.find(t => t.id === ptId)?.name ?? ptId.slice(0, 8) + "…";
 
   if (loading) return <p className={styles.loadingText}>CARGANDO MERCADOS...</p>;
 
@@ -141,9 +211,9 @@ export default function MarketsPage() {
       {/* KPI cards */}
       <div className={styles.statsGrid}>
         {[
-          { label: "Torneos Kronix",     value: kronixTournaments.length,         color: "#8b5cf6" },
-          { label: "Mercados Abiertos",  value: totalOpen,                        color: "#10b981" },
-          { label: "Volumen Total",      value: `$${totalVolume.toFixed(2)}`,     color: "#00F5FF" },
+          { label: "Torneos Kronix",     value: kronixTournaments.length,           color: "#8b5cf6" },
+          { label: "Mercados Abiertos",  value: totalOpen,                          color: "#10b981" },
+          { label: "Volumen Total",      value: `$${totalVolume.toFixed(2)}`,       color: "#00F5FF" },
           { label: "Comisión Pendiente", value: `$${pendingCommission.toFixed(2)}`, color: "#f59e0b" },
         ].map((k, i) => (
           <motion.div
@@ -157,9 +227,7 @@ export default function MarketsPage() {
             <div className={styles.glowBg} />
             <div style={{ position: "relative", zIndex: 1 }}>
               <span className={styles.statLabel}>{k.label}</span>
-              <div className={styles.statValue} style={{ color: k.color, fontSize: "1.6rem" }}>
-                {k.value}
-              </div>
+              <div className={styles.statValue} style={{ color: k.color, fontSize: "1.6rem" }}>{k.value}</div>
             </div>
           </motion.div>
         ))}
@@ -186,30 +254,16 @@ export default function MarketsPage() {
         ))}
       </div>
 
-      {/* Kronix Tournaments table */}
+      {/* Kronix Tournaments */}
       {tab === "kronix" && (
-        <motion.div
-          className="glass-panel"
-          style={{ overflow: "hidden" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ease: EASE_OUT }}
-        >
+        <motion.div className="glass-panel" style={{ overflow: "hidden" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ease: EASE_OUT }}>
           {kronixTournaments.length === 0 ? (
             <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "Rajdhani, sans-serif" }}>
               No hay torneos con arena_betting_enabled en Kronix todavía.
             </p>
           ) : (
             <table className={styles.withdrawalTable}>
-              <thead>
-                <tr>
-                  <th>TORNEO</th>
-                  <th>ESTADO</th>
-                  <th>APUESTAS</th>
-                  <th>VIEWERS</th>
-                  <th>MERCADOS AC</th>
-                </tr>
-              </thead>
+              <thead><tr><th>TORNEO</th><th>ESTADO</th><th>APUESTAS</th><th>VIEWERS</th><th>MERCADOS AC</th></tr></thead>
               <tbody>
                 {kronixTournaments.map(t => {
                   const tourMarkets = markets.filter(m => m.pt_tournament_id === t.id);
@@ -217,34 +271,20 @@ export default function MarketsPage() {
                   return (
                     <tr key={t.id}>
                       <td>
-                        <div style={{ fontFamily: "Orbitron, sans-serif", fontSize: "0.72rem", color: "white" }}>
-                          {t.name}
-                        </div>
-                        <div style={{ color: "var(--text-muted)", fontSize: "0.65rem", marginTop: "2px" }}>
-                          {t.slug}
-                        </div>
+                        <div style={{ fontFamily: "Orbitron, sans-serif", fontSize: "0.72rem", color: "white" }}>{t.name}</div>
+                        <div style={{ color: "var(--text-muted)", fontSize: "0.65rem", marginTop: "2px" }}>{t.slug}</div>
                       </td>
                       <td>
-                        <span className={styles.statusBadge} style={{
-                          background: t.status === "active" ? "rgba(16,185,129,0.1)" : "rgba(100,100,100,0.1)",
-                          border: `1px solid ${t.status === "active" ? "rgba(16,185,129,0.3)" : "rgba(100,100,100,0.2)"}`,
-                          color: t.status === "active" ? "#10b981" : "var(--text-muted)",
-                        }}>
+                        <span className={styles.statusBadge} style={{ background: t.status === "active" ? "rgba(16,185,129,0.1)" : "rgba(100,100,100,0.1)", border: `1px solid ${t.status === "active" ? "rgba(16,185,129,0.3)" : "rgba(100,100,100,0.2)"}`, color: t.status === "active" ? "#10b981" : "var(--text-muted)" }}>
                           {t.status.toUpperCase()}
                         </span>
                       </td>
                       <td>
-                        <span className={styles.statusBadge} style={{
-                          background: `${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}18`,
-                          border: `1px solid ${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}44`,
-                          color: BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888",
-                        }}>
+                        <span className={styles.statusBadge} style={{ background: `${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}18`, border: `1px solid ${BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888"}44`, color: BETTING_STATUS_COLOR[t.arena_betting_status] ?? "#888" }}>
                           {t.arena_betting_status.toUpperCase()}
                         </span>
                       </td>
-                      <td style={{ color: "var(--text-muted)" }}>
-                        {t.total_live_viewers ?? 0}
-                      </td>
+                      <td style={{ color: "var(--text-muted)" }}>{t.total_live_viewers ?? 0}</td>
                       <td>
                         {tourMarkets.length === 0 ? (
                           <span style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Sin sync</span>
@@ -261,20 +301,14 @@ export default function MarketsPage() {
             </table>
           )}
           <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", color: "var(--text-muted)", fontSize: "0.72rem" }}>
-            Para crear los mercados en AC presiona <strong style={{ color: "#00F5FF" }}>⟳ SYNC KRONIX</strong> — requiere que el torneo tenga <code>arena_betting_status = open</code>.
+            Para crear los mercados en AC presiona <strong style={{ color: "#00F5FF" }}>⟳ SYNC KRONIX</strong> — requiere <code>arena_betting_status = open</code>.
           </div>
         </motion.div>
       )}
 
-      {/* Markets table */}
+      {/* Markets table with RESOLVER button */}
       {tab === "markets" && (
-        <motion.div
-          className="glass-panel"
-          style={{ overflow: "hidden" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ease: EASE_OUT }}
-        >
+        <motion.div className="glass-panel" style={{ overflow: "hidden" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ease: EASE_OUT }}>
           {markets.length === 0 ? (
             <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "Rajdhani, sans-serif" }}>
               Sin mercados. Activa arena_betting_enabled en Kronix y presiona SYNC.
@@ -283,36 +317,50 @@ export default function MarketsPage() {
             <table className={styles.withdrawalTable}>
               <thead>
                 <tr>
+                  <th>TORNEO</th>
                   <th>TIPO</th>
                   <th>RONDA</th>
                   <th>ESTADO</th>
-                  <th>VOL. TOTAL</th>
-                  <th>VOL. KRONIX</th>
-                  <th>APERTURA</th>
+                  <th>VOL.</th>
+                  <th>RESULTADO</th>
+                  <th>ACCIÓN</th>
                 </tr>
               </thead>
               <tbody>
                 {markets.map(m => (
                   <tr key={m.id}>
-                    <td style={{ color: "white", fontFamily: "Orbitron, sans-serif", fontSize: "0.7rem" }}>
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.68rem" }}>
+                      {tournamentName(m.pt_tournament_id)}
+                    </td>
+                    <td style={{ color: "white", fontFamily: "Orbitron, sans-serif", fontSize: "0.68rem" }}>
                       {MARKET_LABELS[m.market_type] ?? m.market_type}
                     </td>
                     <td style={{ color: "var(--text-muted)" }}>
-                      {m.round_number ? `Ronda ${m.round_number}` : "—"}
+                      {m.round_number ? `R${m.round_number}` : "—"}
                     </td>
                     <td>
-                      <span className={styles.statusBadge} style={{
-                        background: `${STATUS_COLOR[m.status]}18`,
-                        border: `1px solid ${STATUS_COLOR[m.status]}44`,
-                        color: STATUS_COLOR[m.status],
-                      }}>
+                      <span className={styles.statusBadge} style={{ background: `${STATUS_COLOR[m.status]}18`, border: `1px solid ${STATUS_COLOR[m.status]}44`, color: STATUS_COLOR[m.status] }}>
                         {m.status.toUpperCase()}
                       </span>
                     </td>
                     <td style={{ color: "white", fontWeight: 700 }}>${Number(m.total_volume).toFixed(2)}</td>
-                    <td style={{ color: "#8b5cf6", fontWeight: 700 }}>${Number(m.kronix_volume).toFixed(2)}</td>
-                    <td style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
-                      {new Date(m.opened_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short" })}
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.68rem" }}>
+                      {m.status === "resolved"
+                        ? (m.result_pt_player_id ?? m.result_pt_team_id)?.slice(0, 8) + "…"
+                        : "—"}
+                    </td>
+                    <td>
+                      {m.status !== "resolved" && m.status !== "canceled" ? (
+                        <button
+                          onClick={() => openResolve(m)}
+                          className={styles.btnResolve}
+                          style={{ padding: "0.3rem 0.75rem", fontSize: "0.6rem" }}
+                        >
+                          RESOLVER
+                        </button>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)", fontSize: "0.68rem" }}>—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -324,29 +372,14 @@ export default function MarketsPage() {
 
       {/* Revenue table */}
       {tab === "revenue" && (
-        <motion.div
-          className="glass-panel"
-          style={{ overflow: "hidden" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ease: EASE_OUT }}
-        >
+        <motion.div className="glass-panel" style={{ overflow: "hidden" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ease: EASE_OUT }}>
           {revenue.length === 0 ? (
             <p style={{ padding: "2rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "Rajdhani, sans-serif" }}>
-              Sin reportes de revenue aún. Se generan al finalizar torneos.
+              Sin reportes de revenue aún.
             </p>
           ) : (
             <table className={styles.withdrawalTable}>
-              <thead>
-                <tr>
-                  <th>TORNEO</th>
-                  <th>VOL. TOTAL</th>
-                  <th>VOL. KRONIX</th>
-                  <th>COMISIÓN (1%)</th>
-                  <th>ESTADO</th>
-                  <th>WEBHOOK</th>
-                </tr>
-              </thead>
+              <thead><tr><th>TORNEO</th><th>VOL. TOTAL</th><th>VOL. KRONIX</th><th>COMISIÓN (1%)</th><th>ESTADO</th><th>WEBHOOK</th></tr></thead>
               <tbody>
                 {revenue.map(r => (
                   <tr key={r.pt_tournament_id}>
@@ -357,18 +390,12 @@ export default function MarketsPage() {
                     <td style={{ color: "#8b5cf6", fontWeight: 700 }}>${Number(r.kronix_volume).toFixed(2)}</td>
                     <td style={{ color: "#f59e0b", fontWeight: 700 }}>${Number(r.commission_amount).toFixed(2)}</td>
                     <td>
-                      <span className={styles.statusBadge} style={{
-                        background: r.status === "sent" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
-                        border: `1px solid ${r.status === "sent" ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
-                        color: r.status === "sent" ? "#10b981" : "#f59e0b",
-                      }}>
+                      <span className={styles.statusBadge} style={{ background: r.status === "sent" ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)", border: `1px solid ${r.status === "sent" ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`, color: r.status === "sent" ? "#10b981" : "#f59e0b" }}>
                         {r.status.toUpperCase()}
                       </span>
                     </td>
                     <td style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
-                      {r.webhook_sent_at
-                        ? new Date(r.webhook_sent_at).toLocaleDateString("es-ES")
-                        : "—"}
+                      {r.webhook_sent_at ? new Date(r.webhook_sent_at).toLocaleDateString("es-ES") : "—"}
                     </td>
                   </tr>
                 ))}
@@ -377,6 +404,132 @@ export default function MarketsPage() {
           )}
         </motion.div>
       )}
+
+      {/* ── Resolve Modal ── */}
+      <AnimatePresence>
+        {resolveState && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 999,
+              background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "1rem",
+            }}
+            onClick={e => { if (e.target === e.currentTarget) setResolve(null); }}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ ease: EASE_OUT, duration: 0.2 }}
+              style={{
+                background: "hsl(var(--bg-secondary))",
+                border: "1px solid rgba(0,245,255,0.2)",
+                borderRadius: "16px",
+                padding: "2rem",
+                width: "100%", maxWidth: "480px",
+                display: "flex", flexDirection: "column", gap: "1.5rem",
+              }}
+            >
+              {/* Modal header */}
+              <div>
+                <p style={{ fontFamily: "Orbitron, sans-serif", fontSize: "0.55rem", letterSpacing: "0.15em", color: "hsl(var(--text-muted))" }}>
+                  RESOLVER MERCADO
+                </p>
+                <h2 className="font-orbitron" style={{ fontSize: "1rem", marginTop: "0.5rem", color: "white" }}>
+                  {MARKET_LABELS[resolveState.market.market_type] ?? resolveState.market.market_type}
+                  {resolveState.market.round_number && ` — PARTIDA ${resolveState.market.round_number}`}
+                </h2>
+                <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.8rem", color: "hsl(var(--text-muted))", marginTop: "0.25rem" }}>
+                  Vol. apostado: <strong style={{ color: "#00F5FF" }}>${Number(resolveState.market.total_volume).toFixed(2)}</strong>
+                  {" · "}
+                  {PLAYER_MARKETS.has(resolveState.market.market_type) ? "Selecciona el jugador ganador" : "Selecciona el equipo ganador"}
+                </p>
+              </div>
+
+              {/* Result success */}
+              {resolveState.result ? (
+                <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div style={{ fontSize: "2.5rem" }}>✅</div>
+                  <div>
+                    <p className="font-orbitron" style={{ fontSize: "0.8rem", color: "#10b981", letterSpacing: "0.1em" }}>
+                      MERCADO RESUELTO
+                    </p>
+                    <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.9rem", color: "hsl(var(--text-muted))", marginTop: "0.5rem" }}>
+                      {resolveState.result.won} ganaron · {resolveState.result.lost} perdieron · Pool: {resolveState.result.pool}
+                    </p>
+                  </div>
+                  <button onClick={() => setResolve(null)} className="btn-primary" style={{ fontSize: "0.7rem", letterSpacing: "0.12em" }}>
+                    CERRAR
+                  </button>
+                </div>
+              ) : resolveState.loading ? (
+                <p className="font-orbitron" style={{ textAlign: "center", fontSize: "0.65rem", letterSpacing: "0.15em", color: "hsl(var(--text-muted))", animation: "pulse 1.4s ease-in-out infinite" }}>
+                  CARGANDO...
+                </p>
+              ) : (
+                <>
+                  {/* Winner selector */}
+                  {resolveState.options.length === 0 ? (
+                    <p style={{ fontFamily: "Rajdhani, sans-serif", color: "#f87171", fontSize: "0.85rem" }}>
+                      No se encontraron opciones en PT para este torneo.
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      {resolveState.options.map(opt => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setResolve(prev => prev ? { ...prev, selectedId: opt.id } : null)}
+                          style={{
+                            padding: "0.75rem 1rem",
+                            borderRadius: "10px", cursor: "pointer",
+                            background: resolveState.selectedId === opt.id ? "rgba(0,245,255,0.1)" : "rgba(255,255,255,0.04)",
+                            border: `1px solid ${resolveState.selectedId === opt.id ? "rgba(0,245,255,0.5)" : "rgba(255,255,255,0.08)"}`,
+                            color: resolveState.selectedId === opt.id ? "#00F5FF" : "white",
+                            fontFamily: "Rajdhani, sans-serif", fontWeight: 700,
+                            fontSize: "0.9rem", letterSpacing: "0.04em", textAlign: "left",
+                            transition: "all 150ms ease-out",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {resolveState.error && (
+                    <p style={{ color: "#f87171", fontFamily: "Rajdhani, sans-serif", fontSize: "0.82rem" }}>
+                      {resolveState.error}
+                    </p>
+                  )}
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <button
+                      onClick={() => setResolve(null)}
+                      className="btn-secondary"
+                      style={{ flex: 1, fontSize: "0.7rem", letterSpacing: "0.1em" }}
+                    >
+                      CANCELAR
+                    </button>
+                    <button
+                      onClick={handleResolve}
+                      disabled={!resolveState.selectedId}
+                      className="btn-primary"
+                      style={{ flex: 1, fontSize: "0.7rem", letterSpacing: "0.1em", opacity: resolveState.selectedId ? 1 : 0.4 }}
+                    >
+                      CONFIRMAR RESULTADO
+                    </button>
+                  </div>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
