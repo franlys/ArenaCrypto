@@ -51,12 +51,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*, wallets(balance_stablecoin, test_balance)")
-        .eq("id", userId)
-        .single();
-      if (!error && data) setProfile(data);
+      // Hard 5-second timeout — if Supabase is slow/unreachable, don't block the UI forever
+      const result = await Promise.race([
+        supabase
+          .from("profiles")
+          .select("*, wallets(balance_stablecoin, test_balance)")
+          .eq("id", userId)
+          .single(),
+        new Promise<{ data: null; error: Error }>((resolve) =>
+          setTimeout(() => resolve({ data: null, error: new Error("profile_timeout") }), 5_000)
+        ),
+      ]);
+      if (result.data) setProfile(result.data);
     } catch {
       // Profile missing or network error — user is still authenticated
     }
