@@ -333,7 +333,7 @@ export async function POST(req: NextRequest) {
 
 async function sendKronixWebhook(revenue: any) {
   // KRONIX_WEBHOOK_URL must point to the PT deployment, e.g. https://proyecto-torneos.vercel.app
-  const webhookUrl = `${process.env.KRONIX_WEBHOOK_URL ?? "https://proyecto-torneos.vercel.app"}/api/revenue-report`;
+  const webhookUrl = `${process.env.KRONIX_WEBHOOK_URL ?? "https://proyecto-torneo-flcf.vercel.app"}/api/revenue-report`;
 
   try {
     const res = await fetch(webhookUrl, {
