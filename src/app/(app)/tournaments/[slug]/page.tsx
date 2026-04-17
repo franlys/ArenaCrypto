@@ -39,12 +39,13 @@ export default async function TournamentDetailPage({ params }: Props) {
   if (user) {
     const { data: p } = await supabase
       .from('profiles')
-      .select('id, username, balance, is_premium')
+      .select('id, username, is_premium, is_test_user, wallets(balance_stablecoin, test_balance)')
       .eq('id', user.id)
       .single()
     profile = p
 
-    if (p?.is_premium) {
+    // Test users bypass the exclusivity gate entirely
+    if (p?.is_premium || p?.is_test_user) {
       isUnlocked = true
     } else {
       const { data: unlock } = await supabase
@@ -116,7 +117,12 @@ export default async function TournamentDetailPage({ params }: Props) {
           tournament={tournament}
           teams={teams || []}
           participants={participants || []}
-          userBalance={profile?.balance || 0}
+          userBalance={
+            profile?.is_test_user
+              ? ((profile?.wallets as any)?.test_balance ?? 0)
+              : ((profile?.wallets as any)?.balance_stablecoin ?? 0)
+          }
+          isTestUser={profile?.is_test_user ?? false}
           isLoggedIn={!!user}
           isPremium={profile?.is_premium || false}
           isUnlocked={isUnlocked}

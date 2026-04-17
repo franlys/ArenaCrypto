@@ -10,6 +10,7 @@ interface PlaceBetInput {
   targetType?: 'winner' | 'top_fragger_tournament' | 'top_fragger_match'
   ptTargetId?: string
   ptTargetName?: string
+  marketId?: string
 }
 
 export async function placeTournamentBet({
@@ -19,6 +20,7 @@ export async function placeTournamentBet({
   targetType = 'winner',
   ptTargetId,
   ptTargetName,
+  marketId,
 }: PlaceBetInput) {
   const supabase = await createClient()
 
@@ -29,6 +31,7 @@ export async function placeTournamentBet({
     p_target_type:      targetType,
     p_pt_target_id:     ptTargetId ?? null,
     p_pt_target_name:   ptTargetName ?? null,
+    p_market_id:        marketId ?? null,
   })
 
   if (error) return { error: error.message }

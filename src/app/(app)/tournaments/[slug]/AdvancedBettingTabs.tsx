@@ -19,6 +19,7 @@ interface Props {
   teams: any[]
   participants: any[]
   userBalance: number
+  isTestUser: boolean
   isLoggedIn: boolean
   isPremium: boolean
   isUnlocked: boolean
@@ -152,13 +153,14 @@ function TournamentMarketSection({
 // ── CollapsibleMarket section ────────────────────────────────────────────────
 
 function MarketSection({
-  market, teams, participants, tournamentId, userBalance, isLoggedIn,
+  market, teams, participants, tournamentId, userBalance, isTestUser, isLoggedIn,
 }: {
   market: BetMarket
   teams: any[]
   participants: any[]
   tournamentId: string
   userBalance: number
+  isTestUser: boolean
   isLoggedIn: boolean
 }) {
   const [open, setOpen]       = useState(true)
@@ -295,7 +297,9 @@ function MarketSection({
                 team={isTeamMarket ? item : null}
                 player={isPlayerMarket ? item : undefined}
                 tournamentId={tournamentId}
+                marketId={market.id}
                 userBalance={userBalance}
+                isTestUser={isTestUser}
                 isLoggedIn={isLoggedIn}
                 type={betType}
                 compact
@@ -311,7 +315,7 @@ function MarketSection({
 // ── Main component ───────────────────────────────────────────────────────────
 
 export function AdvancedBettingTabs({
-  tournament, teams, participants, userBalance,
+  tournament, teams, participants, userBalance, isTestUser,
   isLoggedIn, isPremium, isUnlocked, betMarkets, liveMatchIds = [],
 }: Props) {
   const [code, setCode]           = useState('')
@@ -459,11 +463,12 @@ export function AdvancedBettingTabs({
       {/* ── Tournament winner ── */}
       {currentTab === 'tournament_winner' && (() => {
         const meta = MARKET_META.tournament_winner
+        const market = tournamentMarkets.find(m => m.market_type === 'tournament_winner')
         return (
           <TournamentMarketSection meta={meta} label={meta.label}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
               {teams.length > 0 ? teams.map(team => (
-                <BetForm key={team.id} team={team} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="winner" />
+                <BetForm key={team.id} team={team} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="winner" />
               )) : (
                 <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin equipos registrados aún.</p>
               )}
@@ -475,11 +480,12 @@ export function AdvancedBettingTabs({
       {/* ── Tournament MVP ── */}
       {currentTab === 'tournament_mvp' && (() => {
         const meta = MARKET_META.tournament_mvp
+        const market = tournamentMarkets.find(m => m.market_type === 'tournament_mvp')
         return (
           <TournamentMarketSection meta={meta} label={meta.label}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
               {participants.length > 0 ? participants.map(player => (
-                <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} userBalance={userBalance} isLoggedIn={isLoggedIn} type="top_fragger_tournament" />
+                <BetForm key={player.id} team={null} player={player} tournamentId={tournament.id} marketId={market?.id} userBalance={userBalance} isTestUser={isTestUser} isLoggedIn={isLoggedIn} type="top_fragger_tournament" />
               )) : (
                 <p style={{ color: 'hsl(var(--text-muted))', fontFamily: 'Rajdhani, sans-serif' }}>Sin participantes registrados aún.</p>
               )}
@@ -536,6 +542,7 @@ export function AdvancedBettingTabs({
                 participants={participants}
                 tournamentId={tournament.id}
                 userBalance={userBalance}
+                isTestUser={isTestUser}
                 isLoggedIn={isLoggedIn}
               />
             ))}

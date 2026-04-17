@@ -7,7 +7,9 @@ interface BetFormProps {
   team: any | null
   player?: any
   tournamentId: string
+  marketId?: string
   userBalance: number
+  isTestUser?: boolean
   isLoggedIn: boolean
   type: 'winner' | 'top_fragger_tournament' | 'top_fragger_match'
   compact?: boolean
@@ -15,7 +17,7 @@ interface BetFormProps {
 
 const QUICK_AMOUNTS = [5, 10, 25, 50]
 
-export function BetForm({ team, player, tournamentId, userBalance, isLoggedIn, type, compact }: BetFormProps) {
+export function BetForm({ team, player, tournamentId, marketId, userBalance, isTestUser, isLoggedIn, type, compact }: BetFormProps) {
   const [amount, setAmount]     = useState(10)
   const [expanded, setExpanded] = useState(false)
   const [isLoading, setLoading] = useState(false)
@@ -36,6 +38,7 @@ export function BetForm({ team, player, tournamentId, userBalance, isLoggedIn, t
       targetType:     type,
       ptTargetId:     player?.id || team?.id,
       ptTargetName:   label,
+      marketId,
     })
     if ('error' in res) setMessage({ type: 'error', text: res.error })
     else { setMessage({ type: 'success', text: '¡Apuesta confirmada!' }); setExpanded(false) }
@@ -141,7 +144,7 @@ export function BetForm({ team, player, tournamentId, userBalance, isLoggedIn, t
                   opacity: isLoading ? 0.6 : 1, transition: 'opacity 150ms',
                 }}
               >
-                {isLoading ? 'PROCESANDO...' : `APOSTAR $${amount} USDT`}
+                {isLoading ? 'PROCESANDO...' : `${isTestUser ? '[TEST] ' : ''}APOSTAR $${amount} USDT`}
               </button>
             </div>
             {message?.type === 'error' && (
@@ -215,7 +218,7 @@ export function BetForm({ team, player, tournamentId, userBalance, isLoggedIn, t
         className="btn-primary"
         style={{ width: '100%', fontSize: '0.7rem', letterSpacing: '0.15em', opacity: isLoading ? 0.6 : 1 }}
       >
-        {isLoading ? 'PROCESANDO...' : `APOSTAR $${amount} USDT`}
+        {isLoading ? 'PROCESANDO...' : `${isTestUser ? '[TEST] ' : ''}APOSTAR $${amount} USDT`}
       </button>
 
       {message && (
