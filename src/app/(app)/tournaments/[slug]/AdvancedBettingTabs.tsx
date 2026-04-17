@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { BetForm } from './BetForm'
+import { BetHistoryTab } from './BetHistoryTab'
 import { validateStreamerCode } from '@/lib/actions/codes'
 
 interface BetMarket {
@@ -15,11 +16,24 @@ interface BetMarket {
 }
 
 interface UserBet {
+  id: string
   market_id: string
   pt_team_id: string | null
   pt_target_id: string | null
-  amount: number
   pt_target_name: string | null
+  amount: number
+  status: string
+  resolved_at: string | null
+  created_at: string
+  bet_markets: {
+    market_type: string
+    round_number: number | null
+    pt_match_id: string | null
+    status: string
+    result_pt_team_id: string | null
+    result_pt_player_id: string | null
+    resolved_at: string | null
+  } | null
 }
 
 interface Props {
@@ -440,6 +454,13 @@ export function AdvancedBettingTabs({
         isLive,
       }
     }),
+    // History tab — only shown when the user has placed bets
+    ...(userBets.length > 0 ? [{
+      key: 'mis_apuestas',
+      label: '📋 MIS APUESTAS',
+      color: 'rgba(255,255,255,0.12)',
+      textColor: '#fff',
+    }] : []),
   ]
 
   const currentTab = activeTab || tabs[0]?.key || ''
@@ -522,6 +543,15 @@ export function AdvancedBettingTabs({
           </TournamentMarketSection>
         )
       })()}
+
+      {/* ── Bet history ── */}
+      {currentTab === 'mis_apuestas' && (
+        <BetHistoryTab
+          userBets={userBets}
+          teams={teams}
+          participants={participants}
+        />
+      )}
 
       {/* ── Round markets ── */}
       {roundNumbers.map(r => {

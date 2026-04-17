@@ -63,7 +63,26 @@ export default async function TournamentDetailPage({ params }: Props) {
   // Phase 3: user-specific queries — all in parallel (only if logged in)
   let profile: any = null
   let isUnlocked = false
-  let userBets: { market_id: string; pt_team_id: string | null; pt_target_id: string | null; amount: number; pt_target_name: string | null }[] = []
+  let userBets: {
+    id: string
+    market_id: string
+    pt_team_id: string | null
+    pt_target_id: string | null
+    pt_target_name: string | null
+    amount: number
+    status: string
+    resolved_at: string | null
+    created_at: string
+    bet_markets: {
+      market_type: string
+      round_number: number | null
+      pt_match_id: string | null
+      status: string
+      result_pt_team_id: string | null
+      result_pt_player_id: string | null
+      resolved_at: string | null
+    } | null
+  }[] = []
 
   if (user) {
     const [profileResult, unlockResult, betsResult] = await Promise.all([
@@ -80,9 +99,13 @@ export default async function TournamentDetailPage({ params }: Props) {
         .maybeSingle(),
       supabase
         .from('tournament_bets')
-        .select('market_id, pt_team_id, pt_target_id, amount, pt_target_name')
+        .select(`
+          id, market_id, pt_team_id, pt_target_id, pt_target_name, amount, status, resolved_at, created_at,
+          bet_markets!market_id(market_type, round_number, pt_match_id, status, result_pt_team_id, result_pt_player_id, resolved_at)
+        `)
         .eq('user_id', user.id)
-        .eq('pt_tournament_id', tournament.id),
+        .eq('pt_tournament_id', tournament.id)
+        .order('created_at', { ascending: false }),
     ])
 
     profile = profileResult.data
@@ -94,7 +117,13 @@ export default async function TournamentDetailPage({ params }: Props) {
       isUnlocked = !!unlockResult.data
     }
 
-    userBets = (betsResult.data ?? []).filter((b: any) => b.market_id)
+    // Supabase returns joined rows as arrays — normalise bet_markets to single object
+    userBets = (betsResult.data ?? [])
+      .filter((b: any) => b.market_id)
+      .map((b: any) => ({
+        ...b,
+        bet_markets: Array.isArray(b.bet_markets) ? (b.bet_markets[0] ?? null) : (b.bet_markets ?? null),
+      }))
   }
 
   return (
