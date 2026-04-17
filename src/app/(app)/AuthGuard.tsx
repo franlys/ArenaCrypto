@@ -5,17 +5,15 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAdmin } = useUser();
+  const { user, loading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
       router.replace("/login");
-    } else if (isAdmin) {
-      router.replace("/admin");
     }
-  }, [user, loading, isAdmin, router]);
+  }, [user, loading, router]);
 
   // While loading — show a minimal spinner so there's no flash of content
   if (loading) {

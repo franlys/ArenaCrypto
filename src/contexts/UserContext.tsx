@@ -86,13 +86,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser as User);
 
-        if (currentUser) {
-          await fetchProfile(currentUser.id);
-        } else {
-          setProfile(null);
+        try {
+          if (currentUser) {
+            await fetchProfile(currentUser.id);
+          } else {
+            setProfile(null);
+          }
+        } finally {
+          // Always release the loading state — even if fetchProfile hangs or throws
+          if (mounted) setLoading(false);
         }
-
-        setLoading(false);
       }
     );
 
