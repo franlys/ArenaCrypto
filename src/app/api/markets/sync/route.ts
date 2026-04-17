@@ -190,18 +190,51 @@ export async function POST(req: NextRequest) {
                 (s.kill_count > (best?.kill_count ?? -1) ? s : best), null)
             : submissions.find((s: any) => s.rank === 1);
 
-          // Helper: resolve a market that may be "closed" or (edge case) still "open"
-          const resolveMarket = (marketType: string, update: Record<string, unknown>) =>
-            acAdmin.from("bet_markets").update({
-              status: "resolved", resolved_at: resolvedAt, ...update,
-            })
+          // Helper: resolve a market record AND settle all bets in one call
+          const resolveAndSettle = async (
+            marketType: string,
+            update: { result_pt_team_id?: string | null; result_pt_player_id?: string | null },
+          ) => {
+            // 1. Find the market id
+            const { data: mRow } = await acAdmin.from("bet_markets")
+              .select("id")
               .eq("pt_tournament_id", t.id)
               .eq("market_type", marketType)
               .eq("pt_match_id", match.id)
-              .in("status", ["open", "closed"]); // closed = went through is_active; open = edge case
+              .in("status", ["open", "closed"])
+              .maybeSingle();
+
+            if (!mRow) return;
+
+            // 2. Mark bet_markets as resolved
+            await acAdmin.from("bet_markets").update({
+              status: "resolved", resolved_at: resolvedAt, ...update,
+            }).eq("id", mRow.id);
+
+            // 3. Settle all bets via internal RPC (no auth required)
+            const { data: settlement, error: sErr } = await acAdmin.rpc("resolve_market_internal", {
+              p_market_id:           mRow.id,
+              p_result_pt_team_id:   update.result_pt_team_id   ?? null,
+              p_result_pt_player_id: update.result_pt_player_id ?? null,
+            });
+
+            if (sErr) {
+              log.actions.push(`⚠ settle error ${marketType}: ${sErr.message}`);
+            } else if (settlement?.error) {
+              // "Market already resolved" is fine — idempotent
+              if (settlement.error !== "Market already resolved") {
+                log.actions.push(`⚠ settle warning ${marketType}: ${settlement.error}`);
+              }
+            } else {
+              log.actions.push(
+                `settled ${marketType} round ${match.match_number}: ` +
+                `won=${settlement?.won_count ?? 0} lost=${settlement?.lost_count ?? 0} pool=$${settlement?.total_pool ?? 0}`
+              );
+            }
+          };
 
           if (winner && roundMarketTypes.includes("round_winner")) {
-            await resolveMarket("round_winner", { result_pt_team_id: winner.team_id });
+            await resolveAndSettle("round_winner", { result_pt_team_id: winner.team_id });
           }
 
           // ── round_top_fragger (siempre por kill_count)
@@ -209,7 +242,7 @@ export async function POST(req: NextRequest) {
             (s.kill_count > (best?.kill_count ?? -1) ? s : best), null);
 
           if (topFraggerTeam && roundMarketTypes.includes("round_top_fragger")) {
-            await resolveMarket("round_top_fragger", { result_pt_team_id: topFraggerTeam.team_id });
+            await resolveAndSettle("round_top_fragger", { result_pt_team_id: topFraggerTeam.team_id });
           }
 
           // ── round_top_placement (solo battle_royale: equipo con mejor rank / menor número)
@@ -220,7 +253,7 @@ export async function POST(req: NextRequest) {
                 (best == null || s.rank < best.rank ? s : best), null);
 
             if (topPlacement) {
-              await resolveMarket("round_top_placement", { result_pt_team_id: topPlacement.team_id });
+              await resolveAndSettle("round_top_placement", { result_pt_team_id: topPlacement.team_id });
             }
           }
 
@@ -237,11 +270,11 @@ export async function POST(req: NextRequest) {
               .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
             if (topPlayerId) {
-              await resolveMarket("round_player_fragger", { result_pt_player_id: topPlayerId });
+              await resolveAndSettle("round_player_fragger", { result_pt_player_id: topPlayerId });
             }
           }
 
-          log.actions.push(`resolved round ${match.match_number} (type: ${tournamentType})`);
+          log.actions.push(`processed round ${match.match_number} (type: ${tournamentType})`);
         }
       }
     }
@@ -283,15 +316,27 @@ export async function POST(req: NextRequest) {
 
       const champion = standings?.[0];
       if (champion) {
-        await acAdmin.from("bet_markets").update({
-          status: "resolved",
-          result_pt_team_id: champion.team_id,
-          closed_at: new Date().toISOString(),
-          resolved_at: new Date().toISOString(),
-        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_winner")
-          .in("status", ["open", "closed"]);  // closed = ya pasó por is_active
+        const { data: twMarket } = await acAdmin.from("bet_markets")
+          .select("id").eq("pt_tournament_id", t.id).eq("market_type", "tournament_winner")
+          .in("status", ["open", "closed"]).maybeSingle();
 
-        log.actions.push(`resolved tournament_winner → team ${champion.team_id}`);
+        if (twMarket) {
+          await acAdmin.from("bet_markets").update({
+            status: "resolved",
+            result_pt_team_id: champion.team_id,
+            closed_at: new Date().toISOString(),
+            resolved_at: new Date().toISOString(),
+          }).eq("id", twMarket.id);
+
+          const { data: twSettlement } = await acAdmin.rpc("resolve_market_internal", {
+            p_market_id:           twMarket.id,
+            p_result_pt_team_id:   champion.team_id,
+            p_result_pt_player_id: null,
+          });
+          log.actions.push(
+            `settled tournament_winner: won=${twSettlement?.won_count ?? 0} lost=${twSettlement?.lost_count ?? 0} pool=$${twSettlement?.total_pool ?? 0}`
+          );
+        }
       }
 
       // Find tournament MVP from player_kills across all approved submissions
@@ -310,15 +355,27 @@ export async function POST(req: NextRequest) {
       }
       const mvpId = Object.entries(killMap).sort((a, b) => b[1] - a[1])[0]?.[0];
       if (mvpId) {
-        await acAdmin.from("bet_markets").update({
-          status: "resolved",
-          result_pt_player_id: mvpId,
-          closed_at: new Date().toISOString(),
-          resolved_at: new Date().toISOString(),
-        }).eq("pt_tournament_id", t.id).eq("market_type", "tournament_mvp")
-          .in("status", ["open", "closed"]);  // closed = ya pasó por is_active
+        const { data: mvpMarket } = await acAdmin.from("bet_markets")
+          .select("id").eq("pt_tournament_id", t.id).eq("market_type", "tournament_mvp")
+          .in("status", ["open", "closed"]).maybeSingle();
 
-        log.actions.push(`resolved tournament_mvp → player ${mvpId}`);
+        if (mvpMarket) {
+          await acAdmin.from("bet_markets").update({
+            status: "resolved",
+            result_pt_player_id: mvpId,
+            closed_at: new Date().toISOString(),
+            resolved_at: new Date().toISOString(),
+          }).eq("id", mvpMarket.id);
+
+          const { data: mvpSettlement } = await acAdmin.rpc("resolve_market_internal", {
+            p_market_id:           mvpMarket.id,
+            p_result_pt_team_id:   null,
+            p_result_pt_player_id: mvpId,
+          });
+          log.actions.push(
+            `settled tournament_mvp: won=${mvpSettlement?.won_count ?? 0} lost=${mvpSettlement?.lost_count ?? 0} pool=$${mvpSettlement?.total_pool ?? 0}`
+          );
+        }
       }
 
       // Calculate revenue
