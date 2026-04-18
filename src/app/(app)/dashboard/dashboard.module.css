@@ -274,6 +274,12 @@
   transform: scale(0.96);
 }
 
+.stakePillActive {
+  background: rgba(0, 245, 255, 0.1) !important;
+  border-color: #00F5FF !important;
+  color: #00F5FF !important;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .stakePill:hover {
     background: rgba(0, 245, 255, 0.08);

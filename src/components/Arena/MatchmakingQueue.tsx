@@ -9,13 +9,14 @@ import styles from "./MatchmakingQueue.module.css";
 interface MatchmakingQueueProps {
   gameId: string;
   mode: string;
+  modeLabel?: string;
   stake: number;
   isTest?: boolean;
   onCancel: () => void;
 }
 
 export default function MatchmakingQueue({
-  gameId, mode, stake, isTest = false, onCancel,
+  gameId, mode, modeLabel, stake, isTest = false, onCancel,
 }: MatchmakingQueueProps) {
   const router = useRouter();
   const [status, setStatus]   = useState<'joining' | 'searching' | 'found' | 'confirming' | 'error'>('joining');
@@ -157,7 +158,7 @@ export default function MatchmakingQueue({
               />
               <div className={styles.searchCore}>
                 <span className="font-orbitron">BUSCANDO RIVAL</span>
-                <small>{gameId} · {mode}</small>
+                <small>{gameId} · {modeLabel ?? mode}</small>
                 <small style={{ color: 'hsl(var(--text-muted))' }}>
                   Apuesta: {isTest ? '🧪' : '$'}{stake}{isTest ? ' (test)' : ' USDC'}
                 </small>
