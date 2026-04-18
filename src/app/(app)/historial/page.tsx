@@ -37,7 +37,7 @@ export default async function HistorialPage() {
   }))
 
   // Group by tournament
-  const tournamentIds = [...new Set(allBets.map((b: any) => b.pt_tournament_id as string))]
+  const tournamentIds = Array.from(new Set(allBets.map((b: any) => b.pt_tournament_id as string)))
 
   // Fetch tournament names from PT
   const { data: ptTournaments } = tournamentIds.length > 0
