@@ -52,29 +52,31 @@ function resolveTournamentType(t: any): string {
 // - Manual admin / webhook: x-cron-secret: <CRON_SECRET> or <SERVICE_ROLE_KEY>
 // - Authenticated admin users: Authorization: Bearer <supabase_access_token>
 async function isAuthorized(req: NextRequest): Promise<boolean> {
-  const xSecret = req.headers.get("x-cron-secret");
-  const bearer  = req.headers.get("authorization")?.replace("Bearer ", "");
-  const token   = xSecret ?? bearer ?? "";
+  try {
+    const xSecret = req.headers.get("x-cron-secret");
+    const bearer  = req.headers.get("authorization")?.replace("Bearer ", "");
+    const token   = xSecret ?? bearer ?? "";
 
-  // Static secrets (cron / service role)
-  if (
-    token === process.env.CRON_SECRET ||
-    token === process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) return true;
+    // Static secrets (cron / service role)
+    if (
+      token === process.env.CRON_SECRET ||
+      token === process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) return true;
 
-  // Supabase user JWT — verify it's an admin
-  if (token) {
-    const { data: { user } } = await acAdmin.auth.getUser(token);
-    if (user) {
+    // Supabase user JWT — verify it's an admin
+    if (token) {
+      const { data, error: authErr } = await acAdmin.auth.getUser(token);
+      if (authErr || !data?.user) return false;
       const { data: profile } = await acAdmin
         .from("profiles")
         .select("role")
-        .eq("id", user.id)
+        .eq("id", data.user.id)
         .single();
       return profile?.role?.toLowerCase() === "admin";
     }
+  } catch (e) {
+    console.error("[sync] isAuthorized error:", e);
   }
-
   return false;
 }
 
@@ -82,6 +84,8 @@ export async function POST(req: NextRequest) {
   if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  try {
 
   const results: Record<string, any>[] = [];
 
@@ -414,6 +418,10 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, processed: results.length, results });
+  } catch (err: any) {
+    console.error("[sync] unhandled error:", err?.message ?? err);
+    return NextResponse.json({ error: err?.message ?? "Internal error" }, { status: 500 });
+  }
 }
 
 async function sendKronixWebhook(revenue: any) {
