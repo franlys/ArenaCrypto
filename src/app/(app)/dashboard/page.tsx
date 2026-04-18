@@ -5,15 +5,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { tournamentDb as ptClient } from "@/lib/supabase/tournament-db";
+import { useUser } from "@/contexts/UserContext";
 import MatchmakingQueue from "@/components/Arena/MatchmakingQueue";
 import styles from "./dashboard.module.css";
-
-const ptClient = createClient(
-  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: false, autoRefreshToken: false } }
-);
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -38,6 +33,7 @@ interface Game {
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
+  const { isTestUser } = useUser();
 
   const [games, setGames]               = useState<Game[]>(FALLBACK_GAMES);
   const [activeCategory, setCategory]   = useState("Todos");
@@ -220,11 +216,11 @@ export default function DashboardPage() {
                   className="btn-primary"
                   style={{ width: "100%", padding: "0.85rem", fontSize: "0.78rem", letterSpacing: "0.15em" }}
                   onClick={() => setSearching(true)}
-                  disabled={!isConnected}
+                  disabled={!isConnected && !isTestUser}
                 >
                   {selectedGameObj?.icon} BUSCAR RIVAL · {selectedGameObj?.name}
                 </button>
-                {!isConnected && (
+                {!isConnected && !isTestUser && (
                   <p className={styles.ctaHint}>Conecta tu wallet para apostar.</p>
                 )}
               </div>
@@ -235,12 +231,9 @@ export default function DashboardPage() {
                 gameId={selectedGame}
                 mode="1v1 Ranked"
                 stake={stake}
+                isTest={isTestUser}
+                onCancel={() => setSearching(false)}
               />
-              <div style={{ marginTop: "1rem", textAlign: "center" }}>
-                <button className={styles.btnBack} onClick={() => setSearching(false)}>
-                  ← Volver a configuración
-                </button>
-              </div>
             </div>
           )}
         </motion.section>

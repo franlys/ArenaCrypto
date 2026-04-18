@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 /**
  * Tournament Database Client (Bridge)
- * 
+ *
  * This client connects to the SEPARATE Proyecto-torneos database.
  * Use this only for READ operations to fetch tournament data, matches, and standings.
  * All betting logic and user balances MUST use the local ArenaCrypto client.
@@ -15,10 +15,13 @@ if (!ptUrl || !ptAnonKey) {
   console.warn('Tournament Engine Bridge: Environment variables not found.')
 }
 
-export const tournamentDb = createClient(ptUrl, ptAnonKey, {
+// createBrowserClient deduplicates by storageKey — safe in React Strict Mode
+// and prevents the "Multiple GoTrueClient instances" warning caused by bare createClient
+export const tournamentDb = createBrowserClient(ptUrl, ptAnonKey, {
   auth: {
-    persistSession: false, // AC users don't need a session in the PT DB
+    persistSession: false,
     autoRefreshToken: false,
+    detectSessionInUrl: false,
   }
 })
 
