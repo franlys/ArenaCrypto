@@ -1,25 +1,13 @@
 // POST /api/markets/sync
 // Sincroniza mercados de apuestas con el estado actual de Kronix.
 // Llamado por: cron job, webhook de Kronix, o manualmente desde el panel admin.
-//
-// Lógica:
-//  1. Lee torneos activos con arena_betting_enabled desde Kronix (bridge)
-//  2. Abre mercados que aún no existen para esos torneos
-//  3. Cierra mercados de rondas completadas
-//  4. Cuando un torneo termina: resuelve mercados + calcula revenue + dispara webhook
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 60;
 import { createClient } from "@supabase/supabase-js";
 
-const acAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const ptAnon = createClient(
-  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!
-);
+import { tournamentDb } from "@/lib/supabase/tournament-db";
 
 // ── Mercados válidos según el tipo de torneo ─────────────────────────────────
 // kill_race:         solo kills (no hay placement mecánico)
@@ -65,6 +53,7 @@ async function isAuthorized(req: NextRequest): Promise<boolean> {
 
     // Supabase user JWT — verify it's an admin
     if (token) {
+      const acAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const { data, error: authErr } = await acAdmin.auth.getUser(token);
       if (authErr || !data?.user) return false;
       const { data: profile } = await acAdmin
@@ -89,14 +78,16 @@ export async function POST(req: NextRequest) {
 
   const results: Record<string, any>[] = [];
 
+  const acAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
   // ── 1. Fetch betting-enabled tournaments from Kronix ────────────────────
-  // Include "pending" so tournament_winner markets open BEFORE the event starts.
+  // Include "draft" so tournament_winner markets open BEFORE the event starts.
   // Users bet on the champion before any match is played — closes when first match goes live.
-  const { data: tournaments, error: tErr } = await ptAnon
+  const { data: tournaments, error: tErr } = await tournamentDb
     .from("tournaments")
     .select("id, name, status, arena_betting_enabled, arena_betting_status, start_date, end_date, total_matches, matches_completed, tournament_type, format")
     .eq("arena_betting_enabled", true)
-    .in("status", ["pending", "upcoming", "active", "finished"]);
+    .in("status", ["draft", "active", "finished"]);
 
   if (tErr) {
     return NextResponse.json({ error: tErr.message }, { status: 500 });
@@ -125,7 +116,7 @@ export async function POST(req: NextRequest) {
     // ── 3. Fetch ALL matches from Kronix for this tournament ──────────────
     // BETTING HAPPENS BEFORE ROUNDS — open markets for pending matches,
     // resolve markets for completed matches.
-    const { data: allMatches } = await ptAnon
+    const { data: allMatches } = await tournamentDb
       .from("matches")
       .select("id, match_number, round_number, is_completed, is_active, completed_at")
       .eq("tournament_id", t.id)
@@ -157,7 +148,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    for (const match of allMatches ?? []) {
+    await Promise.all((allMatches ?? []).map(async (match) => {
       if (!match.is_completed && match.is_active) {
         // ── Match EN VIVO: cerrar mercados de ronda abiertos
         const { data } = await acAdmin
@@ -170,17 +161,16 @@ export async function POST(req: NextRequest) {
         if (data && data.length > 0) log.actions.push(`closed markets (match ${match.match_number} is live)`);
 
       } else if (!match.is_completed && !match.is_active) {
-        // ── Pending match: create OPEN markets so viewers can bet before it starts
-        for (const mType of roundMarketTypes) {
-          await acAdmin.from("bet_markets").insert({
+        // ── Pending match: create OPEN markets in parallel
+        await Promise.all(roundMarketTypes.map(mType =>
+          acAdmin.from("bet_markets").insert({
             pt_tournament_id: t.id,
             market_type:  mType,
             pt_match_id:  match.id,
-            round_number: match.match_number,   // use match_number so each encounter gets its own tab
+            round_number: match.match_number,
             status: "open",
-          }).select().maybeSingle();
-          // Unique index silently ignores duplicates
-        }
+          }).select().maybeSingle()
+        ));
         log.actions.push(`opened round markets: match ${match.match_number}`);
       } else {
         // ── Completed match: close any remaining open markets, then resolve
@@ -195,7 +185,7 @@ export async function POST(req: NextRequest) {
           .eq("status", "open");
 
         // Resolve using Kronix submission data
-        const { data: submissions } = await ptAnon
+        const { data: submissions } = await tournamentDb
           .from("submissions")
           .select("team_id, kill_count, rank, pot_top, player_kills, status")
           .eq("match_id", match.id)
@@ -255,51 +245,46 @@ export async function POST(req: NextRequest) {
             }
           };
 
-          if (winner && roundMarketTypes.includes("round_winner")) {
-            await resolveAndSettle("round_winner", { result_pt_team_id: winner.team_id });
-          }
-
-          // ── round_top_fragger (siempre por kill_count)
+          // ── Calcular todos los ganadores antes de disparar las resoluciones
           const topFraggerTeam = submissions.reduce((best: any, s: any) =>
             (s.kill_count > (best?.kill_count ?? -1) ? s : best), null);
 
-          if (topFraggerTeam && roundMarketTypes.includes("round_top_fragger")) {
-            await resolveAndSettle("round_top_fragger", { result_pt_team_id: topFraggerTeam.team_id });
-          }
+          const topPlacement = roundMarketTypes.includes("round_top_placement")
+            ? submissions.filter((s: any) => s.rank != null)
+                .reduce((best: any, s: any) => (best == null || s.rank < best.rank ? s : best), null)
+            : null;
 
-          // ── round_top_placement (solo battle_royale: equipo con mejor rank / menor número)
-          if (roundMarketTypes.includes("round_top_placement")) {
-            const topPlacement = submissions
-              .filter((s: any) => s.rank != null)
-              .reduce((best: any, s: any) =>
-                (best == null || s.rank < best.rank ? s : best), null);
-
-            if (topPlacement) {
-              await resolveAndSettle("round_top_placement", { result_pt_team_id: topPlacement.team_id });
-            }
-          }
-
-          // ── round_player_fragger (kills individuales del JSONB player_kills)
+          const playerKillMap: Record<string, number> = {};
           if (roundMarketTypes.includes("round_player_fragger")) {
-            const playerKillMap: Record<string, number> = {};
             for (const s of submissions) {
               const pk = (s.player_kills as Record<string, number>) ?? {};
               for (const [pid, kills] of Object.entries(pk)) {
                 playerKillMap[pid] = (playerKillMap[pid] ?? 0) + Number(kills);
               }
             }
-            const topPlayerId = Object.entries(playerKillMap)
-              .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-
-            if (topPlayerId) {
-              await resolveAndSettle("round_player_fragger", { result_pt_player_id: topPlayerId });
-            }
           }
+          const topPlayerId = Object.entries(playerKillMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+          // ── Resolver todos los mercados del match en paralelo
+          await Promise.all([
+            winner && roundMarketTypes.includes("round_winner")
+              ? resolveAndSettle("round_winner", { result_pt_team_id: winner.team_id })
+              : null,
+            topFraggerTeam && roundMarketTypes.includes("round_top_fragger")
+              ? resolveAndSettle("round_top_fragger", { result_pt_team_id: topFraggerTeam.team_id })
+              : null,
+            topPlacement && roundMarketTypes.includes("round_top_placement")
+              ? resolveAndSettle("round_top_placement", { result_pt_team_id: topPlacement.team_id })
+              : null,
+            topPlayerId && roundMarketTypes.includes("round_player_fragger")
+              ? resolveAndSettle("round_player_fragger", { result_pt_player_id: topPlayerId })
+              : null,
+          ].filter(Boolean));
 
           log.actions.push(`processed round ${match.match_number} (type: ${tournamentType})`);
         }
       }
-    }
+    })); // end Promise.all matches
 
     // ── 3.5 Close tournament_winner/mvp when the FIRST MATCH goes live ───────
     // Betting on who wins the whole tournament is only valid BEFORE any match
@@ -329,7 +314,7 @@ export async function POST(req: NextRequest) {
 
     // ── 4. Tournament finished: resolve tournament-level markets + revenue ──
     if (t.status === "finished") {
-      const { data: standings } = await ptAnon
+      const { data: standings } = await tournamentDb
         .from("team_standings")
         .select("team_id, rank, total_kills")
         .eq("tournament_id", t.id)
@@ -362,7 +347,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Find tournament MVP from player_kills across all approved submissions
-      const { data: allSubs } = await ptAnon
+      const { data: allSubs } = await tournamentDb
         .from("submissions")
         .select("player_kills, team_id")
         .eq("tournament_id", t.id)
@@ -425,6 +410,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function sendKronixWebhook(revenue: any) {
+  const acAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   // KRONIX_WEBHOOK_URL must point to the PT deployment, e.g. https://proyecto-torneos.vercel.app
   const webhookUrl = `${process.env.KRONIX_WEBHOOK_URL ?? "https://proyecto-torneo-flcf.vercel.app"}/api/revenue-report`;
 
