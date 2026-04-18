@@ -52,19 +52,26 @@ export default async function HistorialPage() {
     const tournament = tournamentMap[tid]
 
     const totalStaked    = tbets.reduce((s: number, b: any) => s + Number(b.amount), 0)
-    const totalPayout    = tbets.reduce((s: number, b: any) => s + Number(b.payout_amount ?? 0), 0)
-    const netPnl         = totalPayout - totalStaked
+    const paidBets       = tbets.filter((b: any) => b.status === 'paid' || b.status === 'won')
+    const hasPayoutData  = paidBets.some((b: any) => b.payout_amount != null)
+    const totalPayout    = hasPayoutData
+      ? tbets.reduce((s: number, b: any) => s + Number(b.payout_amount ?? 0), 0)
+      : null  // null = payout data not available (pre-migration bets)
+    const netPnl         = totalPayout != null ? totalPayout - totalStaked : null
 
     const wonCount     = tbets.filter((b: any) => b.status === 'won' || b.status === 'paid').length
     const lostCount    = tbets.filter((b: any) => b.status === 'lost').length
     const pendingCount = tbets.filter((b: any) => b.status === 'pending').length
 
-    return { tid, tournament, tbets, totalStaked, totalPayout, netPnl, wonCount, lostCount, pendingCount }
+    return { tid, tournament, tbets, totalStaked, totalPayout, netPnl, wonCount, lostCount, pendingCount, hasPayoutData }
   })
 
-  const overallStaked = groups.reduce((s, g) => s + g.totalStaked, 0)
-  const overallPayout = groups.reduce((s, g) => s + g.totalPayout, 0)
-  const overallPnl    = overallPayout - overallStaked
+  const overallStaked     = groups.reduce((s, g) => s + g.totalStaked, 0)
+  const hasAnyPayoutData  = groups.some(g => g.hasPayoutData)
+  const overallPayout     = hasAnyPayoutData
+    ? groups.reduce((s, g) => s + (g.totalPayout ?? 0), 0)
+    : null
+  const overallPnl        = overallPayout != null ? overallPayout - overallStaked : null
 
   return (
     <main style={{ minHeight: '100vh', background: 'hsl(var(--bg-primary))', color: 'hsl(var(--text-primary))' }}>
@@ -100,12 +107,12 @@ export default async function HistorialPage() {
               gap: '0.75rem', marginBottom: '2.5rem',
             }}>
               {[
-                { label: 'TOTAL APOSTADO',  value: `$${overallStaked.toFixed(2)}`,  color: '#00F5FF' },
-                { label: 'TOTAL RECUPERADO', value: `$${overallPayout.toFixed(2)}`, color: '#8b5cf6' },
+                { label: 'TOTAL APOSTADO',   value: `$${overallStaked.toFixed(2)}`, color: '#00F5FF' },
+                { label: 'TOTAL RECUPERADO', value: overallPayout != null ? `$${overallPayout.toFixed(2)}` : 'N/D', color: '#8b5cf6' },
                 {
                   label: 'RESULTADO NETO',
-                  value: `${overallPnl >= 0 ? '+' : ''}$${overallPnl.toFixed(2)}`,
-                  color: overallPnl > 0 ? '#10b981' : overallPnl < 0 ? '#f87171' : 'hsl(var(--text-muted))',
+                  value: overallPnl != null ? `${overallPnl >= 0 ? '+' : ''}$${overallPnl.toFixed(2)}` : 'N/D',
+                  color: overallPnl == null ? 'hsl(var(--text-muted))' : overallPnl > 0 ? '#10b981' : overallPnl < 0 ? '#f87171' : 'hsl(var(--text-muted))',
                 },
               ].map(({ label, value, color }) => (
                 <div key={label} style={{
@@ -155,9 +162,9 @@ export default async function HistorialPage() {
                         </p>
                         <p style={{
                           fontFamily: 'Orbitron, sans-serif', fontSize: '1rem', fontWeight: 700, margin: '0.15rem 0 0',
-                          color: netPnl > 0 ? '#10b981' : netPnl < 0 ? '#f87171' : 'hsl(var(--text-muted))',
+                          color: netPnl == null ? 'hsl(var(--text-muted))' : netPnl > 0 ? '#10b981' : netPnl < 0 ? '#f87171' : 'hsl(var(--text-muted))',
                         }}>
-                          {netPnl >= 0 ? '+' : ''}${netPnl.toFixed(2)}
+                          {netPnl == null ? 'N/D' : `${netPnl >= 0 ? '+' : ''}$${netPnl.toFixed(2)}`}
                         </p>
                       </div>
 
