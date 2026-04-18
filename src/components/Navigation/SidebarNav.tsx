@@ -7,7 +7,6 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useUser } from "@/contexts/UserContext";
 import styles from "./SidebarNav.module.css";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
@@ -19,7 +18,6 @@ interface SidebarNavProps {
 export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
-  const { isAdmin } = useUser();
 
   const navItems = [
     { href: "/dashboard",   label: "HUB",      icon: "◈" },
@@ -28,7 +26,6 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
     { href: "/wallets",     label: "WALLET",   icon: "◎" },
     { href: "/premium",     label: "PREMIUM",  icon: "◆" },
     { href: "/profile",     label: "PERFIL",   icon: "◉" },
-    ...(isAdmin ? [{ href: "/admin", label: "ADMIN", icon: "⚙" }] : []),
   ];
 
 

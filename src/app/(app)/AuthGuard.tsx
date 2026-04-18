@@ -5,19 +5,20 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser();
+  const { user, loading, isAdmin } = useUser();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      // Debounce the redirect — Supabase can briefly set user=null during token
-      // refresh (tab switch, focus regain). Without this, the app redirects to
-      // /login mid-session and looks broken.
       const t = setTimeout(() => router.replace("/login"), 400);
       return () => clearTimeout(t);
     }
-  }, [user, loading, router]);
+    // Admins have no business in the user hub — send them to their panel
+    if (isAdmin) {
+      router.replace("/admin");
+    }
+  }, [user, loading, isAdmin, router]);
 
   // While loading — show a minimal spinner so there's no flash of content
   if (loading) {
