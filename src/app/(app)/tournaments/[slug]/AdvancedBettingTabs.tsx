@@ -383,7 +383,7 @@ export function AdvancedBettingTabs({
   }
 
   // ── LOCKED ───────────────────────────────────────────────────────────────
-  if (!isUnlocked && !isPremium) {
+  if (!isUnlocked && !isPremium && tournament.status !== 'finished') {
     return (
       <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 2rem', gap: '1.5rem', maxWidth: '480px', margin: '0 auto' }}>
         <div style={{ fontSize: '2.5rem' }}>🔒</div>

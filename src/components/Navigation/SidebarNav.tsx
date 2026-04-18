@@ -20,12 +20,13 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
   const shouldReduceMotion = useReducedMotion();
 
   const navItems = [
-    { href: "/dashboard",   label: "HUB",      icon: "◈" },
-    { href: "/arena",       label: "ARENA",    icon: "⚔" },
-    { href: "/tournaments", label: "TORNEOS",  icon: "🏆" },
-    { href: "/wallets",     label: "WALLET",   icon: "◎" },
-    { href: "/premium",     label: "PREMIUM",  icon: "◆" },
-    { href: "/profile",     label: "PERFIL",   icon: "◉" },
+    { href: "/dashboard",   label: "HUB",       icon: "◈" },
+    { href: "/arena",       label: "ARENA",     icon: "⚔" },
+    { href: "/tournaments", label: "TORNEOS",   icon: "🏆" },
+    { href: "/historial",   label: "HISTORIAL", icon: "📋" },
+    { href: "/wallets",     label: "WALLET",    icon: "◎" },
+    { href: "/premium",     label: "PREMIUM",   icon: "◆" },
+    { href: "/profile",     label: "PERFIL",    icon: "◉" },
   ];
 
 
