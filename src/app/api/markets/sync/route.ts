@@ -50,18 +50,36 @@ function resolveTournamentType(t: any): string {
 // Allow calls from:
 // - Vercel Cron: Authorization: Bearer <CRON_SECRET>
 // - Manual admin / webhook: x-cron-secret: <CRON_SECRET> or <SERVICE_ROLE_KEY>
-function isAuthorized(req: NextRequest) {
+// - Authenticated admin users: Authorization: Bearer <supabase_access_token>
+async function isAuthorized(req: NextRequest): Promise<boolean> {
   const xSecret = req.headers.get("x-cron-secret");
   const bearer  = req.headers.get("authorization")?.replace("Bearer ", "");
   const token   = xSecret ?? bearer ?? "";
-  return (
+
+  // Static secrets (cron / service role)
+  if (
     token === process.env.CRON_SECRET ||
     token === process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  ) return true;
+
+  // Supabase user JWT — verify it's an admin
+  if (token) {
+    const { data: { user } } = await acAdmin.auth.getUser(token);
+    if (user) {
+      const { data: profile } = await acAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+      return profile?.role?.toLowerCase() === "admin";
+    }
+  }
+
+  return false;
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAuthorized(req)) {
+  if (!(await isAuthorized(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
