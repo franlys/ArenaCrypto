@@ -60,13 +60,14 @@ export default function TournamentSupervisionPage() {
   const [standings, setStandings]     = useState<Standing[]>([]);
   const [markets, setMarkets]         = useState<Market[]>([]);
   const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState<string | null>(null);
   const [tab, setTab]                 = useState<"partidas" | "standings" | "mercados">("partidas");
 
   useEffect(() => {
     if (!tournamentId) return;
     async function load() {
       const [
-        { data: t },
+        { data: t, error: tErr },
         { data: m },
         { data: tm },
         { data: st },
@@ -78,6 +79,7 @@ export default function TournamentSupervisionPage() {
         ptClient.from("team_standings").select("team_id,rank,total_kills,total_points,kill_rate,pot_top_count").eq("tournament_id", tournamentId).order("rank"),
         supabase.from("bet_markets").select("id,market_type,round_number,status,total_volume,kronix_volume,pt_match_id,resolved_at").eq("pt_tournament_id", tournamentId).order("opened_at"),
       ]);
+      if (tErr) setLoadError(`${tErr.code}: ${tErr.message}`);
       setTournament(t ?? null);
       setMatches(m ?? []);
       setTeams(tm ?? []);
@@ -94,7 +96,13 @@ export default function TournamentSupervisionPage() {
   const openMarkets = markets.filter(m => m.status === "open").length;
 
   if (loading) return <p className={styles.loadingText}>CARGANDO TORNEO...</p>;
-  if (!tournament) return <p className={styles.loadingText}>Torneo no encontrado.</p>;
+  if (!tournament) return (
+    <div style={{ padding: "2rem" }}>
+      <p className={styles.loadingText}>Torneo no encontrado.</p>
+      {loadError && <p style={{ color: "#f87171", fontFamily: "monospace", fontSize: "0.75rem", marginTop: "0.5rem" }}>{loadError}</p>}
+      <p style={{ color: "var(--text-muted)", fontFamily: "monospace", fontSize: "0.7rem", marginTop: "0.25rem" }}>ID: {tournamentId}</p>
+    </div>
+  );
 
   return (
     <div className={styles.dashboard}>
