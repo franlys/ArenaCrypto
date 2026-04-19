@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       .neq("pt_tournament_id", null);
 
     if (tournaments) {
-      const uniqueIds = [...new Set(tournaments.map((t: any) => t.pt_tournament_id))];
+      const uniqueIds = Array.from(new Set(tournaments.map((t: any) => t.pt_tournament_id)));
       await Promise.all(
         uniqueIds.map((id) =>
           acAdmin.rpc("calculate_tournament_revenue", { p_pt_tournament_id: id })
