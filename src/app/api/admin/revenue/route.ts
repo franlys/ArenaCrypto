@@ -55,33 +55,44 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Volumen test por torneo (informativo — no cuenta para comisiones)
+  // Volumen test por torneo (informativo — no cuenta para comisiones reales)
   const { data: testData } = await acAdmin
     .from("tournament_bets")
-    .select("pt_tournament_id, amount")
+    .select("pt_tournament_id, amount, origin_platform")
     .eq("is_test", true)
     .neq("status", "canceled");
 
   const testVolumeByTournament: Record<string, number> = {};
+  const testKronixVolumeByTournament: Record<string, number> = {};
   (testData ?? []).forEach((b: any) => {
     const tid = b.pt_tournament_id;
     testVolumeByTournament[tid] = (testVolumeByTournament[tid] ?? 0) + Number(b.amount);
+    if (b.origin_platform === "kronix") {
+      testKronixVolumeByTournament[tid] = (testKronixVolumeByTournament[tid] ?? 0) + Number(b.amount);
+    }
   });
 
-  const records = (data ?? []).map((r: any) => ({
-    ...r,
-    test_volume: testVolumeByTournament[r.pt_tournament_id] ?? 0,
-  }));
+  const records = (data ?? []).map((r: any) => {
+    const testVol = testVolumeByTournament[r.pt_tournament_id] ?? 0;
+    return {
+      ...r,
+      test_volume:      testVol,
+      test_commission:  testVol * 0.01,
+    };
+  });
+
+  const totalTestVolume = Object.values(testVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
 
   const summary = {
-    total_tournaments:    records.length,
-    total_real_volume:    records.reduce((s: number, r: any) => s + Number(r.total_volume), 0),
-    total_kronix_volume:  records.reduce((s: number, r: any) => s + Number(r.kronix_volume), 0),
-    total_commission:     records.reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
-    total_test_volume:    Object.values(testVolumeByTournament).reduce((s: number, v: number) => s + v, 0),
-    pending_amount:       records
-                            .filter((r: any) => r.status === "pending")
-                            .reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
+    total_tournaments:     records.length,
+    total_real_volume:     records.reduce((s: number, r: any) => s + Number(r.total_volume), 0),
+    total_kronix_volume:   records.reduce((s: number, r: any) => s + Number(r.kronix_volume), 0),
+    total_commission:      records.reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
+    total_test_volume:     totalTestVolume,
+    total_test_commission: totalTestVolume * 0.01,
+    pending_amount:        records
+                             .filter((r: any) => r.status === "pending")
+                             .reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
   };
 
   return NextResponse.json({ summary, records });
