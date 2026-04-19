@@ -4,17 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { createClient } from "@supabase/supabase-js";
+import { tournamentDb as ptClient } from "@/lib/supabase/tournament-db";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin.module.css";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-const ptClient = createClient(
-  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: false, autoRefreshToken: false } }
-);
+// ptClient instantiated via singleton
 
 const MARKET_LABELS: Record<string, string> = {
   tournament_winner:    "Ganador Torneo",
@@ -143,7 +139,7 @@ export default function TournamentSupervisionPage() {
           </div>
         </div>
         <a
-          href={`https://proyecto-torneo-flcf.vercel.app/t/${tournamentId}`}
+          href={`https://proyecto-torneo-flcf.vercel.app/t/${tournament?.slug ?? tournamentId}`}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.btnResolve}
