@@ -55,44 +55,63 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Volumen test por torneo (informativo — no cuenta para comisiones reales)
+  // Volumen test y ganancias reales de PT (apostado − pagado)
   const { data: testData } = await acAdmin
     .from("tournament_bets")
-    .select("pt_tournament_id, amount, origin_platform")
+    .select("pt_tournament_id, amount, payout_amount, status, origin_platform")
     .eq("is_test", true)
     .neq("status", "canceled");
 
-  const testVolumeByTournament: Record<string, number> = {};
-  const testKronixVolumeByTournament: Record<string, number> = {};
+  const testVolumeByTournament:   Record<string, number> = {};
+  const testEarningsByTournament: Record<string, number> = {};
   (testData ?? []).forEach((b: any) => {
     const tid = b.pt_tournament_id;
-    testVolumeByTournament[tid] = (testVolumeByTournament[tid] ?? 0) + Number(b.amount);
-    if (b.origin_platform === "kronix") {
-      testKronixVolumeByTournament[tid] = (testKronixVolumeByTournament[tid] ?? 0) + Number(b.amount);
-    }
+    const amt = Number(b.amount ?? 0);
+    const pay = Number(b.payout_amount ?? 0);
+    testVolumeByTournament[tid]   = (testVolumeByTournament[tid]   ?? 0) + amt;
+    // PT se queda con lo apostado menos lo devuelto a ganadores
+    testEarningsByTournament[tid] = (testEarningsByTournament[tid] ?? 0) + amt - pay;
+  });
+
+  // Rake earned by PT per tournament (sum of rake_amount on resolved markets)
+  const { data: rakeData } = await acAdmin
+    .from("bet_markets")
+    .select("pt_tournament_id, rake_amount")
+    .eq("status", "resolved")
+    .not("rake_amount", "is", null);
+
+  const rakeByTournament: Record<string, number> = {};
+  (rakeData ?? []).forEach((m: any) => {
+    const tid = m.pt_tournament_id;
+    rakeByTournament[tid] = (rakeByTournament[tid] ?? 0) + Number(m.rake_amount ?? 0);
   });
 
   const records = (data ?? []).map((r: any) => {
-    const testVol = testVolumeByTournament[r.pt_tournament_id] ?? 0;
+    const testVol      = testVolumeByTournament[r.pt_tournament_id]   ?? 0;
+    const testEarnings = testEarningsByTournament[r.pt_tournament_id] ?? 0;
+    const rakeEarned   = rakeByTournament[r.pt_tournament_id]         ?? 0;
     return {
       ...r,
-      test_volume:      testVol,
-      test_commission:  testVol * 0.01,
+      test_volume:    testVol,
+      test_earnings:  testEarnings,
+      rake_earned:    rakeEarned,
     };
   });
 
-  const totalTestVolume = Object.values(testVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
+  const totalTestVolume   = Object.values(testVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
+  const totalTestEarnings = Object.values(testEarningsByTournament).reduce((s: number, v: number) => s + v, 0);
 
   const summary = {
-    total_tournaments:     records.length,
-    total_real_volume:     records.reduce((s: number, r: any) => s + Number(r.total_volume), 0),
-    total_kronix_volume:   records.reduce((s: number, r: any) => s + Number(r.kronix_volume), 0),
-    total_commission:      records.reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
-    total_test_volume:     totalTestVolume,
-    total_test_commission: totalTestVolume * 0.01,
-    pending_amount:        records
-                             .filter((r: any) => r.status === "pending")
-                             .reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
+    total_tournaments:   records.length,
+    total_real_volume:   records.reduce((s: number, r: any) => s + Number(r.total_volume), 0),
+    total_kronix_volume: records.reduce((s: number, r: any) => s + Number(r.kronix_volume), 0),
+    total_commission:    records.reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
+    total_rake_earned:   records.reduce((s: number, r: any) => s + Number(r.rake_earned ?? 0), 0),
+    total_test_volume:   totalTestVolume,
+    total_test_earnings: totalTestEarnings,
+    pending_amount:      records
+                           .filter((r: any) => r.status === "pending")
+                           .reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
   };
 
   return NextResponse.json({ summary, records });
