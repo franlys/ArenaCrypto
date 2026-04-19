@@ -32,7 +32,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 type Tournament = {
-  id: string; name: string; status: string;
+  id: string; name: string; status: string; slug: string;
   arena_betting_enabled: boolean; arena_betting_status: string;
   total_live_viewers: number; start_date: string | null; end_date: string | null;
   total_matches: number; matches_completed: number;
