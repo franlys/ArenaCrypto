@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { tournamentDb as ptClient } from "@/lib/supabase/tournament-db";
 import { supabase } from "@/lib/supabase";
 import styles from "../../admin.module.css";
 
@@ -66,24 +65,16 @@ export default function TournamentSupervisionPage() {
   useEffect(() => {
     if (!tournamentId) return;
     async function load() {
-      const [
-        { data: t, error: tErr },
-        { data: m },
-        { data: tm },
-        { data: st },
-        { data: mk },
-      ] = await Promise.all([
-        ptClient.from("tournaments").select("*").eq("id", tournamentId).limit(1).then(r => ({ data: r.data?.[0] ?? null, error: r.error })),
-        ptClient.from("matches").select("id,match_number,name,round_number,is_completed,completed_at,map_name").eq("tournament_id", tournamentId).order("match_number"),
-        ptClient.from("teams").select("id,name,avatar_url").eq("tournament_id", tournamentId),
-        ptClient.from("team_standings").select("team_id,rank,total_kills,total_points,kill_rate,pot_top_count").eq("tournament_id", tournamentId).order("rank"),
+      const [ptRes, { data: mk }] = await Promise.all([
+        fetch(`/api/pt/tournament/${tournamentId}`).then(r => r.json()),
         supabase.from("bet_markets").select("id,market_type,round_number,status,total_volume,kronix_volume,pt_match_id,resolved_at").eq("pt_tournament_id", tournamentId).order("opened_at"),
       ]);
-      if (tErr) setLoadError(`${tErr.code}: ${tErr.message}`);
-      setTournament(t ?? null);
-      setMatches(m ?? []);
-      setTeams(tm ?? []);
-      setStandings(st ?? []);
+
+      if (!ptRes.tournament) setLoadError("Torneo no encontrado en PT");
+      setTournament(ptRes.tournament ?? null);
+      setMatches(ptRes.matches ?? []);
+      setTeams(ptRes.teams ?? []);
+      setStandings(ptRes.standings ?? []);
       setMarkets(mk ?? []);
       setLoading(false);
     }
