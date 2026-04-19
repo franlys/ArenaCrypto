@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { DollarSign, TrendingUp, Users, Wallet } from "lucide-react";
 import styles from "./admin.module.css";
 import { motion } from "framer-motion";
+import KronixBalance from "./KronixBalance";
 
 export default function EconomyDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -92,6 +93,8 @@ export default function EconomyDashboard() {
           </motion.div>
         ))}
       </div>
+
+      <KronixBalance />
 
       <div style={{ marginTop: '3rem' }}>
         <h3 className="font-orbitron" style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>ÚLTIMOS MOVIMIENTOS</h3>
