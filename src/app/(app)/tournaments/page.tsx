@@ -5,12 +5,14 @@ import { Orbitron } from 'next/font/google'
 import Link from 'next/link'
 import AdZone from '@/components/Marketing/AdZone'
 import { useEffect, useState } from 'react'
+import { useUser } from '@/contexts/UserContext'
 
 const orbitron = Orbitron({ subsets: ['latin'] })
 
 type Tab = 'activos' | 'historial'
 
 export default function TournamentsPage() {
+  const { user } = useUser()
   const [tab, setTab] = useState<Tab>('activos')
   const [all, setAll] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,10 +21,9 @@ export default function TournamentsPage() {
     tournamentDb
       .from('tournaments')
       .select('*')
-      .eq('arena_betting_enabled', true)
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setAll(data ?? [])
+        setAll((data ?? []).filter((t: any) => t.arena_betting_enabled))
         setLoading(false)
       })
   }, [])
@@ -73,7 +74,7 @@ export default function TournamentsPage() {
             </button>
           ))}
           <Link
-            href="/historial"
+            href={user ? '/historial' : '/login'}
             style={{
               marginLeft: 'auto', fontFamily: 'Orbitron, sans-serif', fontSize: '0.6rem',
               letterSpacing: '0.12em', padding: '0.5rem 1rem', borderRadius: '6px',
