@@ -72,7 +72,7 @@ export default function TournamentSupervisionPage() {
         { data: st },
         { data: mk },
       ] = await Promise.all([
-        ptClient.from("tournaments").select("id,name,status,arena_betting_enabled,arena_betting_status,total_live_viewers,start_date,end_date,total_matches,matches_completed").eq("id", tournamentId).single(),
+        ptClient.from("tournaments").select("id,name,status,slug,arena_betting_enabled,arena_betting_status,total_live_viewers,start_date,end_date,total_matches,matches_completed").eq("id", tournamentId).single(),
         ptClient.from("matches").select("id,match_number,name,round_number,is_completed,completed_at,map_name").eq("tournament_id", tournamentId).order("match_number"),
         ptClient.from("teams").select("id,name,avatar_url").eq("tournament_id", tournamentId),
         ptClient.from("team_standings").select("team_id,rank,total_kills,total_points,kill_rate,pot_top_count").eq("tournament_id", tournamentId).order("rank"),
