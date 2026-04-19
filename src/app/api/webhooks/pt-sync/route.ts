@@ -62,6 +62,13 @@ export async function POST(req: NextRequest) {
         }, { onConflict: "pt_id" });
         if (error) throw error;
 
+        if (data.status === "finished") {
+          await acAdmin.from("bet_markets")
+            .update({ status: "closed" })
+            .eq("pt_tournament_id", data.id)
+            .eq("status", "open");
+        }
+
       } else if (table === "teams") {
         const { error } = await acAdmin.from("ac_teams").upsert({
           pt_id:            data.id,
@@ -87,6 +94,7 @@ export async function POST(req: NextRequest) {
         if (error) throw error;
 
       } else if (table === "matches") {
+        const isCompleted = data.isCompleted ?? data.is_completed ?? false;
         const { error } = await acAdmin.from("ac_matches").upsert({
           pt_id:            data.id,
           pt_tournament_id: data.tournamentId  ?? data.tournament_id,
@@ -94,13 +102,20 @@ export async function POST(req: NextRequest) {
           match_number:     data.matchNumber   ?? data.match_number,
           round_number:     data.roundNumber   ?? data.round_number   ?? 1,
           map_name:         data.mapName       ?? data.map_name,
-          is_completed:     data.isCompleted   ?? data.is_completed   ?? false,
+          is_completed:     isCompleted,
           is_active:        data.isActive      ?? data.is_active      ?? false,
           is_warmup:        data.isWarmup      ?? data.is_warmup      ?? false,
           parent_match_id:  data.parentMatchId ?? data.parent_match_id ?? null,
           synced_at:        syncedAt,
         }, { onConflict: "pt_id" });
         if (error) throw error;
+
+        if (isCompleted) {
+          await acAdmin.from("bet_markets")
+            .update({ status: "closed" })
+            .eq("pt_match_id", data.id)
+            .eq("status", "open");
+        }
       }
 
     } else if (event === "delete") {
