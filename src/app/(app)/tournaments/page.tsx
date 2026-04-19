@@ -1,6 +1,5 @@
 'use client'
 
-import { tournamentDb } from '@/lib/supabase/tournament-db'
 import { Orbitron } from 'next/font/google'
 import Link from 'next/link'
 import AdZone from '@/components/Marketing/AdZone'
@@ -18,12 +17,10 @@ export default function TournamentsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    tournamentDb
-      .from('tournaments')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setAll((data ?? []).filter((t: any) => t.arena_betting_enabled))
+    fetch('/api/pt/tournaments')
+      .then(r => r.json())
+      .then(data => {
+        setAll(Array.isArray(data) ? data : [])
         setLoading(false)
       })
   }, [])
