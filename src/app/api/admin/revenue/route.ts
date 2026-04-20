@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
 
   const totalPaid    = (withdrawals ?? []).filter((w: any) => w.status === "paid").reduce((s: number, w: any) => s + Number(w.amount), 0);
   const totalPending = (withdrawals ?? []).filter((w: any) => w.status === "pending").reduce((s: number, w: any) => s + Number(w.amount), 0);
-  const ptBalance    = totalTestEarnings + summary.total_rake_earned - totalPaid;
+  const ptBalance    = summary.total_rake_earned - totalPaid;
 
   return NextResponse.json({ summary: { ...summary, pt_balance: ptBalance, pt_pending_withdrawal: totalPending }, records });
 }
