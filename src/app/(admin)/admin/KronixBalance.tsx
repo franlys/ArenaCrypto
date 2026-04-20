@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase'
 
 export default function KronixBalance() {
-  const supabase = createClient()
   const [balance, setBalance]   = useState<number | null>(null)
   const [pending, setPending]   = useState<{ id: string; amount: number; requested_at: string }[]>([])
   const [marking, setMarking]   = useState<string | null>(null)
