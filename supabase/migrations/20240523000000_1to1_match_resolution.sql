@@ -15,7 +15,7 @@ CREATE OR REPLACE FUNCTION public.resolve_bet_market(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-AS $$
+AS $func$
 DECLARE
   v_caller_role    TEXT;
   v_market_status  TEXT;
@@ -33,14 +33,14 @@ DECLARE
   v_t_matched      NUMERIC;
 BEGIN
   -- ── Auth ─────────────────────────────────────────────────────────────────────
-  SELECT role INTO v_caller_role FROM public.profiles WHERE id = auth.uid();
+  v_caller_role := (SELECT role FROM public.profiles WHERE id = auth.uid());
   IF LOWER(v_caller_role) IS DISTINCT FROM 'admin' THEN
     RETURN jsonb_build_object('error', 'Unauthorized');
   END IF;
 
   -- ── Validate market ───────────────────────────────────────────────────────────
-  SELECT status INTO v_market_status FROM public.bet_markets WHERE id = p_market_id;
-  IF NOT FOUND THEN RETURN jsonb_build_object('error', 'Market not found'); END IF;
+  v_market_status := (SELECT status FROM public.bet_markets WHERE id = p_market_id);
+  IF v_market_status IS NULL THEN RETURN jsonb_build_object('error', 'Market not found'); END IF;
   IF v_market_status = 'resolved' THEN RETURN jsonb_build_object('error', 'Market already resolved'); END IF;
 
   v_winner_id := COALESCE(p_result_pt_player_id, p_result_pt_team_id);
@@ -165,7 +165,7 @@ BEGIN
     'lost_count',    v_lost_count
   );
 END;
-$$;
+$func$;
 
 REVOKE ALL ON FUNCTION public.resolve_bet_market FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.resolve_bet_market TO authenticated;
