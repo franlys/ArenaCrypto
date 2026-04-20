@@ -197,6 +197,22 @@ export function BetForm({ team, player, tournamentId, marketId, userBalance, isT
                 }}
               />
             </div>
+            {/* Pool info */}
+            <div style={{
+              background: 'rgba(0,245,255,0.04)', border: '1px solid rgba(0,245,255,0.12)',
+              borderRadius: '6px', padding: '0.5rem 0.65rem',
+              display: 'flex', flexDirection: 'column', gap: '0.2rem',
+            }}>
+              <p style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: '0.1em', color: 'rgba(0,245,255,0.6)', marginBottom: '0.1rem' }}>
+                ¿CÓMO FUNCIONA EL POOL?
+              </p>
+              <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
+                Cada comunidad apuesta por su equipo. Los pools se igualan al mínimo entre todas las comunidades — el exceso te es devuelto automáticamente. Si tu equipo gana, recibes tu apuesta igualada × 2.
+              </p>
+              <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: 'rgba(250,204,21,0.55)', lineHeight: 1.4 }}>
+                ⚠ Si no hay apuestas contrarias al cerrar el mercado, tu apuesta se cancela y se devuelve el saldo.
+              </p>
+            </div>
             {/* Confirm button */}
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <button
@@ -351,6 +367,23 @@ export function BetForm({ team, player, tournamentId, marketId, userBalance, isT
             outline: 'none', textAlign: 'center',
           }}
         />
+      </div>
+
+      {/* Pool info */}
+      <div style={{
+        background: 'rgba(0,245,255,0.04)', border: '1px solid rgba(0,245,255,0.12)',
+        borderRadius: '8px', padding: '0.65rem 0.85rem',
+        display: 'flex', flexDirection: 'column', gap: '0.25rem',
+      }}>
+        <p style={{ fontFamily: 'Orbitron, sans-serif', fontSize: '0.5rem', letterSpacing: '0.12em', color: 'rgba(0,245,255,0.6)', marginBottom: '0.15rem' }}>
+          ¿CÓMO FUNCIONA EL POOL?
+        </p>
+        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.78rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.45 }}>
+          Cada comunidad apuesta por su equipo. Los pools se igualan al mínimo entre todas las comunidades — el exceso te es devuelto. Si tu equipo gana, recibes tu apuesta igualada × 2.
+        </p>
+        <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.74rem', color: 'rgba(250,204,21,0.55)', lineHeight: 1.4 }}>
+          ⚠ Si no hay apuestas contrarias al cerrar el mercado, tu apuesta se cancela y el saldo es devuelto automáticamente.
+        </p>
       </div>
 
       <button
