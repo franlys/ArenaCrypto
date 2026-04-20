@@ -55,6 +55,23 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Volumen real por torneo (is_test = false) — calculado directo, ignora kronix_revenue.total_volume
+  const { data: realBetsData } = await acAdmin
+    .from("tournament_bets")
+    .select("pt_tournament_id, amount, origin_platform")
+    .eq("is_test", false)
+    .neq("status", "canceled");
+
+  const realVolumeByTournament: Record<string, number> = {};
+  const kronixVolumeByTournament: Record<string, number> = {};
+  (realBetsData ?? []).forEach((b: any) => {
+    const tid = b.pt_tournament_id;
+    const amt = Number(b.amount ?? 0);
+    realVolumeByTournament[tid] = (realVolumeByTournament[tid] ?? 0) + amt;
+    if (b.origin_platform === "kronix")
+      kronixVolumeByTournament[tid] = (kronixVolumeByTournament[tid] ?? 0) + amt;
+  });
+
   // Volumen test y ganancias reales de PT (apostado − pagado)
   const { data: testData } = await acAdmin
     .from("tournament_bets")
@@ -90,8 +107,12 @@ export async function GET(req: NextRequest) {
     const testVol      = testVolumeByTournament[r.pt_tournament_id]   ?? 0;
     const testEarnings = testEarningsByTournament[r.pt_tournament_id] ?? 0;
     const rakeEarned   = rakeByTournament[r.pt_tournament_id]         ?? 0;
+    const realVol      = realVolumeByTournament[r.pt_tournament_id]   ?? 0;
+    const kronixVol    = kronixVolumeByTournament[r.pt_tournament_id] ?? 0;
     return {
       ...r,
+      total_volume:   realVol,
+      kronix_volume:  kronixVol,
       test_volume:    testVol,
       test_earnings:  testEarnings,
       rake_earned:    rakeEarned,
@@ -100,11 +121,13 @@ export async function GET(req: NextRequest) {
 
   const totalTestVolume   = Object.values(testVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
   const totalTestEarnings = Object.values(testEarningsByTournament).reduce((s: number, v: number) => s + v, 0);
+  const totalRealVolume   = Object.values(realVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
+  const totalKronixVolume = Object.values(kronixVolumeByTournament).reduce((s: number, v: number) => s + v, 0);
 
   const summary = {
     total_tournaments:   records.length,
-    total_real_volume:   records.reduce((s: number, r: any) => s + Number(r.total_volume), 0),
-    total_kronix_volume: records.reduce((s: number, r: any) => s + Number(r.kronix_volume), 0),
+    total_real_volume:   totalRealVolume,
+    total_kronix_volume: totalKronixVolume,
     total_commission:    records.reduce((s: number, r: any) => s + Number(r.commission_amount), 0),
     total_rake_earned:   records.reduce((s: number, r: any) => s + Number(r.rake_earned ?? 0), 0),
     total_test_volume:   totalTestVolume,
