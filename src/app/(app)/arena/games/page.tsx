@@ -24,7 +24,7 @@ export default function GamesHubPage() {
             cursor: 'pointer',
             transition: 'border-color 150ms ease-out',
           }}>
-            <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>📈</div>
+            <div className="font-orbitron" style={{ fontSize: '2rem', lineHeight: 1, color: '#00F5FF' }}>↑×</div>
             <div>
               <p className="font-orbitron" style={{ fontSize: '1.1rem', color: '#00F5FF', marginBottom: '0.35rem' }}>CRASH</p>
               <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
@@ -55,7 +55,7 @@ export default function GamesHubPage() {
             cursor: 'pointer',
             transition: 'border-color 150ms ease-out',
           }}>
-            <div style={{ fontSize: '2.5rem', lineHeight: 1 }}>🎲</div>
+            <div className="font-orbitron" style={{ fontSize: '2rem', lineHeight: 1, color: 'hsl(var(--neon-purple))' }}>◈</div>
             <div>
               <p className="font-orbitron" style={{ fontSize: '1.1rem', color: 'hsl(var(--neon-purple))', marginBottom: '0.35rem' }}>DICE</p>
               <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>

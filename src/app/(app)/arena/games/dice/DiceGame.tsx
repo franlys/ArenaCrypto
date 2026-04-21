@@ -84,7 +84,7 @@ export function DiceGame() {
         <div>
           <Link href="/arena/games" className={styles.backLink}>← Arena Games</Link>
           <h1 className={`font-orbitron ${styles.title}`}>
-            DICE <span style={{ color: 'hsl(var(--neon-purple))', fontSize: '0.6em' }}>🎲</span>
+            DICE <span style={{ color: 'hsl(var(--neon-purple))', fontSize: '0.55em' }}>◈</span>
           </h1>
         </div>
         <div className={styles.balanceRow}>

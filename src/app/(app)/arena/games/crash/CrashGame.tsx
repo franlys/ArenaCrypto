@@ -142,7 +142,7 @@ export function CrashGame() {
         <div>
           <Link href="/arena/games" className={styles.backLink}>← Arena Games</Link>
           <h1 className={`font-orbitron ${styles.title}`}>
-            CRASH <span style={{ color: '#00F5FF', fontSize: '0.6em' }}>📈</span>
+            CRASH <span style={{ color: '#00F5FF', fontSize: '0.55em', letterSpacing: '0.05em' }}>↑</span>
           </h1>
         </div>
         <div className={styles.balanceRow}>
@@ -162,16 +162,25 @@ export function CrashGame() {
             <motion.div key="betting" className={styles.bettingPhase}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p className={styles.phaseLabel}>APOSTANDO</p>
-              <motion.p
-                className={styles.countdown}
-                key={countdown}
-                initial={{ scale: 1.2, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.15 }}
-              >
-                {countdown}
-              </motion.p>
-              <p className={styles.phaseHint}>La ronda inicia en {countdown}s</p>
+              <div className={styles.countdownRing}>
+                <motion.div
+                  className={styles.countdownPulse}
+                  animate={{ scale: [1, 1.18, 1], opacity: [0.5, 0.15, 0.5] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.p
+                  className={styles.countdown}
+                  key={countdown}
+                  initial={{ scale: 1.3, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {countdown > 0 ? countdown : '...'}
+                </motion.p>
+              </div>
+              <p className={styles.phaseHint}>
+                {countdown > 0 ? `La ronda inicia en ${countdown}s` : 'Iniciando…'}
+              </p>
             </motion.div>
           ) : state?.phase === 'crashed' ? (
             <motion.div key="crashed" className={styles.crashedPhase}
