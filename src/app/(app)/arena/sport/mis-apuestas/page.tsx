@@ -55,7 +55,7 @@ export default function MisApuestasPage() {
 
   useEffect(() => {
     getUserExternalBets().then(res => {
-      if ('data' in res) setBets(res.data as Bet[])
+      if ('data' in res) setBets(res.data as unknown as Bet[])
       setLoading(false)
     })
   }, [])
