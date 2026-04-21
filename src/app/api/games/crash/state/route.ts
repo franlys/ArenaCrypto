@@ -10,7 +10,8 @@ import crypto            from 'crypto'
 const BETTING_MS  = 7_000   // betting phase duration
 const BETWEEN_MS  = 4_000   // pause between rounds after crash
 const CRASH_K     = 0.00006 // multiplier = e^(K * elapsed_ms)
-const MAX_MULT    = 200     // hard cap — round always crashes by 200x
+const MAX_MULT    = 100     // hard cap — round always crashes by 100x
+const HOUSE_RTP   = 0.92    // 8% house edge
 
 function db() {
   return createClient(
@@ -23,9 +24,9 @@ function generateCrashPoint(): { seed: string; point: number } {
   const seed = crypto.randomBytes(16).toString('hex')
   const hash = crypto.createHash('sha256').update(seed).digest('hex')
   const h    = parseInt(hash.slice(0, 8), 16)
-  if (h % 33 === 0) return { seed, point: 1.00 }
+  if (h % 20 === 0) return { seed, point: 1.00 }  // ~5% instant crash
   const r     = h / 2 ** 32
-  const point = Math.max(1.01, Math.min(MAX_MULT, Math.floor((0.97 / (1 - r)) * 100) / 100))
+  const point = Math.max(1.01, Math.min(MAX_MULT, Math.floor((HOUSE_RTP / (1 - r)) * 100) / 100))
   return { seed, point }
 }
 
