@@ -67,28 +67,44 @@ async function getState() {
 
   let cur = round as Record<string, unknown> | null
 
-  // ── A: crashed / no round → maybe start a new one ──────────────────────────
+  // ── A: crashed / no round → start new round ───────────────────────────────
   if (!cur || cur.status === 'crashed') {
     const lastCrash      = cur?.crashed_at ? new Date(cur.crashed_at as string).getTime() : 0
     const timeSinceCrash = now - lastCrash
 
     if (timeSinceCrash >= BETWEEN_MS || !cur) {
-      const { data: existing } = await admin
+      // Look for a waiting round ONLY (skip stuck running rounds — Block C handles those)
+      const { data: waiting } = await admin
         .from('crash_rounds').select('*')
-        .in('status', ['waiting', 'running'])
+        .eq('status', 'waiting')
         .order('created_at', { ascending: false })
         .limit(1).maybeSingle()
 
-      if (existing) {
-        cur = existing
+      if (waiting) {
+        cur = waiting
       } else {
-        const { seed, point } = generateCrashPoint()
-        const { data: newRound, error: insertErr } = await admin
-          .from('crash_rounds')
-          .insert({ server_seed: seed, crash_point: point, status: 'waiting' })
-          .select().single()
-        if (newRound) cur = newRound
-        else console.error('[crash/state] insert failed:', insertErr?.message)
+        // Also check if there's a running round — hand off to Block C
+        const { data: running } = await admin
+          .from('crash_rounds').select('*')
+          .eq('status', 'running')
+          .order('created_at', { ascending: false })
+          .limit(1).maybeSingle()
+
+        if (running) {
+          cur = running  // Block C will crash it
+        } else {
+          // Create fresh round
+          const { seed, point } = generateCrashPoint()
+          const { data: newRound, error: insertErr } = await admin
+            .from('crash_rounds')
+            .insert({ server_seed: seed, crash_point: point, status: 'waiting' })
+            .select().single()
+          if (newRound) {
+            cur = newRound
+          } else {
+            console.error('[crash/state] insert failed:', insertErr?.message, insertErr?.code)
+          }
+        }
       }
     }
   }
