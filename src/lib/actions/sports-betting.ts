@@ -60,7 +60,23 @@ export async function placeExternalBet(input: PlaceExternalBetInput) {
 
   if (walletErr) return { error: walletErr.message }
 
-  // 4. Insert bet
+  // 4. Check for existing bet on this market
+  const { data: existing } = await admin
+    .from('external_bets')
+    .select('id')
+    .eq('market_id', market.id)
+    .eq('user_id', user.id)
+    .eq('is_test', input.isTest)
+    .in('status', ['pending', 'won', 'lost', 'paid'])
+    .maybeSingle()
+
+  if (existing) {
+    // Rollback balance deduction
+    await admin.from('wallets').update({ [field]: balance }).eq('user_id', user.id)
+    return { error: 'Ya tienes una apuesta en este partido' }
+  }
+
+  // 5. Insert bet
   const { data: bet, error: betErr } = await admin
     .from('external_bets')
     .insert({
