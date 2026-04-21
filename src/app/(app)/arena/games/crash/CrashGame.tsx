@@ -4,11 +4,11 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
-import { supabase } from '@/lib/supabase'
 import styles from './crash.module.css'
 
-const QUICK   = [1, 5, 10, 25]
-const CRASH_K = 0.00006
+const QUICK    = [1, 5, 10, 25]
+const CRASH_K  = 0.00006
+const MAX_MULT = 100
 
 interface Bet {
   amount:    number
@@ -51,57 +51,25 @@ export function CrashGame() {
   const testBalance   = Number(profile?.wallets?.test_balance        ?? 0)
   const activeBalance = isTest ? testBalance : balance
 
-  // ── Polling 200ms non-blocking ──────────────────────────────────────────────
+  // ── Polling cada 350ms ──────────────────────────────────────────────────────
   useEffect(() => {
-    let inflight = false
-
     async function poll() {
-      if (inflight) return
-      inflight = true
       try {
         const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
         if (res.ok) {
           const data: State = await res.json()
           setState(data)
           stateRef.current = data
-          if (data.phase === 'running' && data.startedAt) {
-            startedAtRef.current = data.startedAt
-          }
+          if (data.phase === 'running' && data.startedAt) startedAtRef.current = data.startedAt
           if (data.phase === 'betting' && data.timeUntilStart > 0) {
             roundStartsAtRef.current = Date.now() + data.timeUntilStart
           }
         }
-      } catch { /* ignore network errors */ }
-      finally { inflight = false }
+      } catch { /* ignore */ }
     }
-
     poll()
-    const id = setInterval(poll, 200)
+    const id = setInterval(poll, 350)
     return () => clearInterval(id)
-  }, [])
-
-  // ── Supabase Realtime — instant round change notification ───────────────────
-  useEffect(() => {
-    const channel = supabase
-      .channel('crash-rounds-rt')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'crash_rounds' },
-        async () => {
-          try {
-            const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
-            if (res.ok) {
-              const data: State = await res.json()
-              setState(data)
-              stateRef.current = data
-              if (data.phase === 'running' && data.startedAt) startedAtRef.current = data.startedAt
-              if (data.phase === 'betting' && data.timeUntilStart > 0) {
-                roundStartsAtRef.current = Date.now() + data.timeUntilStart
-              }
-            }
-          } catch { /* ignore */ }
-        }
-      )
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
   }, [])
 
   // ── Always-running rAF — reads refs, no stale closures ─────────────────────
@@ -110,7 +78,8 @@ export function CrashGame() {
       const s = stateRef.current
       if (s?.phase === 'running' && startedAtRef.current) {
         const elapsed = Date.now() - startedAtRef.current
-        setLiveMult(Math.round(Math.exp(CRASH_K * elapsed) * 100) / 100)
+        const raw = Math.exp(CRASH_K * elapsed)
+        setLiveMult(Math.round(Math.min(raw, MAX_MULT) * 100) / 100)
       } else if (s?.phase === 'crashed') {
         setLiveMult(s.crashPoint ?? s.multiplier)
       } else if (s?.phase === 'betting') {
