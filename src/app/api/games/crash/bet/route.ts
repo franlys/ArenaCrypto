@@ -56,9 +56,9 @@ export async function POST(req: NextRequest) {
   })
 
   if (bErr) {
-    // Rollback
+    console.error('crash_bets insert error:', bErr.message, bErr.code)
     await db.from('wallets').update({ [field]: balance }).eq('user_id', user.id)
-    return NextResponse.json({ error: bErr.message }, { status: 500 })
+    return NextResponse.json({ error: bErr.message, code: bErr.code }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, roundId: round.id })
