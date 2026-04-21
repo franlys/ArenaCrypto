@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export PATH=\"/c/Users/elmae/AppData/Local/nvm/v22.18.0/bin:/c/Users/elmae/AppData/Local/nvm/v18.20.8:$PATH\")",
+      "Bash(export PATH=\"/c/Users/elmae/AppData/Local/nvm/v18.20.8:$PATH\")",
+      "mcp__claude_ai_Vercel__get_runtime_logs",
+      "mcp__claude_ai_Vercel__get_deployment_build_logs",
+      "mcp__claude_ai_Vercel__list_deployments",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(supabase projects *)",
+      "Bash(supabase db *)",
+      "Bash(npx supabase *)",
+      "Read(//c/Users/elmae/AppData/Roaming/npm/**)",
+      "Read(//c/Users/elmae/.supabase/**)",
+      "Bash(cmd /c \"supabase --version\")",
+      "Bash(cmd /c \"where supabase\")",
+      "mcp__claude_ai_Vercel__get_deployment",
+      "Bash(supabase --version)",
+      "Bash(curl -s -X POST https://bcyzskbvcrqbzkuzihtn.supabase.co/rest/v1/rpc/exec_sql -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjeXpza2J2Y3JxYnprdXppaHRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTkzMzk4OSwiZXhwIjoyMDkxNTA5OTg5fQ.IOmtjr-HbsmIlnzuFXRtBPbtMj5DeBrSdlCy4hD92lA' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjeXpza2J2Y3JxYnprdXppaHRuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTkzMzk4OSwiZXhwIjoyMDkxNTA5OTg5fQ.IOmtjr-HbsmIlnzuFXRtBPbtMj5DeBrSdlCy4hD92lA' -H 'Content-Type: application/json' -d '{\"query\": __CMDSUB_OUTPUT__')",
+      "Read(//c/Python313//**)",
+      "Bash(/c/Python313/python.exe --version)",
+      "Read(//c/Users/elmae/AppData/Local/Programs//**)",
+      "Read(//c/Users/elmae/AppData/Roaming/**)",
+      "Read(//c/Users/elmae/**)",
+      "Bash(/c/Users/elmae/AppData/Local/nvm/v22.18.0/node.exe -e ' *)",
+      "Read(//c/tmp/**)",
+      "Bash(/c/Users/elmae/AppData/Local/nvm/v22.18.0/npm install *)",
+      "Bash(/c/Users/elmae/AppData/Local/nvm/v22.18.0/node.exe --require /tmp/pgrun/node_modules/pg/lib/index.js -e ' *)",
+      "Read(//tmp/pgrun/**)",
+      "Bash(/c/Users/elmae/AppData/Local/nvm/v22.18.0/node.exe scripts/seed_game_modes.mjs)",
+      "Bash(sort echo *)",
+      "mcp__claude_ai_Vercel__deploy_to_vercel",
+      "Bash(python3 -c \" import sys, json lines = sys.stdin.readlines\\(\\) for line in lines[-30:]: try: d = json.loads\\(line\\) role = d.get\\('role',''\\) if role in \\('user','assistant'\\): content = d.get\\('content',''\\) if isinstance\\(content, list\\): for c in content: if isinstance\\(c, dict\\) and c.get\\('type'\\) == 'text': print\\(f'[{role}]: {c[\\\\\"text\\\\\"][:300]}'\\) elif isinstance\\(content, str\\): print\\(f'[{role}]: {content[:300]}'\\) except: pass \")",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(git diff *)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npx supabase db push --profile arena 2>&1\")",
+      "Read(//c/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/**)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npm run build\")"
+    ]
+  }
+}

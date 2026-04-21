@@ -4,17 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
-import { createClient } from "@supabase/supabase-js";
+import { tournamentDb as ptClient } from "@/lib/supabase/tournament-db";
 import { Plus, Play, CheckCircle, Eye } from "lucide-react";
 import styles from "../admin.module.css";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
-
-const ptClient = createClient(
-  process.env.NEXT_PUBLIC_PT_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_PT_SUPABASE_ANON_KEY!,
-  { auth: { persistSession: false, autoRefreshToken: false } }
-);
 
 const BETTING_STATUS_COLOR: Record<string, string> = {
   open:   "#10b981",

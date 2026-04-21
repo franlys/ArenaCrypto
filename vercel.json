@@ -1,1 +1,17 @@
-{}
+{
+  "crons": [
+    {
+      "path": "/api/sports/sync?secret=CRON_SECRET_PLACEHOLDER&mode=open",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/sports/sync?secret=CRON_SECRET_PLACEHOLDER&mode=resolve",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/markets/sync",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
+

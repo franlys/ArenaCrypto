@@ -184,20 +184,7 @@ CREATE TABLE IF NOT EXISTS public.leaderboard_themes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 11. TOURNAMENT BETS (NEW for Arena Betting Integration)
-CREATE TABLE IF NOT EXISTS public.tournament_bets (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  team_id UUID REFERENCES public.teams(id) ON DELETE CASCADE, -- Team backed by the user
-  amount DECIMAL NOT NULL CHECK (amount > 0),
-  potential_payout DECIMAL,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'won', 'lost', 'refunded')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_tournament_bets_user ON tournament_bets(user_id);
-CREATE INDEX IF NOT EXISTS idx_tournament_bets_tournament ON tournament_bets(tournament_id);
+-- 11. TOURNAMENT BETS has been moved to 20240504000000_community_betting.sql
 
 -- 12. BRACKETS & GROUPS
 CREATE TABLE IF NOT EXISTS public.bracket_rounds (
@@ -239,7 +226,7 @@ ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tournament_matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tournament_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_standings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tournament_bets ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE tournament_bets ENABLE ROW LEVEL SECURITY;
 
 -- Public READ for tournaments and standings
 CREATE POLICY "Public read tournaments" ON tournaments FOR SELECT USING (true);
@@ -247,9 +234,4 @@ CREATE POLICY "Public read team_standings" ON team_standings FOR SELECT USING (t
 CREATE POLICY "Public read teams" ON teams FOR SELECT USING (true);
 CREATE POLICY "Public read participants" ON participants FOR SELECT USING (true);
 
--- Betting policies
-CREATE POLICY "Users can see their own bets" ON tournament_bets
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can place bets" ON tournament_bets
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Betting policies moved to 20240504000000_community_betting.sql

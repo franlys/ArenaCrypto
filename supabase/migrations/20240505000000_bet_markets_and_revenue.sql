@@ -48,8 +48,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_bet_markets_unique_tournament
   WHERE pt_match_id IS NULL;
 
 ALTER TABLE bet_markets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated can read open markets" ON bet_markets;
 CREATE POLICY "Authenticated can read open markets"
   ON bet_markets FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "Service role manages markets" ON bet_markets;
 CREATE POLICY "Service role manages markets"
   ON bet_markets FOR ALL TO service_role USING (true);
 
@@ -103,12 +105,14 @@ CREATE TABLE IF NOT EXISTS public.kronix_revenue (
 );
 
 ALTER TABLE kronix_revenue ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Admins can read revenue" ON kronix_revenue;
 CREATE POLICY "Admins can read revenue"
   ON kronix_revenue FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id = auth.uid() AND role = 'admin'
   ));
+DROP POLICY IF EXISTS "Service role manages revenue" ON kronix_revenue;
 CREATE POLICY "Service role manages revenue"
   ON kronix_revenue FOR ALL TO service_role USING (true);
 
@@ -170,5 +174,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.calculate_tournament_revenue FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.calculate_tournament_revenue TO service_role;
+REVOKE ALL ON FUNCTION public.calculate_tournament_revenue(UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.calculate_tournament_revenue(UUID, TEXT) TO service_role;

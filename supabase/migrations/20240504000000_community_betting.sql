@@ -29,11 +29,13 @@ CREATE INDEX IF NOT EXISTS idx_tournament_bets_user_id ON tournament_bets(user_i
 -- 4. RLS Policies (Users can only see THEIR bets)
 ALTER TABLE tournament_bets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own tournament bets" ON tournament_bets;
 CREATE POLICY "Users can view their own tournament bets"
 ON tournament_bets FOR SELECT
 TO authenticated
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can create tournament bets" ON tournament_bets;
 CREATE POLICY "Users can create tournament bets"
 ON tournament_bets FOR INSERT
 TO authenticated

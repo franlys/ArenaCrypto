@@ -1,0 +1,178 @@
+/* Mines Game — CSS Module */
+
+.page {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+}
+
+.header { display: flex; flex-direction: column; gap: 0.3rem; }
+.title  { font-size: clamp(1.4rem, 3vw, 2rem); line-height: 1; margin: 0; }
+.subtitle { font-family: Rajdhani, sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+/* Controls */
+.controls {
+  background: var(--color-bg-card);
+  border: 1px solid rgba(0,245,255,0.1);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.controlGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.label { font-family: Rajdhani, sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+
+.amountRow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(0,245,255,0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-family: Orbitron, sans-serif;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 70px;
+}
+.input:focus { outline: none; border-color: rgba(0,245,255,0.5); }
+
+.pill {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.5);
+  font-family: Rajdhani, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+.pill:hover:not(:disabled) { border-color: rgba(0,245,255,0.4); color: #00F5FF; }
+.pill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.slider {
+  width: 100%;
+  accent-color: #00F5FF;
+  cursor: pointer;
+}
+.sliderLabels { display: flex; justify-content: space-between; font-family: Rajdhani, sans-serif; font-size: 0.65rem; color: rgba(255,255,255,0.3); }
+
+.stats { display: flex; flex-direction: column; gap: 0.5rem; }
+.stat { display: flex; justify-content: space-between; align-items: center; }
+.statLabel { font-family: Rajdhani, sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.35); letter-spacing: 0.06em; }
+.statValue { font-family: Orbitron, sans-serif; font-size: 1rem; font-weight: 700; }
+
+.btnStart {
+  background: linear-gradient(135deg, #00F5FF22, #00F5FF11);
+  border: 1px solid #00F5FF;
+  border-radius: 10px;
+  color: #00F5FF;
+  font-family: Orbitron, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background 150ms, transform 150ms;
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 20px #00F5FF33;
+}
+.btnStart:hover:not(:disabled) { background: linear-gradient(135deg, #00F5FF44, #00F5FF22); }
+.btnStart:active:not(:disabled) { transform: scale(0.97); }
+.btnStart:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnCashout {
+  background: linear-gradient(135deg, #22c55e22, #22c55e11);
+  border: 1px solid #22c55e;
+  border-radius: 10px;
+  color: #22c55e;
+  font-family: Orbitron, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background 150ms, transform 150ms;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 20px #22c55e33;
+}
+.btnCashout:hover:not(:disabled) { background: linear-gradient(135deg, #22c55e44, #22c55e22); }
+.btnCashout:active:not(:disabled) { transform: scale(0.97); }
+.btnCashout:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.msg { font-family: Rajdhani, sans-serif; font-size: 0.9rem; text-align: center; color: rgba(255,255,255,0.7); }
+
+/* Board */
+.board {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.tile {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: transform 150ms, border-color 150ms, background 150ms;
+}
+.tile:hover:not(:disabled) { transform: scale(1.05); border-color: rgba(0,245,255,0.3); }
+.tile:active:not(:disabled) { transform: scale(0.95); }
+.tile:disabled { cursor: not-allowed; }
+
+.tile.hidden {
+  background: rgba(255,255,255,0.05);
+}
+.tile.gem {
+  background: rgba(0,245,255,0.15);
+  border-color: rgba(0,245,255,0.5);
+  animation: gemReveal 200ms ease-out;
+}
+.tile.mine {
+  background: rgba(239,68,68,0.2);
+  border-color: rgba(239,68,68,0.7);
+  animation: mineReveal 300ms ease-out;
+}
+.tile.mine-hidden {
+  background: rgba(239,68,68,0.08);
+  border-color: rgba(239,68,68,0.2);
+}
+.tile.gem-hidden {
+  background: rgba(0,245,255,0.05);
+  border-color: rgba(0,245,255,0.15);
+}
+
+.gem { filter: drop-shadow(0 0 8px #00F5FF); }
+.mineIcon { filter: drop-shadow(0 0 8px #ef4444); }
+
+@keyframes gemReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes mineReveal {
+  0% { transform: scale(0.5); opacity: 0; }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile, .btnStart, .btnCashout, .pill { transition: none; }
+  .gem, .mineIcon { animation: none; }
+}

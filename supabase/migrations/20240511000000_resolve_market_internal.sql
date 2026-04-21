@@ -19,6 +19,8 @@ DECLARE
   v_winners_pool    NUMERIC;
   v_won_count       INT;
   v_lost_count      INT;
+  v_test_total_pool   NUMERIC;
+  v_test_winners_pool NUMERIC;
 BEGIN
   -- ── Validate market ──────────────────────────────────────────────────────────
   SELECT status INTO v_market_status FROM public.bet_markets WHERE id = p_market_id;
@@ -77,6 +79,16 @@ BEGIN
   SELECT COUNT(*) INTO v_lost_count FROM public.tournament_bets
   WHERE market_id = p_market_id AND status = 'lost'::tournament_bet_status AND is_test = false;
 
+  -- ── Pool totals (test bets only) ─────────────────────────────────────────────
+  SELECT
+    COALESCE(SUM(amount), 0),
+    COALESCE(SUM(CASE WHEN status = 'won'::tournament_bet_status THEN amount ELSE 0 END), 0)
+  INTO v_test_total_pool, v_test_winners_pool
+  FROM public.tournament_bets
+  WHERE market_id = p_market_id
+    AND is_test   = true
+    AND status   IN ('won'::tournament_bet_status, 'lost'::tournament_bet_status);
+
   -- ── Pari-mutuel payout ───────────────────────────────────────────────────────
   IF v_winners_pool > 0 THEN
     UPDATE public.wallets w
@@ -92,6 +104,23 @@ BEGIN
     WHERE market_id = p_market_id
       AND status    = 'won'::tournament_bet_status
       AND is_test   = false;
+  END IF;
+
+  -- ── Pari-mutuel payout FOR TEST BETS ─────────────────────────────────────────
+  IF v_test_winners_pool > 0 THEN
+    UPDATE public.wallets w
+    SET test_balance = test_balance
+        + ROUND((tb.amount / v_test_winners_pool) * v_test_total_pool, 2)
+    FROM public.tournament_bets tb
+    WHERE tb.market_id = p_market_id
+      AND tb.status    = 'won'::tournament_bet_status
+      AND tb.is_test   = true
+      AND w.user_id    = tb.user_id;
+
+    UPDATE public.tournament_bets SET status = 'paid'::tournament_bet_status
+    WHERE market_id = p_market_id
+      AND status    = 'won'::tournament_bet_status
+      AND is_test   = true;
   END IF;
 
   RETURN jsonb_build_object(

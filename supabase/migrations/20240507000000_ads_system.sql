@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.ads (
 ALTER TABLE public.ads ENABLE ROW LEVEL SECURITY;
 
 -- Lectura pública: solo anuncios activos dentro de su vigencia
+DROP POLICY IF EXISTS "public_read_active_ads" ON public.ads;
 CREATE POLICY "public_read_active_ads" ON public.ads
   FOR SELECT
   USING (
@@ -32,6 +33,7 @@ CREATE POLICY "public_read_active_ads" ON public.ads
   );
 
 -- CRUD completo solo para admins
+DROP POLICY IF EXISTS "admin_full_access_ads" ON public.ads;
 CREATE POLICY "admin_full_access_ads" ON public.ads
   FOR ALL
   USING (
@@ -54,6 +56,7 @@ VALUES ('ads', 'ads', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 -- Admins pueden subir/eliminar archivos
+DROP POLICY IF EXISTS "admins_upload_ads" ON storage.objects;
 CREATE POLICY "admins_upload_ads" ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
@@ -64,6 +67,7 @@ CREATE POLICY "admins_upload_ads" ON storage.objects
     )
   );
 
+DROP POLICY IF EXISTS "admins_delete_ads" ON storage.objects;
 CREATE POLICY "admins_delete_ads" ON storage.objects
   FOR DELETE TO authenticated
   USING (
@@ -75,6 +79,7 @@ CREATE POLICY "admins_delete_ads" ON storage.objects
   );
 
 -- Lectura pública de imágenes
+DROP POLICY IF EXISTS "public_read_ads_images" ON storage.objects;
 CREATE POLICY "public_read_ads_images" ON storage.objects
   FOR SELECT
   USING (bucket_id = 'ads');
@@ -89,6 +94,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS ads_updated_at ON public.ads;
 CREATE TRIGGER ads_updated_at
   BEFORE UPDATE ON public.ads
   FOR EACH ROW EXECUTE FUNCTION public.set_ads_updated_at();

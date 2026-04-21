@@ -184,3 +184,38 @@
 - **Resuelto**: Sesión nunca se queda colgada. Inactividad >30min cierra sesión automáticamente.
 - **Pendiente**: Smart contract Polygon para escrow automatizado.
 - **Pendiente**: Trigger `handle_new_user` para profiles automáticos.
+
+---
+
+## 2026-04-18 — Sincronización DB, Fix Admin Role e Infraestructura
+
+### Actividad del día:
+- **`supabase db push` exitoso**: Aplicadas todas las migraciones pendientes.
+- **Fix idempotencia masivo**: `DROP POLICY/TRIGGER IF EXISTS` añadidos a 8+ migraciones.
+- **Fix overloading**: Firmas explícitas en GRANT/REVOKE de `place_tournament_bet` y `request_withdrawal`.
+- **Restauración rol admin**: `elmaestrogonzalez30@gmail.com` restaurado vía `set_admin.mjs`.
+- **Migración `20240512`**: Función `is_admin()` con `SECURITY DEFINER` — elimina bucle infinito en RLS de `profiles`.
+- **Fix enum PT**: Sync usaba `['pending','upcoming']` inexistentes → corregido a `['draft','active','finished']`.
+- **Fix GoTrueClient**: Clientes movidos del top-level al interior de handlers de API routes.
+- **Perfiles CLI**: `--profile arena` (Edge) y `--profile pt` (Chrome + token manual).
+- **Pago apuestas test**: `resolve_market_internal` acredita `test_balance` en apuestas de prueba ganadoras.
+
+---
+
+## 2026-04-21 — Integración de Deportes Externos (SportAPI / SofaScore)
+
+### Actividad del día:
+- **Proveedor identificado**: SportAPI (`sportapi7.p.rapidapi.com`) — cubre fútbol, NBA, MLB, tenis y UFC. Plan gratuito activo.
+- **`src/lib/sportapi.ts`**: Cliente tipado con `getScheduledEvents`, `getLiveEvents`, `getEventById`.
+- **`POST /api/sports/sync`**: Modo `open` (8AM UTC) y modo `resolve` (11PM UTC).
+- **`POST /api/sports/bet`**: Coloca apuestas en partidos reales con deducción de saldo real o prueba.
+- **Migración `20240515`**: Tablas `external_bet_markets` + `external_bets` + RPC `resolve_external_market` (80% ganadores, 20% plataforma).
+- **`vercel.json`**: 3 Cron Jobs configurados (PT sync cada 15min, sports open 8AM, sports resolve 11PM).
+- **`CLAUDE.md` reescrito**: Documentación completa de toda la arquitectura, reglas, credenciales y flujos.
+- **Skills creadas**: `supabase-migrations.md` y `sports-betting-integration.md`.
+
+### Estado:
+- **Resuelto**: Infraestructura deportes externa lista y documentada.
+- **Pendiente**: Deploy de migraciones 20240513-20240515 + vars de entorno en Vercel.
+- **Pendiente**: UI de la sección de deportes externos para usuarios.
+

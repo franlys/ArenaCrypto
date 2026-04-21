@@ -14,16 +14,19 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage RLS: only authenticated users can upload
+DROP POLICY IF EXISTS "authenticated_upload_evidence" ON storage.objects;
 CREATE POLICY "authenticated_upload_evidence"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (bucket_id = 'evidence');
 
 -- Storage RLS: match participants can read evidence
+DROP POLICY IF EXISTS "authenticated_read_evidence" ON storage.objects;
 CREATE POLICY "authenticated_read_evidence"
   ON storage.objects FOR SELECT TO authenticated
   USING (bucket_id = 'evidence');
 
 -- Storage RLS: owner can delete their own evidence
+DROP POLICY IF EXISTS "owner_delete_evidence" ON storage.objects;
 CREATE POLICY "owner_delete_evidence"
   ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'evidence' AND owner = auth.uid());
@@ -97,10 +100,12 @@ CREATE TABLE IF NOT EXISTS withdrawal_requests (
 
 ALTER TABLE withdrawal_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "owner_read_withdrawals" ON withdrawal_requests;
 CREATE POLICY "owner_read_withdrawals"
   ON withdrawal_requests FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 
+DROP FUNCTION IF EXISTS request_withdrawal(DECIMAL, TEXT);
 CREATE OR REPLACE FUNCTION request_withdrawal(
   p_amount      DECIMAL,
   p_to_address  TEXT

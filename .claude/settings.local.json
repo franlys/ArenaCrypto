@@ -48,7 +48,14 @@
       "Bash(cmd.exe /c \"node --version\")",
       "Bash(cmd.exe /c \"where node\")",
       "Bash(export PATH=\"$PATH:/c/Program Files/nodejs:/c/Users/elmae/AppData/Roaming/npm\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx --yes next build)",
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npm run build 2>&1\")",
+      "Bash(powershell.exe -Command \"cd 'c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto'; npm run build 2>&1 | Select-Object -Last 35\")",
+      "Read(//usr/local/bin/**)",
+      "Read(//c/Users/elmae/.nvm/versions/**)",
+      "Bash(node --version)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npm run build 2>&1\")"
     ]
   }
 }

@@ -69,5 +69,5 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.place_tournament_bet FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.place_tournament_bet TO authenticated;
+REVOKE ALL ON FUNCTION public.place_tournament_bet(UUID, UUID, NUMERIC, bet_target_type, UUID, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.place_tournament_bet(UUID, UUID, NUMERIC, bet_target_type, UUID, TEXT) TO authenticated;
