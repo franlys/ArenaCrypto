@@ -1,11 +1,11 @@
 {
   "crons": [
     {
-      "path": "/api/sports/sync?secret=CRON_SECRET_PLACEHOLDER&mode=open",
+      "path": "/api/sports/sync?mode=open",
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/sports/sync?secret=CRON_SECRET_PLACEHOLDER&mode=resolve",
+      "path": "/api/sports/sync?mode=resolve",
       "schedule": "0 23 * * *"
     },
     {
@@ -14,4 +14,3 @@
     }
   ]
 }
-
