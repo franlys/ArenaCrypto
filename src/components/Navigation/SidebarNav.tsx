@@ -31,6 +31,7 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
     { href: "/arena",        label: "ARENA",     icon: "⚔",  exact: true },
     { href: "/arena/sport",  label: "SPORT",     icon: "⚽" },
     { href: "/arena/gaming", label: "GAMING",    icon: "🎮" },
+    { href: "/arena/games",  label: "GAMES",     icon: "🎲" },
     { href: "/tournaments",  label: "TORNEOS",   icon: "🏆" },
     { href: "/historial",    label: "HISTORIAL", icon: "📋" },
     { href: "/wallets",      label: "WALLET",    icon: "◎" },
