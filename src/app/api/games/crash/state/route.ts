@@ -44,16 +44,32 @@ export async function GET() {
 
   // 2. State machine transitions
   if (!cur || cur.status === 'crashed') {
-    const lastCrash    = cur?.crashed_at ? new Date(cur.crashed_at as string).getTime() : 0
+    const lastCrash      = cur?.crashed_at ? new Date(cur.crashed_at as string).getTime() : 0
     const timeSinceCrash = now - lastCrash
+
     if (timeSinceCrash >= BETWEEN_MS || !cur) {
-      const { seed, point } = generateCrashPoint()
-      const { data: newRound } = await admin
+      // Check first if another request already created a new round
+      const { data: existing } = await admin
         .from('crash_rounds')
-        .insert({ server_seed: seed, crash_point: point, status: 'waiting' })
-        .select()
-        .single()
-      cur = newRound
+        .select('*')
+        .in('status', ['waiting', 'running'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (existing) {
+        cur = existing
+      } else {
+        const { seed, point } = generateCrashPoint()
+        const { data: newRound, error: insertErr } = await admin
+          .from('crash_rounds')
+          .insert({ server_seed: seed, crash_point: point, status: 'waiting' })
+          .select()
+          .single()
+        if (newRound) cur = newRound
+        else console.error('crash_rounds insert failed:', insertErr?.message)
+        // If insert failed, cur stays as crashed — client retries next poll
+      }
     }
   } else if (cur.status === 'waiting') {
     const waitedMs = now - new Date(cur.created_at as string).getTime()
@@ -119,7 +135,11 @@ export async function GET() {
     }
   }
 
-  if (!cur) return NextResponse.json({ error: 'No round' }, { status: 500 })
+  // Fallback: entre rondas — el cliente sigue polling
+  if (!cur) return NextResponse.json({
+    roundId: null, phase: 'crashed', multiplier: 1.00,
+    timeUntilStart: 0, bets: [],
+  }, { headers: { 'Cache-Control': 'no-store' } })
 
   // 3. Get bets for this round
   const { data: bets } = await admin
