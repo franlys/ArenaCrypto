@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
+import { supabase } from '@/lib/supabase'
 import styles from './crash.module.css'
 
 const QUICK = [1, 5, 10, 25]
@@ -46,25 +47,49 @@ export function CrashGame() {
   const testBalance = Number(profile?.wallets?.test_balance        ?? 0)
   const activeBalance = isTest ? testBalance : balance
 
-  // Poll server state
+  // Poll server state every 200ms (non-blocking setInterval)
   useEffect(() => {
-    let cancelled = false
+    let inflight = false
 
     async function poll() {
-      if (cancelled) return
+      if (inflight) return
+      inflight = true
       try {
         const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
-        if (!cancelled && res.ok) {
+        if (res.ok) {
           const data = await res.json()
           setState(data)
           stateRef.current = data
         }
       } catch { /* ignore */ }
-      if (!cancelled) setTimeout(poll, 500)
+      finally { inflight = false }
     }
 
-    poll()
-    return () => { cancelled = true }
+    poll() // immediate first fetch
+    const id = setInterval(poll, 200)
+    return () => clearInterval(id)
+  }, [])
+
+  // Supabase Realtime — instant notification on round phase change
+  useEffect(() => {
+    const channel = supabase
+      .channel('crash-rounds-rt')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'crash_rounds' },
+        async () => {
+          // Immediately fetch authoritative state on any round change
+          try {
+            const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
+            if (res.ok) {
+              const data = await res.json()
+              setState(data)
+              stateRef.current = data
+            }
+          } catch { /* ignore */ }
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
   }, [])
 
   // Capture absolute start time when server sends betting phase
