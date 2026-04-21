@@ -1,6 +1,13 @@
 /* Dragon Tower Game — CSS Module */
 .page { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 1000px; }
-.header { display: flex; flex-direction: column; gap: 0.3rem; }
+/* Balance toggle — same as Dice */
+.balanceRow { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.modeBtn { font-family: Rajdhani,sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.3rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.35); cursor: pointer; transition: all 150ms; display: flex; gap: 0.4rem; align-items: center; }
+.modeBtn span { font-family: Orbitron,sans-serif; font-size: 0.7rem; }
+.modeBtn:hover:not(:disabled) { border-color: rgba(167,139,250,0.3); color: rgba(255,255,255,0.6); }
+.modeBtnActive { border-color: rgba(167,139,250,0.5) !important; background: rgba(167,139,250,0.08) !important; color: #A78BFA !important; }
+.modeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .title { font-size: clamp(1.4rem,3vw,2rem); line-height: 1; margin: 0; }
 .subtitle { font-family: Rajdhani,sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; }
 
