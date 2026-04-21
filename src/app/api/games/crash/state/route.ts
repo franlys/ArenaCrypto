@@ -42,13 +42,15 @@ export async function GET() {
 
   let cur = round as Record<string, unknown> | null
 
-  // 2. State machine transitions
+  // 2. State machine — independent blocks so waiting→running processes in same poll
+
+  // ── A: crashed / no round → maybe create new round ────────────────────────
   if (!cur || cur.status === 'crashed') {
     const lastCrash      = cur?.crashed_at ? new Date(cur.crashed_at as string).getTime() : 0
     const timeSinceCrash = now - lastCrash
 
     if (timeSinceCrash >= BETWEEN_MS || !cur) {
-      // Check first if another request already created a new round
+      // Check if another concurrent request already created one
       const { data: existing } = await admin
         .from('crash_rounds')
         .select('*')
@@ -68,26 +70,32 @@ export async function GET() {
           .single()
         if (newRound) cur = newRound
         else console.error('crash_rounds insert failed:', insertErr?.message)
-        // If insert failed, cur stays as crashed — client retries next poll
       }
     }
-  } else if (cur.status === 'waiting') {
+  }
+
+  // ── B: waiting → running transition ───────────────────────────────────────
+  if (cur && cur.status === 'waiting') {
     const waitedMs = now - new Date(cur.created_at as string).getTime()
     if (waitedMs >= BETTING_MS) {
-      const { data: updated } = await admin
-        .from('crash_rounds')
-        .update({ status: 'running', started_at: new Date().toISOString() })
+      const startedAt = new Date().toISOString()
+      await admin.from('crash_rounds')
+        .update({ status: 'running', started_at: startedAt })
         .eq('id', cur.id)
         .eq('status', 'waiting')
-        .select()
-        .single()
-      cur = updated ?? cur
+      // Re-fetch authoritative state (handles concurrent requests gracefully)
+      const { data: refetched } = await admin
+        .from('crash_rounds').select('*').eq('id', cur.id as string).single()
+      if (refetched) cur = refetched
     }
-  } else if (cur.status === 'running') {
+  }
+
+  // ── C: running — check auto-cashouts and crash ─────────────────────────────
+  if (cur && cur.status === 'running') {
     const elapsed = now - new Date(cur.started_at as string).getTime()
     const mult    = Math.exp(CRASH_K * elapsed)
 
-    // Process auto-cashouts
+    // Auto-cashouts
     const { data: autoBets } = await admin
       .from('crash_bets')
       .select('id, user_id, amount, is_test, auto_cashout')
@@ -100,37 +108,25 @@ export async function GET() {
       const cashoutMult = Number(bet.auto_cashout)
       const payout      = Math.floor(Number(bet.amount) * cashoutMult * 100) / 100
       const field       = bet.is_test ? 'test_balance' : 'balance_stablecoin'
-
-      // Atomic: only update if still active
       const { data: won } = await admin
         .from('crash_bets')
         .update({ status: 'won', cashout_at: cashoutMult, payout })
-        .eq('id', bet.id)
-        .eq('status', 'active')
-        .select('id')
-        .maybeSingle()
-
+        .eq('id', bet.id).eq('status', 'active')
+        .select('id').maybeSingle()
       if (won) {
-        const { data: wallet } = await admin.from('wallets').select(field).eq('user_id', bet.user_id).single()
-        if (wallet) {
-          await admin.from('wallets')
-            .update({ [field]: Number((wallet as Record<string, unknown>)[field]) + payout })
-            .eq('user_id', bet.user_id)
-        }
+        const { data: w } = await admin.from('wallets').select(field).eq('user_id', bet.user_id).single()
+        if (w) await admin.from('wallets')
+          .update({ [field]: Number((w as Record<string, unknown>)[field]) + payout })
+          .eq('user_id', bet.user_id)
       }
     }
 
-    // Check crash
+    // Crash check
     if (mult >= Number(cur.crash_point)) {
-      await admin.from('crash_bets')
-        .update({ status: 'lost' })
-        .eq('round_id', cur.id)
-        .eq('status', 'active')
-
+      await admin.from('crash_bets').update({ status: 'lost' }).eq('round_id', cur.id).eq('status', 'active')
       await admin.from('crash_rounds')
         .update({ status: 'crashed', crashed_at: new Date().toISOString() })
         .eq('id', cur.id)
-
       cur = { ...cur, status: 'crashed', crashed_at: new Date().toISOString() }
     }
   }
