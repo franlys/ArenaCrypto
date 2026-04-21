@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/lib/supabase";
 import styles from "./mines.module.css";
 
 const TOTAL_TILES = 25;
@@ -27,9 +28,15 @@ export default function MinesPage() {
   const activeBalance = isTest ? testBalance : balance;
 
   const apiCall = useCallback(async (body: object) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
     const res = await fetch("/api/games/mines", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(body),
     });
     return res.json();

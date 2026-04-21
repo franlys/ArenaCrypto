@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/lib/supabase";
 import styles from "./plinko.module.css";
 
 type RiskLevel = "low" | "medium" | "high";
@@ -38,9 +39,16 @@ export default function PlinkoPage() {
 
   const dropBall = useCallback(async () => {
     setLoading(true); setMsg(""); setResult(null); setBallPos(null);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const res = await fetch("/api/games/plinko", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ amount, risk_level: risk, rows, isTest }),
     });
     const data = await res.json();

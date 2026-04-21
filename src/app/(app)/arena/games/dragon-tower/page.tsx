@@ -1,6 +1,7 @@
 "use client";
 import { useState, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/lib/supabase";
 import styles from "./dragon-tower.module.css";
 
 type Difficulty = "easy" | "medium" | "hard" | "expert";
@@ -45,9 +46,15 @@ export default function DragonTowerPage() {
   const mults = LEVEL_MULTIPLIERS[difficulty];
 
   const apiCall = useCallback(async (body: object) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
     const res = await fetch("/api/games/dragon-tower", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(body),
     });
     return res.json();
