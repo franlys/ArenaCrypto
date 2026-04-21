@@ -10,6 +10,7 @@ import crypto            from 'crypto'
 const BETTING_MS  = 7_000   // betting phase duration
 const BETWEEN_MS  = 4_000   // pause between rounds after crash
 const CRASH_K     = 0.00006 // multiplier = e^(K * elapsed_ms)
+const MAX_MULT    = 200     // hard cap — round always crashes by 200x
 
 function db() {
   return createClient(
@@ -24,7 +25,7 @@ function generateCrashPoint(): { seed: string; point: number } {
   const h    = parseInt(hash.slice(0, 8), 16)
   if (h % 33 === 0) return { seed, point: 1.00 }
   const r     = h / 2 ** 32
-  const point = Math.max(1.01, Math.floor((0.97 / (1 - r)) * 100) / 100)
+  const point = Math.max(1.01, Math.min(MAX_MULT, Math.floor((0.97 / (1 - r)) * 100) / 100))
   return { seed, point }
 }
 
@@ -122,7 +123,7 @@ export async function GET() {
     }
 
     // Crash check
-    if (mult >= Number(cur.crash_point)) {
+    if (mult >= Number(cur.crash_point) || mult >= MAX_MULT) {
       await admin.from('crash_bets').update({ status: 'lost' }).eq('round_id', cur.id).eq('status', 'active')
       await admin.from('crash_rounds')
         .update({ status: 'crashed', crashed_at: new Date().toISOString() })
