@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
 import { placeExternalBet } from '@/lib/actions/sports-betting'
 import type { MatchPick } from './MatchCard'
 import styles from './betslip.module.css'
@@ -20,9 +19,10 @@ interface BetSlipProps {
 }
 
 export function BetSlip({ pick, isOpen, onClose, balance, testBalance, isTestUser, onBetPlaced }: BetSlipProps) {
-  const [amount, setAmount]   = useState('')
-  const [isTest, setIsTest]   = useState(isTestUser)
-  const [loading, setLoading] = useState(false)
+  const [amount, setAmount]     = useState('')
+  const [isTest, setIsTest]     = useState(isTestUser)
+  const [loading, setLoading]   = useState(false)
+  const [feedback, setFeedback] = useState<{ ok: boolean; msg: string } | null>(null)
 
   const numAmount      = parseFloat(amount) || 0
   const activeBalance  = isTest ? testBalance : balance
@@ -45,12 +45,12 @@ export function BetSlip({ pick, isOpen, onClose, balance, testBalance, isTestUse
         isTest,
       })
       if ('error' in res) {
-        toast.error(res.error)
+        setFeedback({ ok: false, msg: res.error })
       } else {
-        toast.success('✅ Apuesta registrada')
+        setFeedback({ ok: true, msg: '✅ Apuesta registrada' })
         setAmount('')
         onBetPlaced()
-        onClose()
+        setTimeout(() => { setFeedback(null); onClose() }, 1400)
       }
     } finally {
       setLoading(false)
@@ -177,6 +177,21 @@ export function BetSlip({ pick, isOpen, onClose, balance, testBalance, isTestUse
             </div>
 
             <p className={styles.payoutNote}>* Retorno pari-mutuel estimado. Varía según el pozo final.</p>
+
+            {/* Feedback */}
+            <AnimatePresence>
+              {feedback && (
+                <motion.p
+                  className={feedback.ok ? styles.feedbackOk : styles.feedbackErr}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {feedback.msg}
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             {/* CTA */}
             <button
