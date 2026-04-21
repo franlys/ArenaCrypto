@@ -1,0 +1,54 @@
+/* Plinko Game — CSS Module */
+.page { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 1000px; }
+.header { display: flex; flex-direction: column; gap: 0.3rem; }
+.title { font-size: clamp(1.4rem,3vw,2rem); line-height: 1; margin: 0; }
+.subtitle { font-family: Rajdhani,sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; }
+
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; align-items: start; }
+@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+.controls { background: var(--color-bg-card); border: 1px solid rgba(245,158,11,0.12); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.controlGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.label { font-family: Rajdhani,sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+
+.amountRow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; color: #fff; font-family: Orbitron,sans-serif; font-size: 0.95rem; padding: 0.5rem 0.75rem; min-width: 70px; }
+.input:focus { outline: none; border-color: rgba(245,158,11,0.6); }
+
+.pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.5); font-family: Rajdhani,sans-serif; font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.6rem; cursor: pointer; transition: border-color 150ms, color 150ms; }
+.pill:hover:not(:disabled) { border-color: rgba(245,158,11,0.5); color: #F59E0B; }
+.pill:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.riskRow { display: flex; gap: 0.5rem; }
+.riskBtn { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: rgba(255,255,255,0.4); font-family: Rajdhani,sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; padding: 0.5rem; cursor: pointer; transition: all 150ms; }
+.riskBtn:hover:not(:disabled) { border-color: rgba(245,158,11,0.4); color: #F59E0B; }
+.riskActive { background: rgba(245,158,11,0.12) !important; border-color: #F59E0B !important; color: #F59E0B !important; }
+.riskBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnDrop { background: linear-gradient(135deg, #F59E0B22, #F59E0B11); border: 1px solid #F59E0B; border-radius: 10px; color: #F59E0B; font-family: Orbitron,sans-serif; font-size: 0.9rem; font-weight: 700; padding: 0.75rem; cursor: pointer; transition: background 150ms, transform 150ms; letter-spacing: 0.06em; box-shadow: 0 0 20px #F59E0B33; }
+.btnDrop:hover:not(:disabled) { background: linear-gradient(135deg, #F59E0B33, #F59E0B22); }
+.btnDrop:active:not(:disabled) { transform: scale(0.97); }
+.btnDrop:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.msg { font-family: Rajdhani,sans-serif; font-size: 1rem; font-weight: 700; text-align: center; }
+.win { color: #22c55e; }
+.lose { color: rgba(255,255,255,0.5); }
+
+.resultBox { display: flex; flex-direction: column; gap: 0.5rem; }
+.stat { display: flex; justify-content: space-between; }
+.statLabel { font-family: Rajdhani,sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; }
+.statValue { font-family: Orbitron,sans-serif; font-size: 1rem; font-weight: 700; }
+
+/* Board */
+.board { background: var(--color-bg-card); border: 1px solid rgba(245,158,11,0.08); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-height: 300px; }
+.pegsArea { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; align-items: center; }
+.pegRow { display: flex; gap: 1rem; justify-content: center; }
+.peg { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 200ms; }
+.pegHit { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+
+.slots { display: flex; gap: 0.25rem; width: 100%; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
+.slot { min-width: 40px; padding: 0.4rem 0.2rem; border-radius: 6px; border: 1px solid; text-align: center; font-family: Orbitron,sans-serif; font-size: 0.6rem; font-weight: 700; transition: transform 200ms, box-shadow 200ms; }
+.slotHit { transform: scale(1.15); box-shadow: 0 0 12px currentColor; animation: slotPop 400ms ease-out; }
+
+@keyframes slotPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.25); } 100% { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .peg, .slot, .btnDrop, .riskBtn { transition: none; animation: none; } }

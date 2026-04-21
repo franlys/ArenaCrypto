@@ -9,7 +9,8 @@ const TOTAL_TILES = 25;
 type GameState = "idle" | "playing" | "exploded" | "cashed_out";
 
 export default function MinesPage() {
-  const { user, profile } = useUser();
+  const { profile } = useUser();
+  const isTestUser = profile?.is_test_user ?? false;
   const [amount, setAmount] = useState(5);
   const [mineCount, setMineCount] = useState(5);
   const [gameId, setGameId] = useState<string | null>(null);
@@ -85,8 +86,21 @@ export default function MinesPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <h1 className={`font-orbitron ${styles.title}`}>💣 <span className="neon-text-cyan">MINES</span></h1>
-        <p className={styles.subtitle}>Descubre gemas. Evita minas. Cobra cuando quieras.</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <h1 className={`font-orbitron ${styles.title}`}>💣 <span className="neon-text-cyan">MINES</span></h1>
+          {isTestUser && (
+            <span style={{
+              fontFamily: "Rajdhani,sans-serif", fontSize: "0.65rem", fontWeight: 800,
+              letterSpacing: "0.12em", padding: "0.2rem 0.6rem", borderRadius: 4,
+              background: "rgba(0,245,255,0.1)", border: "1px solid rgba(0,245,255,0.35)",
+              color: "#00F5FF",
+            }}>MODO PRUEBA</span>
+          )}
+        </div>
+        <p className={styles.subtitle}>
+          Descubre gemas. Evita minas. Cobra cuando quieras.
+          {isTestUser && <span style={{ color: "rgba(0,245,255,0.6)", marginLeft: "0.5rem" }}>· Usando saldo de prueba</span>}
+        </p>
       </div>
 
       <div className={styles.layout}>
