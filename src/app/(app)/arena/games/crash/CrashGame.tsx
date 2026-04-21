@@ -39,6 +39,8 @@ export function CrashGame() {
   const [liveMult, setLiveMult] = useState(1.00)
   const animRef = useRef<number | null>(null)
   const stateRef = useRef<State | null>(null)
+  const roundStartsAtRef = useRef<number | null>(null)
+  const [localCountdown, setLocalCountdown] = useState(0)
 
   const balance     = Number(profile?.wallets?.balance_stablecoin ?? 0)
   const testBalance = Number(profile?.wallets?.test_balance        ?? 0)
@@ -64,6 +66,23 @@ export function CrashGame() {
     poll()
     return () => { cancelled = true }
   }, [])
+
+  // Capture absolute start time when server sends betting phase
+  useEffect(() => {
+    if (state?.phase === 'betting' && state.timeUntilStart > 0) {
+      roundStartsAtRef.current = Date.now() + state.timeUntilStart
+    }
+  }, [state?.roundId, state?.phase, state?.timeUntilStart])
+
+  // Local countdown ticker — 100ms interval so it feels live
+  useEffect(() => {
+    if (state?.phase !== 'betting') { setLocalCountdown(0); return }
+    const id = setInterval(() => {
+      const remaining = roundStartsAtRef.current ? Math.max(0, roundStartsAtRef.current - Date.now()) : 0
+      setLocalCountdown(Math.ceil(remaining / 1000))
+    }, 100)
+    return () => clearInterval(id)
+  }, [state?.phase])
 
   // Client-side smooth multiplier animation during 'running'
   useEffect(() => {
@@ -133,7 +152,7 @@ export function CrashGame() {
     ? state.crashPoint?.toFixed(2) ?? '—'
     : liveMult.toFixed(2)
 
-  const countdown = state?.timeUntilStart ? Math.ceil(state.timeUntilStart / 1000) : 0
+  const countdown = localCountdown
 
   return (
     <div className={styles.page}>
