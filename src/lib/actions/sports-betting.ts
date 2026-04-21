@@ -10,6 +10,7 @@ export interface PlaceExternalBetInput {
   awayTeam:       string
   startTimestamp: number
   pickName:       string
+  marketType:     string
   amount:         number
   isTest:         boolean
 }
@@ -30,7 +31,7 @@ export async function placeExternalBet(input: PlaceExternalBetInput) {
       external_tournament: input.league,
       external_home_team:  input.homeTeam,
       external_away_team:  input.awayTeam,
-      market_type: 'match_winner',
+      market_type: input.marketType,
       status: 'open',
       starts_at: new Date(input.startTimestamp * 1000).toISOString(),
     }, { onConflict: 'external_event_id,market_type' })

@@ -29,7 +29,7 @@ function GamingMatchCard({
   index = 0,
 }: {
   match: PandaMatch
-  activePick?: string | null
+  activePick?: MatchPick | null
   onPickSelect: (pick: MatchPick) => void
   index?: number
 }) {
@@ -41,10 +41,12 @@ function GamingMatchCard({
 
   if (!homeOp || !awayOp) return null
 
-  const picks: { key: string; label: string }[] = [
+  const winnerPicks: { key: string; label: string }[] = [
     { key: homeOp.name, label: homeOp.name.slice(0, 6).toUpperCase() },
     { key: awayOp.name, label: awayOp.name.slice(0, 6).toUpperCase() },
   ]
+
+  const showMapsBet = (match.number_of_games ?? 0) >= 3
 
   const startTs = match.begin_at ? Math.floor(new Date(match.begin_at).getTime() / 1000) : 0
 
@@ -97,24 +99,58 @@ function GamingMatchCard({
 
       {/* Picks or live label */}
       {!isLive ? (
-        <div className={styles.matchPicks}>
-          {picks.map(p => (
-            <button
-              key={p.key}
-              className={`${styles.pickBtn} ${activePick === p.key ? styles.pickActive : ''}`}
-              onClick={() => onPickSelect({
-                eventId:        `panda-${match.id}`,
-                sport:          match.videogame.slug,
-                league:         `${match.league.name} · ${match.serie.full_name}`,
-                homeTeam:       homeOp.name,
-                awayTeam:       awayOp.name,
-                startTimestamp: startTs,
-                pickName:       p.key,
-              })}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+          {/* match_winner */}
+          <div>
+            <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.2)', marginBottom: '0.25rem' }}>GANADOR</p>
+            <div className={styles.matchPicks}>
+              {winnerPicks.map(p => (
+                <button
+                  key={p.key}
+                  className={`${styles.pickBtn} ${activePick?.marketType === 'match_winner' && activePick?.pickName === p.key ? styles.pickActive : ''}`}
+                  onClick={() => onPickSelect({
+                    eventId:        `panda-${match.id}`,
+                    sport:          match.videogame.slug,
+                    league:         `${match.league.name} · ${match.serie.full_name}`,
+                    homeTeam:       homeOp.name,
+                    awayTeam:       awayOp.name,
+                    startTimestamp: startTs,
+                    pickName:       p.key,
+                    marketType:     'match_winner',
+                  })}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* over_under_maps — solo BO3+ */}
+          {showMapsBet && (
+            <div>
+              <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.2)', marginBottom: '0.25rem' }}>MAPAS TOTALES</p>
+              <div className={styles.matchPicks}>
+                {[{ key: 'over', label: '+2.5' }, { key: 'under', label: '-2.5' }].map(p => (
+                  <button
+                    key={p.key}
+                    className={`${styles.pickBtn} ${activePick?.marketType === 'over_under_maps' && activePick?.pickName === p.key ? styles.pickActive : ''}`}
+                    onClick={() => onPickSelect({
+                      eventId:        `panda-${match.id}`,
+                      sport:          match.videogame.slug,
+                      league:         `${match.league.name} · ${match.serie.full_name}`,
+                      homeTeam:       homeOp.name,
+                      awayTeam:       awayOp.name,
+                      startTimestamp: startTs,
+                      pickName:       p.key,
+                      marketType:     'over_under_maps',
+                    })}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <p className={styles.liveLabel}>EN VIVO · APUESTAS CERRADAS</p>
@@ -193,7 +229,7 @@ export function GamingHubClient({ live, upcoming }: { live: PandaMatch[]; upcomi
                 <GamingMatchCard
                   key={m.id}
                   match={m}
-                  activePick={activePick?.eventId === `panda-${m.id}` ? activePick.pickName : null}
+                  activePick={activePick?.eventId === `panda-${m.id}` ? activePick : null}
                   onPickSelect={handlePickSelect}
                   index={i}
                 />

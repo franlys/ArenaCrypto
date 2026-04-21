@@ -41,6 +41,7 @@ export function BetSlip({ pick, isOpen, onClose, balance, testBalance, isTestUse
         awayTeam:       pick.awayTeam,
         startTimestamp: pick.startTimestamp,
         pickName:       pick.pickName,
+        marketType:     pick.marketType,
         amount:         numAmount,
         isTest,
       })
@@ -57,13 +58,16 @@ export function BetSlip({ pick, isOpen, onClose, balance, testBalance, isTestUse
     }
   }
 
-  const pickLabel = pick
-    ? pick.pickName === 'draw'
-      ? 'EMPATE'
-      : pick.pickName === pick.homeTeam
-        ? `LOCAL · ${pick.homeTeam}`
-        : `VISITA · ${pick.awayTeam}`
-    : ''
+  function getPickLabel(p: typeof pick): string {
+    if (!p) return ''
+    if (p.marketType === 'both_teams_score') return p.pickName === 'yes' ? 'AMBOS ANOTAN · SÍ' : 'AMBOS ANOTAN · NO'
+    if (p.marketType === 'over_under_2_5')   return p.pickName === 'over' ? 'GOLES TOTALES · OVER +2.5' : 'GOLES TOTALES · UNDER -2.5'
+    if (p.marketType === 'over_under_maps')  return p.pickName === 'over' ? 'MAPAS · OVER +2.5' : 'MAPAS · UNDER -2.5'
+    if (p.pickName === 'draw') return 'GANADOR · EMPATE'
+    if (p.pickName === p.homeTeam) return `GANADOR · LOCAL`
+    return `GANADOR · VISITA`
+  }
+  const pickLabel = getPickLabel(pick)
 
   return (
     <>

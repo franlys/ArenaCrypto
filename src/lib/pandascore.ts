@@ -27,6 +27,7 @@ export interface PandaMatch {
   results: Array<{ team_id: number; score: number }>;
   winner?: { id: number; name: string } | null;
   draw: boolean;
+  number_of_games: number | null;
 }
 
 export async function getLiveMatches(): Promise<PandaMatch[]> {

@@ -11,6 +11,13 @@ export interface MatchPick {
   awayTeam:       string
   startTimestamp: number
   pickName:       string
+  marketType:     string
+}
+
+interface MarketSection {
+  marketType: string
+  label:      string
+  picks:      { key: string; label: string }[]
 }
 
 interface MatchCardProps {
@@ -23,7 +30,7 @@ interface MatchCardProps {
   isLive?:        boolean
   homeScore?:     number
   awayScore?:     number
-  activePick?:    string | null
+  activePick?:    MatchPick | null
   onPickSelect:   (pick: MatchPick) => void
   index?:         number
 }
@@ -42,18 +49,59 @@ function formatKickoff(ts: number): string {
   const now = new Date()
   const isToday = d.toDateString() === now.toDateString()
   const timeStr = d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true })
-  return isToday ? `Hoy · ${timeStr}` : `${d.toLocaleDateString('es-VE', { month: 'short', day: 'numeric' })} · ${timeStr}`
+  return isToday
+    ? `Hoy · ${timeStr}`
+    : `${d.toLocaleDateString('es-VE', { month: 'short', day: 'numeric' })} · ${timeStr}`
+}
+
+function buildSections(sport: string, homeTeam: string, awayTeam: string): MarketSection[] {
+  if (sport === 'football') {
+    return [
+      {
+        marketType: 'match_winner',
+        label: 'GANADOR',
+        picks: [
+          { key: homeTeam, label: 'LOCAL' },
+          { key: 'draw',   label: 'EMPATE' },
+          { key: awayTeam, label: 'VISITA' },
+        ],
+      },
+      {
+        marketType: 'both_teams_score',
+        label: 'AMBOS ANOTAN',
+        picks: [
+          { key: 'yes', label: 'SÍ' },
+          { key: 'no',  label: 'NO' },
+        ],
+      },
+      {
+        marketType: 'over_under_2_5',
+        label: 'GOLES TOTALES',
+        picks: [
+          { key: 'over',  label: '+2.5' },
+          { key: 'under', label: '-2.5' },
+        ],
+      },
+    ]
+  }
+  // basketball, baseball — no draw
+  return [
+    {
+      marketType: 'match_winner',
+      label: 'GANADOR',
+      picks: [
+        { key: homeTeam, label: 'LOCAL' },
+        { key: awayTeam, label: 'VISITA' },
+      ],
+    },
+  ]
 }
 
 export function MatchCard({
   eventId, sport, league, homeTeam, awayTeam, startTimestamp,
   isLive, homeScore, awayScore, activePick, onPickSelect, index = 0,
 }: MatchCardProps) {
-  const picks = [
-    { key: homeTeam,  label: 'LOCAL' },
-    { key: 'draw',    label: 'EMPATE' },
-    { key: awayTeam,  label: 'VISIT.' },
-  ]
+  const sections = buildSections(sport, homeTeam, awayTeam)
 
   return (
     <motion.div
@@ -100,25 +148,35 @@ export function MatchCard({
         </div>
       </div>
 
-      {/* Pick buttons — disabled when live */}
-      {!isLive && (
-        <div className={styles.picksRow}>
-          {picks.map(p => (
-            <button
-              key={p.key}
-              className={`${styles.pickBtn} ${activePick === p.key ? styles.pickActive : ''}`}
-              onClick={() => onPickSelect({
-                eventId, sport, league, homeTeam, awayTeam, startTimestamp,
-                pickName: p.key,
-              })}
-            >
-              {p.label}
-            </button>
+      {/* Market sections */}
+      {!isLive ? (
+        <div className={styles.markets}>
+          {sections.map(section => (
+            <div key={section.marketType} className={styles.marketSection}>
+              <span className={styles.marketLabel}>{section.label}</span>
+              <div className={`${styles.picksRow} ${section.picks.length === 2 ? styles.picksRow2 : ''}`}>
+                {section.picks.map(p => {
+                  const isActive =
+                    activePick?.marketType === section.marketType &&
+                    activePick?.pickName   === p.key
+                  return (
+                    <button
+                      key={p.key}
+                      className={`${styles.pickBtn} ${isActive ? styles.pickActive : ''}`}
+                      onClick={() => onPickSelect({
+                        eventId, sport, league, homeTeam, awayTeam,
+                        startTimestamp, pickName: p.key, marketType: section.marketType,
+                      })}
+                    >
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           ))}
         </div>
-      )}
-
-      {isLive && (
+      ) : (
         <div className={styles.liveFooter}>
           <span className={styles.liveLabel}>EN VIVO · APUESTAS CERRADAS</span>
         </div>

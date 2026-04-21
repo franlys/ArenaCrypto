@@ -149,11 +149,37 @@
   color: rgba(239,68,68,0.6);
 }
 
+/* ── Market sections ── */
+.markets {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.marketSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.marketLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+}
+
 /* ── Pick buttons ── */
 .picksRow {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.4rem;
+}
+
+.picksRow2 {
+  grid-template-columns: 1fr 1fr;
 }
 
 .pickBtn {

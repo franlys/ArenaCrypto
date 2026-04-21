@@ -138,7 +138,7 @@ export function SportHubClient({ eventsBySport, liveBySport }: Props) {
                 homeTeam={ev.homeTeam.name}
                 awayTeam={ev.awayTeam.name}
                 startTimestamp={ev.startTimestamp}
-                activePick={activePick?.eventId === String(ev.id) ? activePick.pickName : null}
+                activePick={activePick?.eventId === String(ev.id) ? activePick : null}
                 onPickSelect={handlePickSelect}
                 index={i}
               />
