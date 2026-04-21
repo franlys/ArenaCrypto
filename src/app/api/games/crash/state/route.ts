@@ -30,7 +30,18 @@ function generateCrashPoint(): { seed: string; point: number } {
   return { seed, point }
 }
 
+const FALLBACK = { roundId: null, phase: 'crashed', multiplier: 1.00, timeUntilStart: 0, bets: [] }
+
 export async function GET() {
+  try {
+    return await getState()
+  } catch (err) {
+    console.error('crash/state unhandled error:', err)
+    return NextResponse.json(FALLBACK, { headers: { 'Cache-Control': 'no-store' } })
+  }
+}
+
+async function getState() {
   const admin = db()
   const now   = Date.now()
 
@@ -173,3 +184,4 @@ export async function GET() {
     })),
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
+

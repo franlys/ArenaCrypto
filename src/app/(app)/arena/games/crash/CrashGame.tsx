@@ -7,19 +7,19 @@ import { useUser } from '@/contexts/UserContext'
 import { supabase } from '@/lib/supabase'
 import styles from './crash.module.css'
 
-const QUICK = [1, 5, 10, 25]
+const QUICK   = [1, 5, 10, 25]
 const CRASH_K = 0.00006
 
 interface Bet {
-  amount: number
-  isTest: boolean
+  amount:    number
+  isTest:    boolean
   cashoutAt: number | null
   payout:    number | null
   status:    'active' | 'won' | 'lost'
 }
 
 interface State {
-  roundId:        string
+  roundId:        string | null
   phase:          'betting' | 'running' | 'crashed'
   multiplier:     number
   crashPoint?:    number
@@ -30,24 +30,28 @@ interface State {
 
 export function CrashGame() {
   const { profile, isTestUser, refreshProfile } = useUser()
-  const [state, setState]       = useState<State | null>(null)
-  const [amount, setAmount]     = useState('')
-  const [autoCashout, setAuto]  = useState('')
-  const [isTest, setIsTest]     = useState(isTestUser)
-  const [betting, setBetting]   = useState(false)
-  const [cashingOut, setCashing] = useState(false)
+  const [state, setState]         = useState<State | null>(null)
+  const [amount, setAmount]       = useState('')
+  const [autoCashout, setAuto]    = useState('')
+  const [isTest, setIsTest]       = useState(isTestUser)
+  const [betting, setBetting]     = useState(false)
+  const [cashingOut, setCashing]  = useState(false)
+  const [betError, setBetError]   = useState('')
   const [myRoundId, setMyRoundId] = useState<string | null>(null)
-  const [liveMult, setLiveMult] = useState(1.00)
-  const animRef = useRef<number | null>(null)
-  const stateRef = useRef<State | null>(null)
-  const roundStartsAtRef = useRef<number | null>(null)
+  const [liveMult, setLiveMult]   = useState(1.00)
   const [localCountdown, setLocalCountdown] = useState(0)
 
-  const balance     = Number(profile?.wallets?.balance_stablecoin ?? 0)
-  const testBalance = Number(profile?.wallets?.test_balance        ?? 0)
+  // Refs always hold the latest values — avoids stale closures in rAF / intervals
+  const stateRef        = useRef<State | null>(null)
+  const startedAtRef    = useRef<number | null>(null)
+  const roundStartsAtRef = useRef<number | null>(null)
+  const animRef         = useRef<number | null>(null)
+
+  const balance       = Number(profile?.wallets?.balance_stablecoin ?? 0)
+  const testBalance   = Number(profile?.wallets?.test_balance        ?? 0)
   const activeBalance = isTest ? testBalance : balance
 
-  // Poll server state every 200ms (non-blocking setInterval)
+  // ── Polling 200ms non-blocking ──────────────────────────────────────────────
   useEffect(() => {
     let inflight = false
 
@@ -57,82 +61,85 @@ export function CrashGame() {
       try {
         const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
         if (res.ok) {
-          const data = await res.json()
+          const data: State = await res.json()
           setState(data)
           stateRef.current = data
+          if (data.phase === 'running' && data.startedAt) {
+            startedAtRef.current = data.startedAt
+          }
+          if (data.phase === 'betting' && data.timeUntilStart > 0) {
+            roundStartsAtRef.current = Date.now() + data.timeUntilStart
+          }
         }
-      } catch { /* ignore */ }
+      } catch { /* ignore network errors */ }
       finally { inflight = false }
     }
 
-    poll() // immediate first fetch
+    poll()
     const id = setInterval(poll, 200)
     return () => clearInterval(id)
   }, [])
 
-  // Supabase Realtime — instant notification on round phase change
+  // ── Supabase Realtime — instant round change notification ───────────────────
   useEffect(() => {
     const channel = supabase
       .channel('crash-rounds-rt')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crash_rounds' },
         async () => {
-          // Immediately fetch authoritative state on any round change
           try {
             const res = await fetch('/api/games/crash/state', { cache: 'no-store' })
             if (res.ok) {
-              const data = await res.json()
+              const data: State = await res.json()
               setState(data)
               stateRef.current = data
+              if (data.phase === 'running' && data.startedAt) startedAtRef.current = data.startedAt
+              if (data.phase === 'betting' && data.timeUntilStart > 0) {
+                roundStartsAtRef.current = Date.now() + data.timeUntilStart
+              }
             }
           } catch { /* ignore */ }
         }
       )
       .subscribe()
-
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Capture absolute start time when server sends betting phase
+  // ── Always-running rAF — reads refs, no stale closures ─────────────────────
   useEffect(() => {
-    if (state?.phase === 'betting' && state.timeUntilStart > 0) {
-      roundStartsAtRef.current = Date.now() + state.timeUntilStart
+    const tick = () => {
+      const s = stateRef.current
+      if (s?.phase === 'running' && startedAtRef.current) {
+        const elapsed = Date.now() - startedAtRef.current
+        setLiveMult(Math.round(Math.exp(CRASH_K * elapsed) * 100) / 100)
+      } else if (s?.phase === 'crashed') {
+        setLiveMult(s.crashPoint ?? s.multiplier)
+      } else if (s?.phase === 'betting') {
+        setLiveMult(1.00)
+      }
+      animRef.current = requestAnimationFrame(tick)
     }
-  }, [state?.roundId, state?.phase, state?.timeUntilStart])
+    animRef.current = requestAnimationFrame(tick)
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
+  }, [])
 
-  // Local countdown ticker — 100ms interval so it feels live
+  // ── Countdown ticker ────────────────────────────────────────────────────────
   useEffect(() => {
     if (state?.phase !== 'betting') { setLocalCountdown(0); return }
     const id = setInterval(() => {
-      const remaining = roundStartsAtRef.current ? Math.max(0, roundStartsAtRef.current - Date.now()) : 0
+      const remaining = roundStartsAtRef.current
+        ? Math.max(0, roundStartsAtRef.current - Date.now())
+        : 0
       setLocalCountdown(Math.ceil(remaining / 1000))
     }, 100)
     return () => clearInterval(id)
   }, [state?.phase])
 
-  // Client-side smooth multiplier animation during 'running'
-  useEffect(() => {
-    if (!state) return
-
-    if (state.phase === 'running' && state.startedAt) {
-      const tick = () => {
-        const elapsed = Date.now() - state.startedAt!
-        setLiveMult(Math.round(Math.exp(CRASH_K * elapsed) * 100) / 100)
-        animRef.current = requestAnimationFrame(tick)
-      }
-      animRef.current = requestAnimationFrame(tick)
-      return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
-    } else {
-      if (animRef.current) cancelAnimationFrame(animRef.current)
-      setLiveMult(state.multiplier)
-    }
-  }, [state?.phase, state?.startedAt])
-
-  const myBet = state ? state.bets.find((_, i) => i === 0) : undefined // simplified — server doesn't expose user_id
-
+  // ── Bet handler ─────────────────────────────────────────────────────────────
   const handleBet = useCallback(async () => {
     const num = parseFloat(amount)
     if (!num || num < 0.5 || num > activeBalance) return
     setBetting(true)
+    setBetError('')
     try {
       const res = await fetch('/api/games/crash/bet', {
         method: 'POST',
@@ -143,12 +150,15 @@ export function CrashGame() {
       if (data.ok) {
         setMyRoundId(data.roundId)
         refreshProfile()
+      } else {
+        setBetError(data.error ?? 'Error al apostar')
       }
     } finally {
       setBetting(false)
     }
   }, [amount, isTest, autoCashout, activeBalance, refreshProfile])
 
+  // ── Cashout handler ─────────────────────────────────────────────────────────
   const handleCashout = useCallback(async () => {
     if (!state?.roundId) return
     setCashing(true)
@@ -165,20 +175,20 @@ export function CrashGame() {
     }
   }, [state?.roundId, refreshProfile])
 
-  const hasActiveBet = myRoundId === state?.roundId && state?.phase === 'running'
-  const canBet = state?.phase === 'betting' && parseFloat(amount) >= 0.5 && parseFloat(amount) <= activeBalance && myRoundId !== state?.roundId
+  const hasActiveBet = myRoundId !== null && myRoundId === state?.roundId && state?.phase === 'running'
+  const canBet       = state?.phase === 'betting'
+    && parseFloat(amount) >= 0.5
+    && parseFloat(amount) <= activeBalance
+    && myRoundId !== state?.roundId
 
   const multColor =
     state?.phase === 'crashed' ? '#ef4444' :
     state?.phase === 'running' ? (liveMult >= 2 ? '#22c55e' : '#00F5FF') :
     'rgba(255,255,255,0.5)'
 
-  const displayMult = state?.phase === 'crashed'
-    ? state.crashPoint?.toFixed(2) ?? '—'
-    : liveMult.toFixed(2)
-
   const countdown = localCountdown
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className={styles.page}>
       {/* Header */}
@@ -202,7 +212,12 @@ export function CrashGame() {
       {/* Crash display */}
       <div className={`${styles.crashDisplay} ${state?.phase === 'crashed' ? styles.crashed : state?.phase === 'running' ? styles.running : ''}`}>
         <AnimatePresence mode="wait">
-          {state?.phase === 'betting' ? (
+          {!state ? (
+            <motion.div key="loading" className={styles.bettingPhase}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <p className={styles.phaseLabel}>CONECTANDO…</p>
+            </motion.div>
+          ) : state.phase === 'betting' ? (
             <motion.div key="betting" className={styles.bettingPhase}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <p className={styles.phaseLabel}>APOSTANDO</p>
@@ -219,21 +234,21 @@ export function CrashGame() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {countdown > 0 ? countdown : '...'}
+                  {countdown > 0 ? countdown : '…'}
                 </motion.p>
               </div>
               <p className={styles.phaseHint}>
                 {countdown > 0 ? `La ronda inicia en ${countdown}s` : 'Iniciando…'}
               </p>
             </motion.div>
-          ) : state?.phase === 'crashed' ? (
+          ) : state.phase === 'crashed' ? (
             <motion.div key="crashed" className={styles.crashedPhase}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}>
               <p className={styles.crashedLabel}>EXPLOTÓ</p>
               <p className={styles.crashedMult} style={{ color: '#ef4444' }}>
-                {displayMult}x
+                {liveMult.toFixed(2)}x
               </p>
             </motion.div>
           ) : (
@@ -246,7 +261,7 @@ export function CrashGame() {
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               >
-                {displayMult}x
+                {liveMult.toFixed(2)}x
               </motion.p>
             </motion.div>
           )}
@@ -261,7 +276,7 @@ export function CrashGame() {
             <span className={styles.inputPre}>$</span>
             <input
               type="number" min="0.5" step="0.5"
-              value={amount} onChange={e => setAmount(e.target.value)}
+              value={amount} onChange={e => { setAmount(e.target.value); setBetError('') }}
               className={styles.amountInput} placeholder="0.00"
               disabled={state?.phase !== 'betting'}
             />
@@ -286,6 +301,12 @@ export function CrashGame() {
             <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', paddingLeft: '0.5rem' }}>x</span>
           </div>
 
+          {betError && (
+            <p style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.72rem', color: '#ef4444', marginTop: '0.25rem' }}>
+              {betError}
+            </p>
+          )}
+
           <button
             className={`${styles.ctaBtn} ${hasActiveBet ? styles.ctaCashout : ''} ${(!canBet && !hasActiveBet) ? styles.ctaDisabled : ''}`}
             onClick={hasActiveBet ? handleCashout : handleBet}
@@ -295,8 +316,10 @@ export function CrashGame() {
               <span className={styles.spinner} />
             ) : hasActiveBet ? (
               `COBRAR ${liveMult.toFixed(2)}x — $${(parseFloat(amount || '0') * liveMult).toFixed(2)}`
-            ) : state?.phase !== 'betting' ? (
-              'ESPERA LA PRÓXIMA RONDA'
+            ) : state?.phase === 'running' ? (
+              'EN CURSO — ESPERA LA PRÓXIMA'
+            ) : state?.phase === 'crashed' ? (
+              'ESPERANDO NUEVA RONDA…'
             ) : (
               'APOSTAR'
             )}
@@ -317,11 +340,7 @@ export function CrashGame() {
                   <span className={styles.betAmount}>${b.amount.toFixed(2)}</span>
                   {b.isTest && <span className={styles.testTag}>TEST</span>}
                   <span className={`${styles.betStatus} ${b.status === 'won' ? styles.betWon : b.status === 'lost' ? styles.betLost : ''}`}>
-                    {b.status === 'won'
-                      ? `${b.cashoutAt?.toFixed(2)}x ✓`
-                      : b.status === 'lost'
-                        ? `💥`
-                        : '…'}
+                    {b.status === 'won' ? `${b.cashoutAt?.toFixed(2)}x ✓` : b.status === 'lost' ? '💥' : '…'}
                   </span>
                   {b.payout != null && (
                     <span className={styles.betPayout}>${b.payout.toFixed(2)}</span>
