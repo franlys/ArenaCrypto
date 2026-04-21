@@ -1,0 +1,203 @@
+.page {
+  padding: 2rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 800px;
+}
+
+.header { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.backLink {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(0,245,255,0.5);
+  text-decoration: none;
+  transition: color 150ms ease-out;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+
+@media (hover: hover) and (pointer: fine) { .backLink:hover { color: #00F5FF; } }
+
+.title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1;
+}
+
+/* ── Stats ── */
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.statCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.statLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.statValue { font-size: 1.1rem; line-height: 1; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.tab {
+  padding: 0.55rem 0.85rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.tabActive { color: #00F5FF !important; border-bottom-color: #00F5FF; }
+
+/* ── Bet list ── */
+.betList { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.betRow {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  transition: border-color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .betRow:hover { border-color: rgba(255,255,255,0.12); }
+}
+
+.betStatus {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.testTag {
+  font-size: 0.4rem;
+  letter-spacing: 0.1em;
+  color: rgba(251,191,36,0.6);
+  border-top: 1px solid rgba(251,191,36,0.2);
+  padding-top: 0.2rem;
+  width: 100%;
+  text-align: center;
+}
+
+.betMain { flex: 1; min-width: 0; }
+
+.betMatch {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.betLeague {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.betRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.betPick {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.52rem;
+  font-weight: 900;
+  color: rgba(0,245,255,0.7);
+  letter-spacing: 0.08em;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.betAmount { font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+
+.betDate {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ── Loading / empty ── */
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(0,245,255,0.15);
+  border-top-color: #00F5FF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  border: 1px dashed rgba(255,255,255,0.07);
+  border-radius: 12px;
+}
+
+@media (max-width: 640px) {
+  .page { padding: 1.25rem 1rem 4rem; }
+  .statsRow { grid-template-columns: 1fr; }
+  .betRow { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}

@@ -1,0 +1,350 @@
+/* ── BetSlip Drawer ── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 49;
+  backdrop-filter: blur(2px);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 360px;
+  height: 100dvh;
+  background: #0d0d12;
+  border-left: 1px solid rgba(0,245,255,0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+  overflow-y: auto;
+  box-shadow: -8px 0 40px rgba(0,0,0,0.6);
+}
+
+@media (max-width: 480px) {
+  .drawer { width: 100vw; }
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.headerLabel {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.25em;
+  color: rgba(0,245,255,0.6);
+  margin-bottom: 0.35rem;
+}
+
+.headerMatch {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.02em;
+}
+
+.headerMatch span { color: rgba(255,255,255,0.3); margin: 0 0.3em; }
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.4);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 150ms ease-out, border-color 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .closeBtn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+}
+
+/* ── Body ── */
+.body {
+  flex: 1;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.section { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.sectionLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+/* ── Pick chip ── */
+.pickChip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(0,245,255,0.05);
+  border: 1px solid rgba(0,245,255,0.2);
+  border-radius: 10px;
+}
+
+.pickChipLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+.pickChipValue {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #00F5FF;
+  letter-spacing: 0.05em;
+}
+
+/* ── Mode toggle ── */
+.modeToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.modeBtn {
+  padding: 0.55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: background 120ms ease-out, color 120ms ease-out;
+}
+
+.modeBtnActive {
+  background: rgba(0,245,255,0.1);
+  border-color: rgba(0,245,255,0.3);
+  color: #00F5FF;
+}
+
+.modeBal {
+  font-size: 0.6rem;
+  opacity: 0.7;
+}
+
+.testBadge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(251,191,36,0.7);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ── Amount input ── */
+.inputWrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 150ms ease-out;
+}
+
+.inputWrap:focus-within {
+  border-color: rgba(0,245,255,0.4);
+  box-shadow: 0 0 0 2px rgba(0,245,255,0.06);
+}
+
+.inputPrefix {
+  padding: 0 0.75rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(0,245,255,0.5);
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+
+.amountInput {
+  flex: 1;
+  padding: 0.8rem 0.75rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fff;
+  -moz-appearance: textfield;
+}
+
+.amountInput::-webkit-inner-spin-button,
+.amountInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.amountInput::placeholder { color: rgba(255,255,255,0.15); }
+
+/* ── Quick pills ── */
+.quickPills {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.pill {
+  flex: 1;
+  padding: 0.4rem 0;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  transition: all 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pill:hover:not(:disabled) {
+    background: rgba(0,245,255,0.06);
+    border-color: rgba(0,245,255,0.25);
+    color: #00F5FF;
+  }
+}
+
+.pillActive {
+  background: rgba(0,245,255,0.1) !important;
+  border-color: rgba(0,245,255,0.4) !important;
+  color: #00F5FF !important;
+}
+
+.pill:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* ── Payout row ── */
+.payoutRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+
+.payoutItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.payoutLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.25);
+  text-transform: uppercase;
+}
+
+.payoutVal {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.7);
+  line-height: 1;
+}
+
+.payoutGain { color: #00F5FF; text-shadow: 0 0 12px rgba(0,245,255,0.4); }
+
+.payoutArrow {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.payoutNote {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.2);
+  line-height: 1.4;
+  margin-top: -0.5rem;
+}
+
+/* ── Confirm button ── */
+.confirmBtn {
+  padding: 1rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #00F5FF, hsl(var(--neon-purple)));
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #000;
+  cursor: pointer;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .confirmBtn:hover:not(:disabled) { opacity: 0.9; }
+}
+
+.confirmBtn:active:not(:disabled) { transform: scale(0.98); }
+
+.confirmDisabled {
+  background: rgba(255,255,255,0.07) !important;
+  color: rgba(255,255,255,0.3) !important;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+  .confirmBtn:active { transform: none; }
+}

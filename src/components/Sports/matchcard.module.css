@@ -1,0 +1,210 @@
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: border-color 150ms ease-out, background 150ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    border-color: rgba(0, 245, 255, 0.2);
+    background: rgba(0, 245, 255, 0.02);
+  }
+}
+
+.card:active { transform: scale(0.99); }
+
+.live {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.03);
+}
+
+/* ── League row ── */
+.leagueRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.liveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(239,68,68,0.8);
+}
+
+.leagueName {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kickoff {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.55rem;
+  color: rgba(0,245,255,0.5);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Teams ── */
+.teamsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.teamSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.teamSideRight {
+  align-items: center;
+}
+
+.teamAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(0,245,255,0.06);
+  border: 1px solid rgba(0,245,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.teamInitials {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: rgba(0,245,255,0.7);
+  letter-spacing: 0.05em;
+}
+
+.teamName {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  text-align: center;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 90px;
+}
+
+.vsText {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 900;
+  color: rgba(255,255,255,0.2);
+  flex-shrink: 0;
+  padding: 0 0.25rem;
+}
+
+/* ── Live scoreboard ── */
+.scoreboard {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.score {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+}
+
+.scoreDash {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(239,68,68,0.6);
+}
+
+/* ── Pick buttons ── */
+.picksRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.pickBtn {
+  padding: 0.45rem 0.25rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  transition: background 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pickBtn:hover {
+    background: rgba(0,245,255,0.06);
+    border-color: rgba(0,245,255,0.3);
+    color: #00F5FF;
+  }
+}
+
+.pickBtn:active { transform: scale(0.96); }
+
+.pickActive {
+  background: rgba(0,245,255,0.12) !important;
+  border-color: rgba(0,245,255,0.6) !important;
+  color: #00F5FF !important;
+  box-shadow: 0 0 12px rgba(0,245,255,0.15);
+}
+
+/* ── Live footer ── */
+.liveFooter {
+  text-align: center;
+  padding: 0.3rem;
+  background: rgba(239,68,68,0.06);
+  border-radius: 6px;
+}
+
+.liveLabel {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: rgba(239,68,68,0.6);
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:active { transform: none; }
+  .pickBtn:active { transform: none; }
+}

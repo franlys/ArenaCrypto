@@ -11,6 +11,13 @@ import styles from "./SidebarNav.module.css";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
 
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  exact?: boolean;
+}
+
 interface SidebarNavProps {
   onItemClick?: () => void;
 }
@@ -19,14 +26,16 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
 
-  const navItems = [
-    { href: "/dashboard",   label: "HUB",       icon: "◈" },
-    { href: "/arena",       label: "ARENA",     icon: "⚔" },
-    { href: "/tournaments", label: "TORNEOS",   icon: "🏆" },
-    { href: "/historial",   label: "HISTORIAL", icon: "📋" },
-    { href: "/wallets",     label: "WALLET",    icon: "◎" },
-    { href: "/premium",     label: "PREMIUM",   icon: "◆" },
-    { href: "/profile",     label: "PERFIL",    icon: "◉" },
+  const navItems: NavItem[] = [
+    { href: "/dashboard",    label: "HUB",       icon: "◈",  exact: true },
+    { href: "/arena",        label: "ARENA",     icon: "⚔",  exact: true },
+    { href: "/arena/sport",  label: "SPORT",     icon: "⚽" },
+    { href: "/arena/gaming", label: "GAMING",    icon: "🎮" },
+    { href: "/tournaments",  label: "TORNEOS",   icon: "🏆" },
+    { href: "/historial",    label: "HISTORIAL", icon: "📋" },
+    { href: "/wallets",      label: "WALLET",    icon: "◎" },
+    { href: "/premium",      label: "PREMIUM",   icon: "◆" },
+    { href: "/profile",      label: "PERFIL",    icon: "◉" },
   ];
 
 
@@ -50,9 +59,9 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
       {/* Nav items */}
       <ul className={styles.list}>
         {navItems.map((item, i) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname.startsWith(item.href));
+          const isActive = item.exact
+            ? pathname === item.href
+            : pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
 
           return (
             <motion.li
