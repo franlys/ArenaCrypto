@@ -29,7 +29,19 @@ export async function POST(req: NextRequest) {
     .limit(1)
     .maybeSingle()
 
-  if (!round) return NextResponse.json({ error: 'No hay ronda en fase de apuestas' }, { status: 409 })
+  if (!round) return NextResponse.json({ error: 'La ronda ya comenzó, espera la próxima' }, { status: 409 })
+
+  // Check for existing bet in this round
+  const { data: existing } = await db
+    .from('crash_bets')
+    .select('id')
+    .eq('round_id', round.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    return NextResponse.json({ ok: true, roundId: round.id, alreadyBet: true })
+  }
 
   // Check wallet
   const { data: wallet } = await db.from('wallets').select('balance_stablecoin, test_balance').eq('user_id', user.id).single()
@@ -43,7 +55,7 @@ export async function POST(req: NextRequest) {
   const { error: wErr } = await db.from('wallets')
     .update({ [field]: balance - amount })
     .eq('user_id', user.id)
-  if (wErr) return NextResponse.json({ error: wErr.message }, { status: 500 })
+  if (wErr) return NextResponse.json({ error: 'Error al procesar pago' }, { status: 500 })
 
   // Place bet
   const { error: bErr } = await db.from('crash_bets').insert({
@@ -56,9 +68,14 @@ export async function POST(req: NextRequest) {
   })
 
   if (bErr) {
+    // Duplicate race condition — rollback and return ok (bet exists)
+    if (bErr.code === '23505') {
+      await db.from('wallets').update({ [field]: balance }).eq('user_id', user.id)
+      return NextResponse.json({ ok: true, roundId: round.id, alreadyBet: true })
+    }
     console.error('crash_bets insert error:', bErr.message, bErr.code)
     await db.from('wallets').update({ [field]: balance }).eq('user_id', user.id)
-    return NextResponse.json({ error: bErr.message, code: bErr.code }, { status: 500 })
+    return NextResponse.json({ error: 'Error al registrar la apuesta' }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, roundId: round.id })

@@ -118,7 +118,7 @@ export function CrashGame() {
       const data = await res.json()
       if (data.ok) {
         setMyRoundId(data.roundId)
-        refreshProfile()
+        if (!data.alreadyBet) refreshProfile()
       } else {
         setBetError(data.error ?? 'Error al apostar')
       }
