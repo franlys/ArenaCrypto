@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.game_modes (
 );
 
 ALTER TABLE public.game_modes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "game_modes_public_read" ON public.game_modes;
 CREATE POLICY "game_modes_public_read" ON public.game_modes FOR SELECT USING (true);
 
 -- ── FPS ──────────────────────────────────────────────────────────────────────
