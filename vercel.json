@@ -7,10 +7,6 @@
     {
       "path": "/api/sports/sync?mode=resolve",
       "schedule": "0 23 * * *"
-    },
-    {
-      "path": "/api/markets/sync",
-      "schedule": "*/15 * * * *"
     }
   ]
 }
