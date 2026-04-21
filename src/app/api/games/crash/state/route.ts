@@ -93,11 +93,11 @@ async function getState() {
         if (running) {
           cur = running  // Block C will crash it
         } else {
-          // Create fresh round
+          // Create fresh round — use Vercel clock for created_at to avoid DB clock skew
           const { seed, point } = generateCrashPoint()
           const { data: newRound, error: insertErr } = await admin
             .from('crash_rounds')
-            .insert({ server_seed: seed, crash_point: point, status: 'waiting' })
+            .insert({ server_seed: seed, crash_point: point, status: 'waiting', created_at: new Date(now).toISOString() })
             .select().single()
           if (newRound) {
             cur = newRound
@@ -111,7 +111,7 @@ async function getState() {
 
   // ── B: waiting → running ────────────────────────────────────────────────────
   if (cur && cur.status === 'waiting') {
-    const waitedMs = now - new Date(cur.created_at as string).getTime()
+    const waitedMs = Math.max(0, now - new Date(cur.created_at as string).getTime())
     if (waitedMs >= BETTING_MS) {
       const startedAt = new Date().toISOString()
       await admin.from('crash_rounds')
@@ -175,10 +175,8 @@ async function getState() {
     cur.status === 'running'  ? Math.min(Math.exp(CRASH_K * elapsed), MAX_MULT) :
     cur.status === 'crashed'  ? Math.min(Number(cur.crash_point), MAX_MULT)     : 1.00
 
-  const timeUntilStart =
-    cur.status === 'waiting'
-      ? Math.max(0, BETTING_MS - (now - new Date(cur.created_at as string).getTime()))
-      : 0
+  const elapsed2     = Math.max(0, now - new Date(cur.created_at as string).getTime())
+  const timeUntilStart = cur.status === 'waiting' ? Math.max(0, BETTING_MS - elapsed2) : 0
 
   return NextResponse.json({
     roundId:       cur.id,
