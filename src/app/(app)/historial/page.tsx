@@ -236,7 +236,7 @@ export default async function HistorialPage() {
                             </p>
                             {isWon && payout > 0 && (
                               <p style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.7rem', color: '#10b981', margin: '0.1rem 0 0', letterSpacing: '0.03em' }}>
-                                +${payout.toFixed(2)}
+                                +${(payout - Number(bet.amount)).toFixed(2)}
                               </p>
                             )}
                           </div>
