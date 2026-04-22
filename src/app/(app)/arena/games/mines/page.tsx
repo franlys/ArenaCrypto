@@ -97,9 +97,11 @@ export default function MinesPage() {
     if (data.error) { setMsg(data.error); return; }
     setBoard(data.board); setPayout(data.payout);
     setStatus("cashed_out");
-    const profit = data.payout - amount;
-    setMsg(`💰 ¡Cobrado! +$${profit.toFixed(2)}`);
-    refreshProfile();
+    if (data.status === "cashed_out") {
+      const profit = data.payout - amount;
+      setMsg(`💰 ¡COBRADO! +$${profit.toFixed(2)}`);
+      refreshProfile();
+    }
   };
 
   const getTileState = (idx: number) => {

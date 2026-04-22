@@ -72,7 +72,8 @@ export default function LimboPage() {
         setStatus("finished");
         setLoading(false);
         if (data.won) {
-          setMsg(`💰 ¡GANASTE! +$${data.payout.toFixed(2)}`);
+          const profit = data.payout - amount;
+          setMsg(`💰 ¡GANASTE! +$${profit.toFixed(2)}`);
         } else {
           setMsg("❌ Perdiste");
         }

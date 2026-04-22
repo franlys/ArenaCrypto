@@ -74,6 +74,12 @@ export function DiceGame() {
       if (data.result !== undefined) {
         setResult(data)
         setShowResult(true)
+        if (data.won) {
+          const profit = data.payout - numAmount;
+          setMsg(`💰 ¡GANASTE! +$${profit.toFixed(2)}`)
+        } else {
+          setMsg(`❌ PERDISTE`)
+        }
         setHistory(prev => [{ ...data, amount: numAmount, target, direction }, ...prev.slice(0, 9)])
         refreshProfile()
       }
@@ -119,7 +125,7 @@ export function DiceGame() {
                 >
                   <p className={styles.resultNum}>{result.result}</p>
                   <p className={styles.resultVerdict} style={{ color: result.won ? '#22c55e' : '#ef4444' }}>
-                    {result.won ? `✓ +$${result.payout.toFixed(2)}` : '✗ PERDISTE'}
+                    {msg}
                   </p>
                 </motion.div>
               ) : (
@@ -230,7 +236,7 @@ export function DiceGame() {
                   </span>
                   <span className={styles.histMult}>{h.multiplier}x</span>
                   <span className={styles.histPayout} style={{ color: h.won ? '#22c55e' : 'rgba(239,68,68,0.7)' }}>
-                    {h.won ? `+$${h.payout.toFixed(2)}` : `-$${h.amount.toFixed(2)}`}
+                    {h.won ? `+$${(h.payout - h.amount).toFixed(2)}` : `-$${h.amount.toFixed(2)}`}
                   </span>
                 </motion.div>
               ))}
