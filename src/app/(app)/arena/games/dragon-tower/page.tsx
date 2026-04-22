@@ -118,7 +118,10 @@ export default function DragonTowerPage() {
     if (!data.survived) {
       newBoard[boardRow][tileIndex] = "mine";
       for (let t = 0; t < cfg.tiles; t++) {
-        if (newBoard[boardRow][t] === "hidden") newBoard[boardRow][t] = "safe";
+        const isSafeTile = data.safe_tiles?.includes(t);
+        if (newBoard[boardRow][t] === "hidden") {
+          newBoard[boardRow][t] = isSafeTile ? "safe" : "mine";
+        }
       }
       setTileStates(newBoard);
       setStatus("dead");

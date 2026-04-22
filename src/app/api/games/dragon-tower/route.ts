@@ -43,21 +43,17 @@ const LEVEL_MULTIPLIERS: Record<string, number[]> = {
 
 const MAX_LEVELS = 9;
 
-function isLevelSafe(serverSeed: string, level: number, tile: number, difficulty: string): boolean {
+function getLevelSafeTiles(serverSeed: string, level: number, difficulty: string): number[] {
   const cfg = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG];
   const hash = crypto.createHash("sha256").update(`${serverSeed}-${level}`).digest("hex");
-  
-  // Deterministic safe positions (only 1 safe tile for high difficulties)
-  const safeTile = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
+  const pos = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
   
   if (cfg.mines === 1) {
-    // If only 1 mine, any tile except that mine is safe
-    // Wait, let's keep it simple: 
-    // In easy/medium, one tile is the MINE.
-    return tile !== safeTile;
+    // Everything is safe EXCEPT pos
+    return Array.from({ length: cfg.tiles }, (_, i) => i).filter(i => i !== pos);
   } else {
-    // In expert, only ONE tile is SAFE.
-    return tile === safeTile;
+    // ONLY pos is safe
+    return [pos];
   }
 }
 
@@ -126,17 +122,15 @@ export async function POST(req: NextRequest) {
     if (!game || game.status !== "active") return NextResponse.json({ error: "Partida no activa" }, { status: 400 });
 
     const nextLevel = game.current_level + 1;
-    const safe = isLevelSafe(game.server_seed, nextLevel, tile_index, game.difficulty);
+    const safeTiles = getLevelSafeTiles(game.server_seed, nextLevel, game.difficulty);
+    const survived = safeTiles.includes(tile_index);
 
-    if (!safe) {
-      const cfg = DIFFICULTY_CONFIG[game.difficulty as keyof typeof DIFFICULTY_CONFIG];
-      const hash = crypto.createHash("sha256").update(`${game.server_seed}-${nextLevel}`).digest("hex");
-      const mineTile = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
+    if (!survived) {
       await db.from("dragon_tower_games").update({
         status: "dead", payout: 0, path: [...(game.path ?? []), tile_index],
         finished_at: new Date().toISOString(),
       }).eq("id", game_id);
-      return NextResponse.json({ ok: true, survived: false, mine_was_at: mineTile, payout: 0 });
+      return NextResponse.json({ ok: true, survived: false, safe_tiles: safeTiles, payout: 0 });
     }
 
     const multipliers = LEVEL_MULTIPLIERS[game.difficulty];
