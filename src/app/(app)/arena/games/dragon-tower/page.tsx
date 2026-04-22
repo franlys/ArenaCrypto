@@ -138,7 +138,8 @@ export default function DragonTowerPage() {
     if (data.auto_cashout) {
       setPayout(data.payout);
       setStatus("cashed_out");
-      setMsg(`🏆 ¡Cima alcanzada! +$${data.payout.toFixed(2)}`);
+      const profit = data.payout - amount;
+      setMsg(`🏆 ¡Cima alcanzada! +$${profit.toFixed(2)}`);
       refreshProfile();
     }
   };
@@ -151,7 +152,8 @@ export default function DragonTowerPage() {
     if (data.error) { setMsg(data.error); return; }
     setPayout(data.payout);
     setStatus("cashed_out");
-    setMsg(`💰 Cobrado! +$${data.payout.toFixed(2)} (${data.multiplier}x)`);
+    const profit = data.payout - amount;
+    setMsg(`💰 ¡Cobrado! +$${profit.toFixed(2)} (${data.multiplier}x)`);
     refreshProfile();
   };
 

@@ -94,7 +94,8 @@ export default function MinesPage() {
     if (data.error) { setMsg(data.error); return; }
     setBoard(data.board); setPayout(data.payout);
     setStatus("cashed_out");
-    setMsg(`💰 ¡Cobrado! +$${data.payout.toFixed(2)}`);
+    const profit = data.payout - amount;
+    setMsg(`💰 ¡Cobrado! +$${profit.toFixed(2)}`);
     refreshProfile();
   };
 

@@ -9,19 +9,19 @@ type RowCount  = 8 | 12 | 16;
 
 const MULTIPLIERS: Record<RiskLevel, Record<number, number[]>> = {
   low: {
-    8:  [5.6, 2.1, 1.1, 1.0, 0.5, 1.0, 1.1, 2.1, 5.6],
-    12: [10, 3.0, 1.6, 1.4, 1.1, 1.0, 0.5, 1.0, 1.1, 1.4, 1.6, 3.0, 10],
-    16: [16, 9.0, 2.0, 1.4, 1.4, 1.2, 1.1, 1.0, 0.5, 1.0, 1.1, 1.2, 1.4, 1.4, 2.0, 9.0, 16],
+    8:  [3.2, 1.5, 1.1, 1.0, 0.5, 1.0, 1.1, 1.5, 3.2],
+    12: [5.0, 2.0, 1.4, 1.1, 1.0, 0.8, 0.5, 0.8, 1.0, 1.1, 1.4, 2.0, 5.0],
+    16: [10, 5.0, 2.0, 1.4, 1.1, 1.0, 1.0, 0.9, 0.5, 0.9, 1.0, 1.0, 1.1, 1.4, 2.0, 5.0, 10],
   },
   medium: {
-    8:  [13, 3.0, 1.3, 0.7, 0.4, 0.7, 1.3, 3.0, 13],
-    12: [33, 11, 4.0, 2.0, 1.1, 0.6, 0.3, 0.6, 1.1, 2.0, 4.0, 11, 33],
-    16: [110, 41, 10, 5.0, 3.0, 1.5, 1.0, 0.5, 0.3, 0.5, 1.0, 1.5, 3.0, 5.0, 10, 41, 110],
+    8:  [10, 2.5, 1.2, 0.6, 0.3, 0.6, 1.2, 2.5, 10],
+    12: [25, 9.0, 3.5, 1.5, 1.0, 0.5, 0.2, 0.5, 1.0, 1.5, 3.5, 9.0, 25],
+    16: [80, 30, 8.0, 4.0, 2.0, 1.2, 0.8, 0.4, 0.2, 0.4, 0.8, 1.2, 2.0, 4.0, 8.0, 30, 80],
   },
   high: {
-    8:  [29, 4.0, 1.5, 0.3, 0.2, 0.3, 1.5, 4.0, 29],
-    12: [170, 24, 8.1, 2.0, 0.7, 0.2, 0.1, 0.2, 0.7, 2.0, 8.1, 24, 170],
-    16: [620, 190, 26, 9.0, 4.0, 2.0, 0.5, 0.2, 0.1, 0.2, 0.5, 2.0, 4.0, 9.0, 26, 190, 620],
+    8:  [25, 3.5, 1.3, 0.3, 0.1, 0.3, 1.3, 3.5, 25],
+    12: [120, 20, 6.5, 1.8, 0.6, 0.2, 0.1, 0.2, 0.6, 1.8, 6.5, 20, 120],
+    16: [250, 120, 22, 7.5, 3.5, 1.5, 0.4, 0.1, 0.1, 0.1, 0.4, 1.5, 3.5, 7.5, 22, 120, 250],
   }
 };
 
@@ -123,7 +123,10 @@ export default function PlinkoPage() {
 
       await animateBall(data.path, data.slot);
       setResult(data);
-      setMsg(data.multiplier >= 1 ? `💰 +$${data.payout.toFixed(2)}` : `📉 $${data.payout.toFixed(2)}`);
+      const profit = data.payout - amount;
+      if (profit > 0) setMsg(`💰 +$${profit.toFixed(2)}`);
+      else if (profit === 0) setMsg(`⚖ Empate ($0.00)`);
+      else setMsg(`📉 Perdiste -$${Math.abs(profit).toFixed(2)}`);
       refreshProfile();
     } catch (err) { setMsg("Error de conexión"); } finally { setLoading(false); }
   }, [amount, risk, rows, isTest, refreshProfile, loading]);
@@ -160,7 +163,7 @@ export default function PlinkoPage() {
           <div className={styles.controlGroup}><label className={styles.label}>FILAS</label>
             <div className={styles.riskRow}>{([8,12,16] as RowCount[]).map(r => <button key={r} className={`${styles.riskBtn} ${rows === r ? styles.riskActive : ""}`} onClick={() => setRows(r)} disabled={loading}>{r}</button>)}</div>
           </div>
-          <button className={styles.btnDrop} onClick={dropBall} disabled={loading || amount > activeBalance || amount <= 0}>{loading ? "..." : "⬇ SOLTAR BOLA"}</button>
+          <button className={styles.btnDrop} onClick={dropBall} disabled={loading || amount > activeBalance || amount <= 0 || amount > 1000}>{loading ? "..." : "⬇ SOLTAR BOLA"}</button>
           {msg && <p className={`${styles.msg} ${result && result.multiplier >= 1 ? styles.win : styles.lose}`}>{msg}</p>}
         </div>
 
