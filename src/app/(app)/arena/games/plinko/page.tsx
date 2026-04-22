@@ -60,12 +60,13 @@ export default function PlinkoPage() {
     
     const boardWidth = boardRef.current.clientWidth;
     const centerX = boardWidth / 2;
-    const startY = 28;
-    const rowHeight = 17.6; // Matches CSS 0.6rem gap + 8px peg
-    const pegGap = 24;    // Matches CSS 1rem gap + 8px peg
+    const startY = 32;
+    const rowHeight = 18; 
+    const pegGap = 24;    
 
+    // Start exactly at the top peg center
     setBallVisible(true);
-    setBallCoord({ x: centerX - 7, y: startY }); // -7 for ball radius half
+    setBallCoord({ x: centerX - 7, y: startY });
 
     let currentX = centerX - 7;
     let currentY = startY;
@@ -74,7 +75,7 @@ export default function PlinkoPage() {
     for (let i = 0; i < path.length; i++) {
       await new Promise(r => setTimeout(r, 90));
       const dir = path[i];
-      const jitter = (Math.random() - 0.5) * 5;
+      const jitter = (Math.random() - 0.5) * 4;
 
       if (dir === "R") {
         currentX += pegGap / 2;
@@ -90,8 +91,10 @@ export default function PlinkoPage() {
     }
 
     // Final alignment to exact slot center
-    const slotPitch = 44.5; // (40px width + 4.5px estimated gap/padding)
-    const slotX = centerX + (finalSlot - (rows / 2)) * slotPitch - 7;
+    // Total slots = rows + 1. Each slot area = (boardWidth - padding) / (rows + 1)
+    const availableWidth = boardWidth - 48; // 1.5rem padding each side
+    const slotWidth = availableWidth / (rows + 1);
+    const slotX = 24 + (finalSlot * slotWidth) + (slotWidth / 2) - 7;
     
     await new Promise(r => setTimeout(r, 100));
     setBallCoord({ x: slotX, y: currentY + 60 });

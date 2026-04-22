@@ -31,14 +31,14 @@ const DIFFICULTY_CONFIG = {
   easy:   { tiles: 4 },
   medium: { tiles: 3 },
   hard:   { tiles: 2 },
-  expert: { tiles: 4 }, // Expert: 3 mines, 1 safe (25% chance)
+  expert: { tiles: 5 }, // Expert: 4 mines, 1 safe (20% chance)
 };
 
 const LEVEL_MULTIPLIERS: Record<string, number[]> = {
   easy:   [1.20, 1.44, 1.73, 2.07, 2.49, 2.99, 3.58, 4.30, 5.16],
   medium: [1.35, 1.82, 2.46, 3.32, 4.48, 6.05, 8.17, 11.0, 14.8],
   hard:   [1.80, 3.24, 5.83, 10.5, 18.9, 34.0, 61.2, 110, 198],
-  expert: [3.60, 12.96, 46.66, 167.9, 604.6, 2176, 7836, 28210, 101550],
+  expert: [4.50, 20.25, 91.12, 410.0, 1845, 8303, 37367, 168153, 756690],
 };
 
 const MAX_LEVELS = 9;
