@@ -69,7 +69,17 @@ export function CrashGame() {
     }
     poll()
     const id = setInterval(poll, 350)
-    return () => clearInterval(id)
+
+    // Al volver a la pestaña: poll inmediato para no quedar con estado rancio
+    function onVisible() {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [])
 
   // ── Always-running rAF — reads refs, no stale closures ─────────────────────

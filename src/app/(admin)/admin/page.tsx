@@ -5,7 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { DollarSign, TrendingUp, Users, Wallet, RefreshCw, CheckCircle } from "lucide-react";
 import styles from "./admin.module.css";
 import { motion } from "framer-motion";
-import KronixBalance from "./KronixBalance";
+import KronixBalance from "./KronixBalance"
+import TestEconomyPanel from "./TestEconomyPanel";
 
 function SportsSyncPanel() {
   const [running, setRunning]   = useState<string | null>(null)
@@ -154,6 +155,8 @@ export default function EconomyDashboard() {
       <KronixBalance />
 
       <SportsSyncPanel />
+
+      <TestEconomyPanel />
 
       <div style={{ marginTop: '3rem' }}>
         <h3 className="font-orbitron" style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>ÚLTIMOS MOVIMIENTOS</h3>
