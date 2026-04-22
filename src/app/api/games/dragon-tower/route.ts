@@ -148,13 +148,14 @@ export async function POST(req: NextRequest) {
     }).eq("id", game_id);
 
     if (nextLevel >= MAX_LEVELS) {
-      const payout = Number((game.amount * newMult).toFixed(2));
-      const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
-      await db.from("wallets").update({ [field]: (w as any)[field] + payout }).eq("user_id", user.id);
-      await db.from("dragon_tower_games").update({
-        status: "cashed_out", payout, finished_at: new Date().toISOString(),
-      }).eq("id", game_id);
-      return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: newMult, auto_cashout: true, payout });
+    const payout = Number((game.amount * multipliers[nextLevel - 1]).toFixed(2));
+    const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
+    const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
+    await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
+    await db.from("dragon_tower_games").update({
+      status: "cashed_out", payout, finished_at: new Date().toISOString(),
+    }).eq("id", game_id);
+    return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: multipliers[nextLevel - 1], auto_cashout: true, payout });
     }
 
     return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: newMult });
@@ -168,8 +169,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nada que cobrar" }, { status: 400 });
 
     const payout = Number((game.amount * game.current_multiplier).toFixed(2));
-    const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
-    await db.from("wallets").update({ [field]: (w as any)[field] + payout }).eq("user_id", user.id);
+    const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
+    const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
+    await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
     await db.from("dragon_tower_games").update({
       status: "cashed_out", payout, finished_at: new Date().toISOString(),
     }).eq("id", game_id);
