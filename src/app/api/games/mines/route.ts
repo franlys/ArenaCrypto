@@ -7,6 +7,8 @@ import { createClient as createAnon } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
+const MAX_PAYOUT = 50000;
+
 function admin() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -122,7 +124,8 @@ export async function POST(req: NextRequest) {
     if (!game || game.status !== "active" || game.revealed.length === 0)
       return NextResponse.json({ error: "Nada que cobrar" }, { status: 400 });
 
-    const payout = Number((game.amount * game.current_multiplier).toFixed(2));
+    const payoutRaw = Number((game.amount * game.current_multiplier).toFixed(2));
+    const payout = Math.min(payoutRaw, MAX_PAYOUT);
     const col = game.is_test ? "test_balance" : "balance_stablecoin";
     const { data: w } = await db.from("wallets").select(col).eq("user_id", user.id).single();
     await db.from("wallets").update({ [col]: (w as any)[col] + payout }).eq("user_id", user.id);
