@@ -2,10 +2,67 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { DollarSign, TrendingUp, Users, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Wallet, RefreshCw, CheckCircle } from "lucide-react";
 import styles from "./admin.module.css";
 import { motion } from "framer-motion";
 import KronixBalance from "./KronixBalance";
+
+function SportsSyncPanel() {
+  const [running, setRunning]   = useState<string | null>(null)
+  const [result, setResult]     = useState<string | null>(null)
+
+  async function runSync(mode: 'open' | 'resolve') {
+    setRunning(mode)
+    setResult(null)
+    try {
+      const res = await fetch('/api/admin/sports-sync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ mode }),
+      })
+      const data = await res.json()
+      const summary = (data.results ?? []).map((r: Record<string,unknown>) =>
+        `${r.sport}: ${r.markets_opened ?? r.markets_resolved ?? r.error ?? '?'}`
+      ).join(' · ')
+      setResult(`✓ ${summary || JSON.stringify(data)}`)
+    } catch (e: unknown) {
+      setResult(`Error: ${e instanceof Error ? e.message : String(e)}`)
+    } finally {
+      setRunning(null)
+    }
+  }
+
+  return (
+    <div style={{ marginTop: '2rem', background: 'var(--color-bg-card)', border: '1px solid var(--glass-border)', borderRadius: 12, padding: '1.25rem' }}>
+      <h3 className="font-orbitron" style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em' }}>
+        SPORTS SYNC MANUAL
+      </h3>
+      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <button
+          onClick={() => runSync('open')}
+          disabled={!!running}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', border: '1px solid rgba(0,245,255,0.3)', borderRadius: 8, background: 'rgba(0,245,255,0.07)', color: '#00F5FF', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.1em', opacity: running ? 0.5 : 1 }}
+        >
+          <RefreshCw size={12} style={{ animation: running === 'open' ? 'spin 1s linear infinite' : 'none' }} />
+          ABRIR PARTIDOS HOY
+        </button>
+        <button
+          onClick={() => runSync('resolve')}
+          disabled={!!running}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, background: 'rgba(34,197,94,0.07)', color: '#22c55e', fontFamily: 'Orbitron,sans-serif', fontSize: '0.6rem', fontWeight: 700, cursor: 'pointer', letterSpacing: '0.1em', opacity: running ? 0.5 : 1 }}
+        >
+          <CheckCircle size={12} />
+          RESOLVER APUESTAS
+        </button>
+        {result && (
+          <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: '0.8rem', color: result.startsWith('✓') ? '#22c55e' : '#ef4444' }}>
+            {result}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function EconomyDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -95,6 +152,8 @@ export default function EconomyDashboard() {
       </div>
 
       <KronixBalance />
+
+      <SportsSyncPanel />
 
       <div style={{ marginTop: '3rem' }}>
         <h3 className="font-orbitron" style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>ÚLTIMOS MOVIMIENTOS</h3>
