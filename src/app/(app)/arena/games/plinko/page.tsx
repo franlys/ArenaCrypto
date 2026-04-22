@@ -10,19 +10,19 @@ type RowCount  = 8 | 12 | 16;
 // 8% House Edge Multipliers (Matched with API)
 const MULTIPLIERS: Record<RiskLevel, Record<number, number[]>> = {
   low: {
-    8:  [5.0, 1.9, 1.1, 1.0, 0.5, 1.0, 1.1, 1.9, 5.0],
-    12: [8.0, 2.5, 1.4, 1.1, 1.0, 0.5, 1.0, 1.1, 1.4, 2.5, 8.0, 0, 0],
-    16: [14, 6, 2, 1.2, 1.2, 1.1, 1, 0.9, 0.5, 0.9, 1, 1.1, 1.2, 1.2, 2, 6, 14],
+    8:  [5.6, 2.1, 1.1, 1.0, 0.5, 1.0, 1.1, 2.1, 5.6],
+    12: [10, 3.0, 1.6, 1.4, 1.1, 1.0, 0.5, 1.0, 1.1, 1.4, 1.6, 3.0, 10],
+    16: [16, 9.0, 2.0, 1.4, 1.4, 1.2, 1.1, 1.0, 0.5, 1.0, 1.1, 1.2, 1.4, 1.4, 2.0, 9.0, 16],
   },
   medium: {
-    8:  [11, 2.5, 1.3, 0.7, 0.4, 0.7, 1.3, 2.5, 11],
-    12: [20, 5.0, 1.9, 1.2, 0.6, 0.4, 0.6, 1.2, 1.9, 5.0, 20, 0, 0],
-    16: [90, 32, 8, 4, 2, 1.4, 1, 0.5, 0.3, 0.5, 1, 1.4, 2, 4, 8, 32, 90],
+    8:  [13, 3.0, 1.3, 0.7, 0.4, 0.7, 1.3, 3.0, 13],
+    12: [33, 11, 4.0, 2.0, 1.1, 0.6, 0.3, 0.6, 1.1, 2.0, 4.0, 11, 33],
+    16: [110, 41, 10, 5.0, 3.0, 1.5, 1.0, 0.5, 0.3, 0.5, 1.0, 1.5, 3.0, 5.0, 10, 41, 110],
   },
   high: {
-    8:  [25, 3.5, 1.3, 0.3, 0.2, 0.3, 1.3, 3.5, 25],
-    12: [65, 8, 2.5, 0.6, 0.4, 0.1, 0.4, 0.6, 2.5, 8, 65, 0, 0],
-    16: [800, 110, 22, 7, 4, 2, 0.6, 0.2, 0.1, 0.2, 0.6, 2, 4, 7, 22, 110, 800],
+    8:  [29, 4.0, 1.5, 0.3, 0.2, 0.3, 1.5, 4.0, 29],
+    12: [170, 24, 8.1, 2.0, 0.7, 0.2, 0.1, 0.2, 0.7, 2.0, 8.1, 24, 170],
+    16: [620, 190, 26, 9.0, 4.0, 2.0, 0.5, 0.2, 0.1, 0.2, 0.5, 2.0, 4.0, 9.0, 26, 190, 620],
   }
 };
 
@@ -61,57 +61,51 @@ export default function PlinkoPage() {
     
     const boardWidth = boardRef.current.clientWidth;
     const centerX = boardWidth / 2;
-    const startY = 32;
-    const rowHeight = 18; 
+    const startY = 40;
+    const rowHeight = 22; 
     
-    // Dynamic pegGap based on board width and number of rows
-    // Last row has rows+1 pegs. We want to space them evenly.
-    const availableWidth = boardWidth - 48; // 1.5rem padding
-    const slotWidth = availableWidth / (rows + 1);
+    // We fixed the container max-width to 500px in CSS
+    const containerWidth = Math.min(500, boardWidth - 64);
+    const slotWidth = containerWidth / (rows + 1);
     const pegGap = slotWidth; 
 
-    // Start exactly at the top peg center
+    // Start exactly at the top center
     setBallVisible(true);
-    setBallCoord({ x: centerX - 7, y: startY });
+    setBallCoord({ x: centerX - 6, y: startY });
 
-    let currentX = centerX - 7;
+    let currentX = centerX - 6;
     let currentY = startY;
     let currentSlot = 0;
 
     for (let i = 0; i < path.length; i++) {
-      await new Promise(r => setTimeout(r, 90));
+      await new Promise(r => setTimeout(r, 110));
       const dir = path[i];
-      const jitter = (Math.random() - 0.5) * 3;
-
+      
+      // Calculate next X based on centered slots
+      // Each move L/R shifts by half a slotWidth
       if (dir === "R") {
-        currentX += pegGap / 2;
+        currentX += slotWidth / 2;
         currentSlot++;
       } else {
-        currentX -= pegGap / 2;
+        currentX -= slotWidth / 2;
       }
       currentY += rowHeight;
       
-      setBallCoord({ x: currentX + jitter, y: currentY });
+      setBallCoord({ x: currentX, y: currentY });
       setHitPeg({ row: i, col: currentSlot });
-      setTimeout(() => setHitPeg(null), 80);
+      setTimeout(() => setHitPeg(null), 90);
     }
 
-    // Final alignment to exact slot center using REFS
+    // Final drop into slot
     const slotEl = slotsRef.current[finalSlot];
-    if (slotEl && boardRef.current) {
-      const boardRect = boardRef.current.getBoundingClientRect();
-      const slotRect = slotEl.getBoundingClientRect();
-      const finalX = slotRect.left - boardRect.left + (slotRect.width / 2) - 7;
-      setBallCoord({ x: finalX, y: currentY + 55 });
-    } else {
-      // Fallback if refs fail
-      const availableWidth = boardWidth - 48;
-      const slotWidth = availableWidth / (rows + 1);
-      const slotX = 24 + (finalSlot * slotWidth) + (slotWidth / 2) - 7;
-      setBallCoord({ x: slotX, y: currentY + 55 });
+    if (slotEl) {
+      const rect = slotEl.getBoundingClientRect();
+      const bRect = boardRef.current.getBoundingClientRect();
+      const targetX = rect.left - bRect.left + (rect.width / 2) - 6;
+      setBallCoord({ x: targetX, y: currentY + 60 });
     }
     
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 250));
     setBallVisible(false);
   };
 
@@ -232,9 +226,8 @@ export default function PlinkoPage() {
 
           <div className={styles.slots} style={{ 
             gridTemplateColumns: `repeat(${rows + 1}, 1fr)`,
-            padding: `0 ${(boardRef.current?.clientWidth ?? 600) / (rows + 1) / 2}px` 
           }}>
-            {mults.filter((_, i) => i <= rows).map((m, i) => (
+            {mults.map((m, i) => (
               <div key={i} 
                 ref={el => { slotsRef.current[i] = el; }}
                 className={`${styles.slot} ${result?.slot === i && !ballVisible ? styles.slotHit : ""}`}

@@ -23,30 +23,33 @@ async function getAuthUser(req: NextRequest) {
   return null;
 }
 
+// Fixed lengths for 8, 12, 16 rows (9, 13, 17 slots)
 const MULTIPLIERS: Record<string, Record<number, number[]>> = {
   low: {
-    8:  [4.0, 1.8, 1.0, 0.5, 0.3, 0.5, 1.0, 1.8, 4.0],
-    12: [7.0, 2.0, 1.2, 0.8, 0.4, 0.2, 0.4, 0.8, 1.2, 2.0, 7.0, 0, 0],
-    16: [12, 5, 1.8, 1.0, 0.9, 0.7, 0.5, 0.3, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 1.8, 5, 12],
+    8:  [5.6, 2.1, 1.1, 1.0, 0.5, 1.0, 1.1, 2.1, 5.6],
+    12: [10, 3.0, 1.6, 1.4, 1.1, 1.0, 0.5, 1.0, 1.1, 1.4, 1.6, 3.0, 10],
+    16: [16, 9.0, 2.0, 1.4, 1.4, 1.2, 1.1, 1.0, 0.5, 1.0, 1.1, 1.2, 1.4, 1.4, 2.0, 9.0, 16],
   },
   medium: {
-    8:  [8, 2.0, 1.0, 0.5, 0.2, 0.5, 1.0, 2.0, 8],
-    12: [15, 4.0, 1.5, 0.8, 0.4, 0.2, 0.4, 0.8, 1.5, 4.0, 15, 0, 0],
-    16: [60, 25, 6, 3, 1.5, 1, 0.5, 0.3, 0.2, 0.3, 0.5, 1, 1.5, 3, 6, 25, 60],
+    8:  [13, 3.0, 1.3, 0.7, 0.4, 0.7, 1.3, 3.0, 13],
+    12: [33, 11, 4.0, 2.0, 1.1, 0.6, 0.3, 0.6, 1.1, 2.0, 4.0, 11, 33],
+    16: [110, 41, 10, 5.0, 3.0, 1.5, 1.0, 0.5, 0.3, 0.5, 1.0, 1.5, 3.0, 5.0, 10, 41, 110],
   },
   high: {
-    8:  [22, 3.0, 1.2, 0.3, 0.2, 0.3, 1.2, 3.0, 22],
-    12: [55, 7, 2.2, 0.6, 0.4, 0.1, 0.4, 0.6, 2.2, 7, 55, 0, 0],
-    16: [500, 80, 18, 6, 3, 1.5, 0.5, 0.2, 0.1, 0.2, 0.5, 1.5, 3, 6, 18, 80, 500],
+    8:  [29, 4.0, 1.5, 0.3, 0.2, 0.3, 1.5, 4.0, 29],
+    12: [170, 24, 8.1, 2.0, 0.7, 0.2, 0.1, 0.2, 0.7, 2.0, 8.1, 24, 170],
+    16: [620, 190, 26, 9.0, 4.0, 2.0, 0.5, 0.2, 0.1, 0.2, 0.5, 2.0, 4.0, 9.0, 26, 190, 620],
   }
 };
 
 function dropPlinko(serverSeed: string, rows: number): { path: string[]; slot: number } {
-  const hash = crypto.createHash("sha256").update(serverSeed).digest("hex");
+  // Use a unique seed per drop
+  const dropSeed = crypto.createHash("sha256").update(serverSeed + Date.now().toString()).digest("hex");
   const path: string[] = [];
   let slot = 0;
   for (let i = 0; i < rows; i++) {
-    const bit = parseInt(hash[i % 64], 16) % 2;
+    // Standard Plinko: each row is a 50/50 left/right decision
+    const bit = parseInt(dropSeed.slice(i * 2, i * 2 + 2), 16) % 2;
     if (bit === 0) { path.push("L"); } else { path.push("R"); slot++; }
   }
   return { path, slot };
@@ -60,6 +63,7 @@ export async function POST(req: NextRequest) {
   let { amount, risk_level = "medium", rows = 16, isTest = false } = body;
 
   if (!amount || amount <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+  if (![8, 12, 16].includes(rows)) return NextResponse.json({ error: "Filas inválidas" }, { status: 400 });
   
   const db = admin();
 
@@ -77,7 +81,8 @@ export async function POST(req: NextRequest) {
   const bal = Number((wallet as Record<string, unknown>)[field]);
   if (bal < amount) return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
 
-  await db.from("wallets").update({ [field]: bal - amount }).eq("user_id", user.id);
+  // Deduct
+  await db.from("wallets").update({ [field]: Number((bal - amount).toFixed(2)) }).eq("user_id", user.id);
 
   const serverSeed = crypto.randomBytes(32).toString("hex");
   const { path, slot } = dropPlinko(serverSeed, rows);
@@ -85,8 +90,10 @@ export async function POST(req: NextRequest) {
   const payout = Number((amount * multiplier).toFixed(2));
 
   // Credit payout
-  const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
-  await db.from("wallets").update({ [field]: Number((w as any)[field]) + payout }).eq("user_id", user.id);
+  if (payout > 0) {
+    const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
+    await db.from("wallets").update({ [field]: Number((Number((w as any)[field]) + payout).toFixed(2)) }).eq("user_id", user.id);
+  }
 
   await db.from("plinko_drops").insert({
     user_id: user.id, amount, is_test: isTest,

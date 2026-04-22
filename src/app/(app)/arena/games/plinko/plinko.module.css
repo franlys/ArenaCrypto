@@ -1,15 +1,13 @@
 /* Plinko Game — CSS Module */
 .page { padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; max-width: 1000px; }
-/* Balance toggle — same as Dice */
+
 .balanceRow { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .modeBtn { font-family: Rajdhani,sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.3rem 0.75rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.35); cursor: pointer; transition: all 150ms; display: flex; gap: 0.4rem; align-items: center; }
 .modeBtn span { font-family: Orbitron,sans-serif; font-size: 0.7rem; }
 .modeBtn:hover:not(:disabled) { border-color: rgba(245,158,11,0.3); color: rgba(255,255,255,0.6); }
 .modeBtnActive { border-color: rgba(245,158,11,0.5) !important; background: rgba(245,158,11,0.08) !important; color: #F59E0B !important; }
-.modeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .title { font-size: clamp(1.4rem,3vw,2rem); line-height: 1; margin: 0; }
-.subtitle { font-family: Rajdhani,sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.35); letter-spacing: 0.04em; }
 
 .layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; align-items: start; }
 @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
@@ -24,62 +22,78 @@
 
 .pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; color: rgba(255,255,255,0.5); font-family: Rajdhani,sans-serif; font-size: 0.75rem; font-weight: 700; padding: 0.4rem 0.6rem; cursor: pointer; transition: border-color 150ms, color 150ms; }
 .pill:hover:not(:disabled) { border-color: rgba(245,158,11,0.5); color: #F59E0B; }
-.pill:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .riskRow { display: flex; gap: 0.5rem; }
 .riskBtn { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: rgba(255,255,255,0.4); font-family: Rajdhani,sans-serif; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; padding: 0.5rem; cursor: pointer; transition: all 150ms; }
 .riskBtn:hover:not(:disabled) { border-color: rgba(245,158,11,0.4); color: #F59E0B; }
 .riskActive { background: rgba(245,158,11,0.12) !important; border-color: #F59E0B !important; color: #F59E0B !important; }
-.riskBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btnDrop { background: linear-gradient(135deg, #F59E0B22, #F59E0B11); border: 1px solid #F59E0B; border-radius: 10px; color: #F59E0B; font-family: Orbitron,sans-serif; font-size: 0.9rem; font-weight: 700; padding: 0.75rem; cursor: pointer; transition: background 150ms, transform 150ms; letter-spacing: 0.06em; box-shadow: 0 0 20px #F59E0B33; }
-.btnDrop:hover:not(:disabled) { background: linear-gradient(135deg, #F59E0B33, #F59E0B22); }
-.btnDrop:active:not(:disabled) { transform: scale(0.97); }
-.btnDrop:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .msg { font-family: Rajdhani,sans-serif; font-size: 1rem; font-weight: 700; text-align: center; }
 .win { color: #22c55e; }
 .lose { color: rgba(255,255,255,0.5); }
 
-.resultBox { display: flex; flex-direction: column; gap: 0.5rem; }
-.stat { display: flex; justify-content: space-between; }
-.statLabel { font-family: Rajdhani,sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.35); letter-spacing: 0.08em; }
-.statValue { font-family: Orbitron,sans-serif; font-size: 1rem; font-weight: 700; }
+/* Board & Alignment Fix */
+.board { 
+  position: relative; 
+  background: var(--color-bg-card); 
+  border: 1px solid rgba(245,158,11,0.08); 
+  border-radius: 16px; 
+  padding: 2rem; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.5rem; 
+  align-items: center; 
+  min-height: 450px; 
+  overflow: hidden; 
+}
 
-/* Board */
-.board { position: relative; background: var(--color-bg-card); border: 1px solid rgba(245,158,11,0.08); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-height: 400px; overflow: hidden; }
-.pegsArea { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; align-items: center; }
-.pegRow { display: flex; gap: 1rem; justify-content: center; }
-.peg { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 200ms; }
-.pegHit { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+.pegsArea { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 1.2rem; 
+  width: 100%; 
+  max-width: 500px; /* Force a consistent width for alignment */
+}
+
+.pegRow { 
+  display: flex; 
+  justify-content: center; 
+  gap: var(--peg-gap, 1.2rem); /* We will sync this in JS or just keep it consistent */
+}
+
+.peg { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 200ms; }
+.pegHit { background: #F59E0B; box-shadow: 0 0 10px #F59E0B; transform: scale(1.5); }
 
 .slots {
   display: grid;
   gap: 4px;
-  margin-top: 1rem;
   width: 100%;
+  max-width: 500px; /* Match pegsArea width exactly */
+  margin-top: auto;
 }
 
 .slot {
-  aspect-ratio: 1.2;
+  aspect-ratio: 1;
   border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px;
+  border-radius: 6px;
   background: rgba(255,255,255,0.03);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: Orbitron, sans-serif;
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   font-weight: 700;
   transition: all 300ms;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.slotHit { transform: scale(1.15); box-shadow: 0 0 12px currentColor; animation: slotPop 400ms ease-out; }
+
+.slotHit { transform: scale(1.15); box-shadow: 0 0 15px currentColor; animation: slotPop 400ms ease-out; z-index: 5; }
 
 @keyframes slotPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.25); } 100% { transform: scale(1.15); } }
 
-.ball { position: absolute; width: 14px; height: 14px; background: #F59E0B; border-radius: 50%; box-shadow: 0 0 15px #F59E0B, 0 0 5px #fff; z-index: 10; transition: all 120ms linear; pointer-events: none; }
+.ball { position: absolute; width: 12px; height: 12px; background: #F59E0B; border-radius: 50%; box-shadow: 0 0 15px #F59E0B, 0 0 5px #fff; z-index: 10; transition: all 120ms linear; pointer-events: none; }
 
-.payoutMsg { margin-top: 0.5rem; animation: slideUp 0.3s ease-out forwards; }
-@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-@media (prefers-reduced-motion: reduce) { .peg, .slot, .btnDrop, .riskBtn { transition: none; animation: none; } }
+.payoutMsg { margin-top: 0.5rem; }
