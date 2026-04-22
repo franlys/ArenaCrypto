@@ -42,6 +42,7 @@ export function DiceGame() {
   const [result, setResult]         = useState<RollResult | null>(null)
   const [history, setHistory]       = useState<HistoryEntry[]>([])
   const [showResult, setShowResult] = useState(false)
+  const [msg, setMsg]               = useState("")
 
   const balance     = Number(profile?.wallets?.balance_stablecoin ?? 0)
   const testBalance = Number(profile?.wallets?.test_balance        ?? 0)
@@ -57,6 +58,7 @@ export function DiceGame() {
     if (!canRoll || rolling) return
     setRolling(true);
     setShowResult(false);
+    setMsg("");
     const start = Date.now();
 
     try {
