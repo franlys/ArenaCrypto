@@ -31,7 +31,7 @@ function calcMinesMultiplier(mines: number, revealed: number, amount: number): n
     prob *= (25 - mines - i) / (25 - i);
   }
   // Dynamic difficulty: higher edge to ensure platform solvency
-  const houseEdge = amount > 100 ? 0.22 : 0.18; 
+  const houseEdge = amount > 100 ? 0.35 : 0.25; 
   return Math.max(1, Number(((1 - houseEdge) / prob).toFixed(4)));
 }
 

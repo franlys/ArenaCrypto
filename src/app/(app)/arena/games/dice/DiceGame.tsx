@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
 import styles from './dice.module.css'
 
-const HOUSE_EDGE = 0.16
+const HOUSE_EDGE = 0.24
 const QUICK      = [1, 5, 10, 25]
 
 interface RollResult {
@@ -23,13 +23,13 @@ interface HistoryEntry extends RollResult {
 }
 
 function calcMultiplier(target: number, direction: 'over' | 'under'): number {
-  const winChance = direction === 'over' ? (99 - target) / 100 : (target - 1) / 100
+  const winChance = direction === 'over' ? (100 - target) / 100 : (target - 1) / 100
   if (winChance <= 0) return 0
   return Math.floor(((1 - HOUSE_EDGE) / winChance) * 100) / 100
 }
 
 function winChancePct(target: number, direction: 'over' | 'under'): number {
-  return direction === 'over' ? 99 - target : target - 1
+  return direction === 'over' ? 100 - target : target - 1
 }
 
 export function DiceGame() {

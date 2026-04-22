@@ -3,7 +3,7 @@ import { createClient as createAnon } from '@/lib/supabase/server'
 import { createClient }              from '@supabase/supabase-js'
 import crypto                        from 'crypto'
 
-const HOUSE_EDGE = 0.16 // 16% edge (84% RTP)
+const HOUSE_EDGE = 0.24 // 24% edge (76% RTP)
 const MAX_BET = 1000
 
 function admin() {
@@ -13,9 +13,14 @@ function admin() {
   )
 }
 
-function diceMultiplier(target: number, direction: 'over' | 'under'): number {
-  const winChance = direction === 'over' ? (99 - target) / 100 : (target - 1) / 100
-  return Math.max(1, Number(((1 - HOUSE_EDGE) / winChance).toFixed(4)))
+function calcMultiplier(target: number, direction: 'over' | 'under'): number {
+  const winChance = direction === 'over' ? (100 - target) / 100 : (target - 1) / 100
+  if (winChance <= 0) return 0
+  return Math.floor(((1 - HOUSE_EDGE) / winChance) * 100) / 100
+}
+
+function winChancePct(target: number, direction: 'over' | 'under'): number {
+  return direction === 'over' ? 100 - target : target - 1
 }
 
 function rollDice(): number {
@@ -60,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   // Roll
   const result     = rollDice()
-  const multiplier = diceMultiplier(target, direction)
+  const multiplier = calcMultiplier(target, direction)
   const won        =
     direction === 'over'  ? result > target :
     result < target

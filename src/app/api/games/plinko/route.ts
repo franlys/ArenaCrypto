@@ -50,7 +50,7 @@ function dropPlinko(serverSeed: string, rows: number, amount: number): { path: s
   let slot = 0;
   
   // DYNAMIC DIFFICULTY: Stronger bias towards center
-  const centerBias = amount > 250 ? 0.07 : 0.03; 
+  const centerBias = amount > 250 ? 0.15 : 0.08; 
 
   for (let i = 0; i < rows; i++) {
     const val = parseInt(dropSeed.slice(i * 2, i * 2 + 2), 16) / 256;
