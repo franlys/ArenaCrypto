@@ -34,7 +34,7 @@ function calcMinesMultiplier(mines: number, revealed: number): number {
   for (let i = 0; i < revealed; i++) {
     prob *= (25 - mines - i) / (25 - i);
   }
-  return Math.max(1, Number((0.90 / prob).toFixed(4)));
+  return Math.max(1, Number((0.88 / prob).toFixed(4)));
 }
 
 function generateBoard(serverSeed: string, minesCount: number): boolean[] {
@@ -64,8 +64,15 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Sesión expirada o no autenticado. Por favor, recarga la página o conecta tu wallet." }, { status: 401 });
 
   const body = await req.json();
-  const { action, isTest } = body;
+  let { action, isTest } = body;
   const db = admin();
+
+  // SECURITY: Force test mode for test users
+  const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
+  if (profile?.is_test_user) {
+    isTest = true;
+  }
+
   const field = isTest ? "test_balance" : "balance_stablecoin";
 
   if (action === "get-active") {

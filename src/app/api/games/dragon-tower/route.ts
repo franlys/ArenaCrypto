@@ -1,7 +1,3 @@
-/**
- * POST /api/games/dragon-tower
- * Dual Auth: cookie-based (SSR) + Bearer token (fallback)
- */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createAnon } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
@@ -28,21 +24,21 @@ async function getAuthUser(req: NextRequest) {
 }
 
 const DIFFICULTY_CONFIG = {
-  easy:   { tiles: 4, mines: 1 }, // 75% win
-  medium: { tiles: 3, mines: 1 }, // 66.6% win
-  hard:   { tiles: 2, mines: 1 }, // 50% win
-  expert: { tiles: 5, mines: 4 }, // 20% win
+  easy:   { tiles: 4, mines: 1 }, 
+  medium: { tiles: 3, mines: 1 }, 
+  hard:   { tiles: 2, mines: 1 }, 
+  expert: { tiles: 5, mines: 4 }, 
 };
 
 const LEVEL_MULTIPLIERS: Record<string, number[]> = {
-  easy:   [1.10, 1.25, 1.50, 1.80, 2.20, 2.70, 3.30, 4.00, 5.00],
-  medium: [1.30, 1.70, 2.30, 3.20, 4.50, 6.50, 10.0, 15.0, 25.0],
-  hard:   [1.90, 3.50, 6.50, 12.0, 20.0, 35.0, 55.0, 80.0, 100.0],
-  expert: [4.50, 15.0, 40.0, 80.0, 150, 250, 450, 700, 1000],
+  easy:   [1.05, 1.15, 1.30, 1.50, 1.75, 2.05, 2.45, 2.95, 3.50],
+  medium: [1.20, 1.50, 1.90, 2.40, 3.20, 4.30, 6.00, 8.50, 12.0],
+  hard:   [1.75, 2.80, 4.50, 7.50, 12.0, 20.0, 32.0, 50.0, 70.0],
+  expert: [4.00, 10.0, 25.0, 50.0, 90.0, 160, 280, 450, 650],
 };
 
 const MAX_LEVELS = 9;
-const MAX_PAYOUT = 50000; // Platform safety cap
+const MAX_PAYOUT = 50000;
 
 function getLevelSafeTiles(serverSeed: string, level: number, difficulty: string): number[] {
   const cfg = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG];
@@ -50,21 +46,26 @@ function getLevelSafeTiles(serverSeed: string, level: number, difficulty: string
   const pos = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
   
   if (cfg.mines === 1) {
-    // Everything is safe EXCEPT pos
     return Array.from({ length: cfg.tiles }, (_, i) => i).filter(i => i !== pos);
   } else {
-    // ONLY pos is safe
     return [pos];
   }
 }
 
 export async function POST(req: NextRequest) {
   const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: "Sesión expirada o no autenticado. Por favor, recarga la página o conecta tu wallet." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const body = await req.json();
-  const { action, isTest = false } = body;
+  let { action, isTest = false } = body;
   const db = admin();
+
+  // SECURITY: Force test mode for test users
+  const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
+  if (profile?.is_test_user) {
+    isTest = true;
+  }
+
   const field = isTest ? "test_balance" : "balance_stablecoin";
 
   if (action === "get-active") {
@@ -93,8 +94,7 @@ export async function POST(req: NextRequest) {
       .select("id").eq("user_id", user.id).eq("status", "active").maybeSingle();
     if (active) return NextResponse.json({ error: "Ya tienes una partida activa" }, { status: 400 });
 
-    const { data: wallet } = await db.from("wallets")
-      .select("balance_stablecoin, test_balance").eq("user_id", user.id).single();
+    const { data: wallet } = await db.from("wallets").select(field).eq("user_id", user.id).single();
     if (!wallet) return NextResponse.json({ error: "Wallet no encontrada" }, { status: 400 });
 
     const bal = Number((wallet as Record<string, unknown>)[field]);
@@ -143,15 +143,14 @@ export async function POST(req: NextRequest) {
     }).eq("id", game_id);
 
     if (nextLevel >= MAX_LEVELS) {
-    const payoutRaw = Number((game.amount * multipliers[nextLevel - 1]).toFixed(2));
-    const payout = Math.min(payoutRaw, MAX_PAYOUT);
-    const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
-    const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
-    await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
-    await db.from("dragon_tower_games").update({
-      status: "cashed_out", payout, finished_at: new Date().toISOString(),
-    }).eq("id", game_id);
-    return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: multipliers[nextLevel - 1], auto_cashout: true, payout });
+      const payoutRaw = Number((game.amount * multipliers[nextLevel - 1]).toFixed(2));
+      const payout = Math.min(payoutRaw, MAX_PAYOUT);
+      const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
+      await db.from("wallets").update({ [field]: Number((w as any)[field]) + payout }).eq("user_id", user.id);
+      await db.from("dragon_tower_games").update({
+        status: "cashed_out", payout, finished_at: new Date().toISOString(),
+      }).eq("id", game_id);
+      return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: multipliers[nextLevel - 1], auto_cashout: true, payout });
     }
 
     return NextResponse.json({ ok: true, survived: true, level: nextLevel, multiplier: newMult });
@@ -166,9 +165,8 @@ export async function POST(req: NextRequest) {
 
     const payoutRaw = Number((game.amount * game.current_multiplier).toFixed(2));
     const payout = Math.min(payoutRaw, MAX_PAYOUT);
-    const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
-    const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
-    await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
+    const { data: w } = await db.from("wallets").select(field).eq("user_id", user.id).single();
+    await db.from("wallets").update({ [field]: Number((w as any)[field]) + payout }).eq("user_id", user.id);
     await db.from("dragon_tower_games").update({
       status: "cashed_out", payout, finished_at: new Date().toISOString(),
     }).eq("id", game_id);

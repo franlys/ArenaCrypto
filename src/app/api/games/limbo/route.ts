@@ -31,13 +31,16 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
 
   const body = await req.json();
-  const { amount, target_multiplier, isTest = false } = body;
-
-  if (!amount || amount < 0.1) return NextResponse.json({ error: "Monto mínimo $0.10" }, { status: 400 });
-  if (!target_multiplier || target_multiplier < 1.01 || target_multiplier > 10000) 
-    return NextResponse.json({ error: "Multiplicador inválido (1.01x - 10000x)" }, { status: 400 });
+  let { amount, target_multiplier, isTest = false } = body;
 
   const db = admin();
+
+  // SECURITY: Force test mode for test users
+  const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
+  if (profile?.is_test_user) {
+    isTest = true;
+  }
+
   const field = isTest ? "test_balance" : "balance_stablecoin";
 
   // Check wallet

@@ -3,7 +3,7 @@ import { createClient as createAnon } from '@/lib/supabase/server'
 import { createClient }              from '@supabase/supabase-js'
 import crypto                        from 'crypto'
 
-const HOUSE_EDGE = 0.10
+const HOUSE_EDGE = 0.12 // 12% edge (88% RTP)
 
 function admin() {
   return createClient(
@@ -14,7 +14,7 @@ function admin() {
 
 function diceMultiplier(target: number, direction: 'over' | 'under'): number {
   const winChance = direction === 'over' ? (99 - target) / 100 : (target - 1) / 100
-  return Math.floor(((1 - HOUSE_EDGE) / winChance) * 100) / 100
+  return Math.max(1, Number(((1 - HOUSE_EDGE) / winChance).toFixed(4)))
 }
 
 function rollDice(): number {
@@ -34,7 +34,15 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
   const db    = admin()
-  const field = isTest ? 'test_balance' : 'balance_stablecoin'
+  
+  // SECURITY: Force test mode for test users
+  const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
+  let finalIsTest = isTest;
+  if (profile?.is_test_user) {
+    finalIsTest = true;
+  }
+  
+  const field = finalIsTest ? 'test_balance' : 'balance_stablecoin'
 
   const { data: wallet } = await db.from('wallets').select('balance_stablecoin, test_balance').eq('user_id', user.id).single()
   if (!wallet) return NextResponse.json({ error: 'Wallet no encontrada' }, { status: 400 })
@@ -65,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   // Save roll
   await db.from('dice_rolls').insert({
-    user_id: user.id, amount, is_test: isTest ?? false,
+    user_id: user.id, amount, is_test: finalIsTest ?? false,
     target, direction, result, won, multiplier, payout,
   })
 
