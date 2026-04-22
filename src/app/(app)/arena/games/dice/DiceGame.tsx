@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
 import styles from './dice.module.css'
 
-const HOUSE_EDGE = 0.10
+const HOUSE_EDGE = 0.16
 const QUICK      = [1, 5, 10, 25]
 
 interface RollResult {
@@ -51,7 +51,7 @@ export function DiceGame() {
   const winChance   = winChancePct(target, direction)
   const numAmount   = parseFloat(amount) || 0
   const potentialWin = numAmount > 0 ? Math.floor(numAmount * multiplier * 100) / 100 : 0
-  const canRoll     = numAmount >= 0.5 && numAmount <= activeBalance
+  const canRoll     = numAmount >= 0.5 && numAmount <= activeBalance && numAmount <= 1000
 
   const handleRoll = useCallback(async () => {
     if (!canRoll || rolling) return

@@ -166,7 +166,7 @@ export default function MinesPage() {
 
           {isIdle ? (
             <button className={styles.btnStart} onClick={startGame}
-              disabled={loading || amount > activeBalance || amount <= 0}>
+              disabled={loading || amount > activeBalance || amount <= 0 || amount > 1000}>
               {loading ? "..." : "JUGAR"}
             </button>
           ) : (

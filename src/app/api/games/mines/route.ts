@@ -30,8 +30,8 @@ function calcMinesMultiplier(mines: number, revealed: number, amount: number): n
   for (let i = 0; i < revealed; i++) {
     prob *= (25 - mines - i) / (25 - i);
   }
-  // Dynamic difficulty: higher bet = higher edge
-  const houseEdge = amount > 250 ? 0.16 : 0.12; 
+  // Dynamic difficulty: higher edge to ensure platform solvency
+  const houseEdge = amount > 100 ? 0.22 : 0.18; 
   return Math.max(1, Number(((1 - houseEdge) / prob).toFixed(4)));
 }
 
@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
   if (action === "start") {
     const { amount, mines_count = 5 } = body;
     if (!amount || amount <= 0 || mines_count < 1 || mines_count > 24) return NextResponse.json({ error: "Parámetros inválidos" }, { status: 400 });
-    if (amount > MAX_BET && !isTest) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
+    // Enforce hard limit for everyone to protect economy
+    if (amount > MAX_BET) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
 
     const { data: active } = await db.from("mines_games").select("id").eq("user_id", user.id).eq("status", "active").maybeSingle();
     if (active) return NextResponse.json({ error: "Ya tienes una partida activa" }, { status: 400 });

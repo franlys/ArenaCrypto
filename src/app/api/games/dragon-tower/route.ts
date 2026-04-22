@@ -31,10 +31,10 @@ const DIFFICULTY_CONFIG = {
 };
 
 const LEVEL_MULTIPLIERS: Record<string, number[]> = {
-  easy:   [1.05, 1.15, 1.30, 1.50, 1.75, 2.05, 2.45, 2.95, 3.50],
-  medium: [1.20, 1.50, 1.90, 2.40, 3.20, 4.30, 6.00, 8.50, 12.0],
-  hard:   [1.75, 2.80, 4.50, 7.50, 12.0, 20.0, 32.0, 50.0, 70.0],
-  expert: [4.00, 10.0, 25.0, 50.0, 90.0, 160, 280, 450, 650],
+  easy:   [1.02, 1.08, 1.15, 1.25, 1.40, 1.65, 2.00, 2.50, 3.20],
+  medium: [1.15, 1.40, 1.80, 2.30, 3.00, 4.00, 5.50, 7.50, 10.0],
+  hard:   [1.65, 2.50, 4.00, 6.50, 10.0, 16.0, 26.0, 40.0, 60.0],
+  expert: [3.50, 8.50, 20.0, 40.0, 80.0, 140, 220, 350, 500],
 };
 
 const MAX_LEVELS = 9;
@@ -90,7 +90,8 @@ export async function POST(req: NextRequest) {
   if (action === "start") {
     const { amount, difficulty = "medium" } = body;
     if (!amount || amount <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
-    if (amount > MAX_BET && !isTest) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
+    // Enforce hard limit for everyone
+    if (amount > MAX_BET) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
 
     const { data: active } = await db.from("dragon_tower_games")
       .select("id").eq("user_id", user.id).eq("status", "active").maybeSingle();

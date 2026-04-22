@@ -3,7 +3,8 @@ import { createClient as createAnon } from '@/lib/supabase/server'
 import { createClient }              from '@supabase/supabase-js'
 import crypto                        from 'crypto'
 
-const HOUSE_EDGE = 0.12 // 12% edge (88% RTP)
+const HOUSE_EDGE = 0.16 // 16% edge (84% RTP)
+const MAX_BET = 1000
 
 function admin() {
   return createClient(
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
   const { amount, target, direction, isTest } = await req.json()
 
   if (!amount || amount < 0.5)                        return NextResponse.json({ error: 'Monto mínimo $0.50' }, { status: 400 })
+  if (amount > MAX_BET)                               return NextResponse.json({ error: `La apuesta máxima es $${MAX_BET}` }, { status: 400 })
   if (!target || target < 2 || target > 98)           return NextResponse.json({ error: 'Target entre 2 y 98' }, { status: 400 })
   if (direction !== 'over' && direction !== 'under')  return NextResponse.json({ error: 'Direction inválido' }, { status: 400 })
 

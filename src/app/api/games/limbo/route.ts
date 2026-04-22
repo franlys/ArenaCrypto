@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const MAX_PAYOUT = 25000;
 const MAX_BET = 1000;
-const BASE_HOUSE_EDGE = 0.08; 
+const BASE_HOUSE_EDGE = 0.12; // 12% base edge
 
 function admin() {
   return createClient(
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   let { amount, target_multiplier, isTest = false } = body;
   if (!amount || amount <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
-  if (amount > MAX_BET && !isTest) return NextResponse.json({ error: `La apuesta máxima es $${MAX_BET}` }, { status: 400 });
+  if (amount > MAX_BET) return NextResponse.json({ error: `La apuesta máxima es $${MAX_BET}` }, { status: 400 });
   if (target_multiplier < 1.01 || target_multiplier > 1000000) return NextResponse.json({ error: "Multiplicador inválido" }, { status: 400 });
 
   const db = admin();
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
 
   await db.from("wallets").update({ [field]: Number((balance - amount).toFixed(2)) }).eq("user_id", user.id);
 
-  // Dynamic Difficulty: Higher bet = higher edge
-  const effectiveEdge = amount > 250 ? 0.12 : BASE_HOUSE_EDGE;
+  // Dynamic Difficulty: Stronger edge for high stakes
+  const effectiveEdge = amount > 100 ? 0.20 : BASE_HOUSE_EDGE;
   const randomValue = crypto.randomBytes(4).readUInt32BE(0) / Math.pow(2, 32);
   const result = Math.floor(((1 - effectiveEdge) / (1 - randomValue)) * 100) / 100;
   

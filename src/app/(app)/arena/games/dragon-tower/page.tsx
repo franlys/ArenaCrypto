@@ -14,10 +14,10 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { tiles: number; label: string; colo
 };
 
 const LEVEL_MULTIPLIERS: Record<Difficulty, number[]> = {
-  easy:   [1.10, 1.25, 1.50, 1.80, 2.20, 2.70, 3.30, 4.00, 5.00],
-  medium: [1.30, 1.70, 2.30, 3.20, 4.50, 6.50, 10.0, 15.0, 25.0],
-  hard:   [1.90, 3.50, 6.50, 12.0, 20.0, 35.0, 55.0, 80.0, 100.0],
-  expert: [4.50, 15.0, 40.0, 80.0, 150, 250, 450, 700, 1000],
+  easy:   [1.02, 1.08, 1.15, 1.25, 1.40, 1.65, 2.00, 2.50, 3.20],
+  medium: [1.15, 1.40, 1.80, 2.30, 3.00, 4.00, 5.50, 7.50, 10.0],
+  hard:   [1.65, 2.50, 4.00, 6.50, 10.0, 16.0, 26.0, 40.0, 60.0],
+  expert: [3.50, 8.50, 20.0, 40.0, 80.0, 140, 220, 350, 500],
 };
 
 const MAX_LEVELS = 9;
@@ -216,7 +216,7 @@ export default function DragonTowerPage() {
 
           {isIdle ? (
             <button className={styles.btnStart} onClick={startGame}
-              disabled={loading || amount > activeBalance || amount <= 0}>
+              disabled={loading || amount > activeBalance || amount <= 0 || amount > 1000}>
               {loading ? "..." : "⚔ INICIAR"}
             </button>
           ) : (
