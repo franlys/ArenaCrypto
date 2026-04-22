@@ -163,10 +163,12 @@ export default function DragonTowerPage() {
         <h1 className={`font-orbitron ${styles.title}`}>🐉 <span className="neon-text-purple">DRAGON TOWER</span></h1>
         {/* Balance Toggle — mismo patrón que Dice */}
         <div className={styles.balanceRow}>
-          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`}
-            onClick={() => setIsTest(false)} disabled={!isIdle}>
-            REAL <span>${balance.toFixed(2)}</span>
-          </button>
+          {!isTestUser && (
+            <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`}
+              onClick={() => setIsTest(false)} disabled={!isIdle}>
+              REAL <span>${balance.toFixed(2)}</span>
+            </button>
+          )}
           <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ""}`}
             onClick={() => setIsTest(true)} disabled={!isIdle}>
             TEST <span>${testBalance.toFixed(2)}</span>

@@ -115,12 +115,14 @@ export default function MinesPage() {
         <h1 className={`font-orbitron ${styles.title}`}>💣 <span className="neon-text-cyan">MINES</span></h1>
         {/* Balance Toggle — mismo patrón que Dice */}
         <div className={styles.balanceRow}>
-          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`}
-            onClick={() => setIsTest(false)} disabled={status === "playing"}>
-            REAL <span>${balance.toFixed(2)}</span>
-          </button>
+          {!isTestUser && (
+            <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`}
+              onClick={() => setIsTest(false)} disabled={status !== "idle"}>
+              REAL <span>${balance.toFixed(2)}</span>
+            </button>
+          )}
           <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ""}`}
-            onClick={() => setIsTest(true)} disabled={status === "playing"}>
+            onClick={() => setIsTest(true)} disabled={status !== "idle"}>
             TEST <span>${testBalance.toFixed(2)}</span>
           </button>
         </div>

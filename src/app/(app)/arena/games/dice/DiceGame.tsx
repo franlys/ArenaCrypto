@@ -88,9 +88,11 @@ export function DiceGame() {
           </h1>
         </div>
         <div className={styles.balanceRow}>
-          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ''}`} onClick={() => setIsTest(false)}>
-            REAL <span>${balance.toFixed(2)}</span>
-          </button>
+          {!isTestUser && (
+            <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ''}`} onClick={() => setIsTest(false)}>
+              REAL <span>${balance.toFixed(2)}</span>
+            </button>
+          )}
           <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ''}`} onClick={() => setIsTest(true)}>
             TEST <span>${testBalance.toFixed(2)}</span>
           </button>

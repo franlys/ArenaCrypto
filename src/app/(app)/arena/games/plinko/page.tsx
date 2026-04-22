@@ -133,9 +133,11 @@ export default function PlinkoPage() {
       <div className={styles.header}>
         <h1 className={`font-orbitron ${styles.title}`}>⬡ <span className="neon-text-gold">PLINKO</span></h1>
         <div className={styles.balanceRow}>
-          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`} onClick={() => setIsTest(false)} disabled={loading}>
-            REAL <span>${balance.toFixed(2)}</span>
-          </button>
+          {!isTestUser && (
+            <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`} onClick={() => setIsTest(false)} disabled={loading}>
+              REAL <span>${balance.toFixed(2)}</span>
+            </button>
+          )}
           <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ""}`} onClick={() => setIsTest(true)} disabled={loading}>
             TEST <span>${testBalance.toFixed(2)}</span>
           </button>
