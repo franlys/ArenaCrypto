@@ -35,6 +35,7 @@ const SLOT_COLORS: Record<RiskLevel, (m: number) => string> = {
 export default function PlinkoPage() {
   const { profile, isTestUser, refreshProfile } = useUser();
   const boardRef = useRef<HTMLDivElement>(null);
+  const slotsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const balance     = Number(profile?.wallets?.balance_stablecoin ?? 0);
   const testBalance = Number(profile?.wallets?.test_balance        ?? 0);
@@ -62,7 +63,12 @@ export default function PlinkoPage() {
     const centerX = boardWidth / 2;
     const startY = 32;
     const rowHeight = 18; 
-    const pegGap = 24;    
+    
+    // Dynamic pegGap based on board width and number of rows
+    // Last row has rows+1 pegs. We want to space them evenly.
+    const availableWidth = boardWidth - 48; // 1.5rem padding
+    const slotWidth = availableWidth / (rows + 1);
+    const pegGap = slotWidth; 
 
     // Start exactly at the top peg center
     setBallVisible(true);
@@ -75,7 +81,7 @@ export default function PlinkoPage() {
     for (let i = 0; i < path.length; i++) {
       await new Promise(r => setTimeout(r, 90));
       const dir = path[i];
-      const jitter = (Math.random() - 0.5) * 4;
+      const jitter = (Math.random() - 0.5) * 3;
 
       if (dir === "R") {
         currentX += pegGap / 2;
@@ -90,14 +96,20 @@ export default function PlinkoPage() {
       setTimeout(() => setHitPeg(null), 80);
     }
 
-    // Final alignment to exact slot center
-    // Total slots = rows + 1. Each slot area = (boardWidth - padding) / (rows + 1)
-    const availableWidth = boardWidth - 48; // 1.5rem padding each side
-    const slotWidth = availableWidth / (rows + 1);
-    const slotX = 24 + (finalSlot * slotWidth) + (slotWidth / 2) - 7;
-    
-    await new Promise(r => setTimeout(r, 100));
-    setBallCoord({ x: slotX, y: currentY + 60 });
+    // Final alignment to exact slot center using REFS
+    const slotEl = slotsRef.current[finalSlot];
+    if (slotEl && boardRef.current) {
+      const boardRect = boardRef.current.getBoundingClientRect();
+      const slotRect = slotEl.getBoundingClientRect();
+      const finalX = slotRect.left - boardRect.left + (slotRect.width / 2) - 7;
+      setBallCoord({ x: finalX, y: currentY + 55 });
+    } else {
+      // Fallback if refs fail
+      const availableWidth = boardWidth - 48;
+      const slotWidth = availableWidth / (rows + 1);
+      const slotX = 24 + (finalSlot * slotWidth) + (slotWidth / 2) - 7;
+      setBallCoord({ x: slotX, y: currentY + 55 });
+    }
     
     await new Promise(r => setTimeout(r, 200));
     setBallVisible(false);
@@ -209,18 +221,27 @@ export default function PlinkoPage() {
           )}
 
           <div className={styles.pegsArea}>
-            {Array.from({ length: rows }, (_, row) => (
+            {Array.from({ length: rows + 1 }, (_, row) => (
               <div key={row} className={styles.pegRow}>
-                {Array.from({ length: row + 2 }, (_, i) => (
+                {Array.from({ length: row + 1 }, (_, i) => (
                   <div key={i} className={`${styles.peg} ${hitPeg?.row === row && hitPeg?.col === i ? styles.pegHit : ""}`} />
                 ))}
               </div>
             ))}
           </div>
-          <div className={styles.slots}>
+
+          <div className={styles.slots} style={{ 
+            gridTemplateColumns: `repeat(${rows + 1}, 1fr)`,
+            padding: `0 ${(boardRef.current?.clientWidth ?? 600) / (rows + 1) / 2}px` 
+          }}>
             {mults.filter((_, i) => i <= rows).map((m, i) => (
-              <div key={i} className={`${styles.slot} ${result?.slot === i && !ballVisible ? styles.slotHit : ""}`}
-                style={{ borderColor: SLOT_COLORS[risk](m)+"66", color: SLOT_COLORS[risk](m) }}>
+              <div key={i} 
+                ref={el => { slotsRef.current[i] = el; }}
+                className={`${styles.slot} ${result?.slot === i && !ballVisible ? styles.slotHit : ""}`}
+                style={{ 
+                  borderColor: SLOT_COLORS[risk](m)+"66", 
+                  color: SLOT_COLORS[risk](m),
+                }}>
                 {m}x
               </div>
             ))}

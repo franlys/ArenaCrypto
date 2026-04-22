@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient }  from '@supabase/supabase-js'
 import crypto            from 'crypto'
 
-const BETTING_MS     = 7_000
-const BETWEEN_MS     = 4_000
+const BETTING_MS     = 4_000
+const BETWEEN_MS     = 2_000
 const CRASH_K        = 0.00006
 const MAX_MULT       = 100
 const MAX_RUNTIME_MS = 90_000
@@ -160,5 +160,6 @@ async function getState() {
       payout:    b.payout    ? Number(b.payout)     : null,
       status:    b.status,
     })),
+    serverTime: now,
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

@@ -53,8 +53,26 @@
 .peg { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 200ms; }
 .pegHit { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
 
-.slots { display: flex; gap: 0.25rem; width: 100%; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
-.slot { min-width: 40px; padding: 0.4rem 0.2rem; border-radius: 6px; border: 1px solid; text-align: center; font-family: Orbitron,sans-serif; font-size: 0.6rem; font-weight: 700; transition: transform 200ms, box-shadow 200ms; }
+.slots {
+  display: grid;
+  gap: 4px;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.slot {
+  aspect-ratio: 1.2;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Orbitron, sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  transition: all 300ms;
+}
 .slotHit { transform: scale(1.15); box-shadow: 0 0 12px currentColor; animation: slotPop 400ms ease-out; }
 
 @keyframes slotPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.25); } 100% { transform: scale(1.15); } }

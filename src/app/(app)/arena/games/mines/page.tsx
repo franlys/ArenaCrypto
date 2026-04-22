@@ -166,8 +166,8 @@ export default function MinesPage() {
                 disabled={status !== "playing" || revealed.includes(i)}>
                 {s === "gem"         && <span className={styles.gem}>💎</span>}
                 {s === "mine"        && <span className={styles.mineIcon}>💥</span>}
-                {s === "mine-hidden" && <span className={styles.mineIcon}>💣</span>}
-                {s === "gem-hidden"  && <span className={styles.gem}>💎</span>}
+                {s === "mine-hidden" && <span className={styles.mineIcon} style={{ opacity: 0.7 }}>💣</span>}
+                {s === "gem-hidden"  && <span className={styles.gem} style={{ opacity: 0.7 }}>💎</span>}
               </button>
             );
           })}
