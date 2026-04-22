@@ -191,14 +191,24 @@ export default function DragonTowerPage() {
         </div>
 
         <div className={styles.tower}>
-          {/* Dragon Avatar Animation */}
-          <div className={`${styles.dragonAvatar} ${styles.floating}`} 
+          {/* Neon Japanese Dragon Avatar */}
+          <div className={styles.dragonAvatar} 
             style={{ 
               bottom: `${(currentLevel / MAX_LEVELS) * 100}%`,
               opacity: status === "playing" || status === "cashed_out" ? 1 : 0,
-              display: status === "idle" ? "none" : "block"
+              display: status === "idle" ? "none" : "flex"
             }} 
-          />
+          >
+            <svg viewBox="0 0 100 100" className={`${styles.neonDragon} ${styles.slithering}`}>
+              {/* Serpentine Body */}
+              <path d="M80,80 C70,90 50,90 40,80 C30,70 30,50 40,40 C50,30 70,30 80,40 C90,50 90,70 80,80" />
+              <path d="M40,40 C30,30 20,40 10,30 C0,20 10,10 20,20" />
+              {/* Head with Whiskers */}
+              <path d="M20,20 L15,10 M20,20 L30,15" strokeWidth="1" />
+              <circle cx="22" cy="18" r="2" fill="currentColor" />
+              <path d="M25,25 Q35,25 30,35" strokeWidth="1" />
+            </svg>
+          </div>
           {Array.from({ length: MAX_LEVELS }, (_, i) => {
             const levelNum = MAX_LEVELS - i;
             const boardIdx = i;
