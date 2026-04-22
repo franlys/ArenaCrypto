@@ -151,26 +151,26 @@
 .tile:active:not(:disabled) { transform: scale(0.95); }
 .tile:disabled { cursor: not-allowed; }
 
-.tile.hidden {
-  background: rgba(255,255,255,0.05);
+.tileHidden {
+  background: rgba(255,255,255,0.08);
 }
-.tile.gem {
-  background: rgba(0,245,255,0.15);
-  border-color: rgba(0,245,255,0.5);
+.tileGem {
+  background: rgba(0,245,255,0.2);
+  border-color: rgba(0,245,255,0.6);
   animation: gemReveal 200ms ease-out;
 }
-.tile.mine {
-  background: rgba(239,68,68,0.2);
-  border-color: rgba(239,68,68,0.7);
+.tileMine {
+  background: rgba(239,68,68,0.25);
+  border-color: rgba(239,68,68,0.8);
   animation: mineReveal 300ms ease-out;
 }
-.tile.mine-hidden {
-  background: rgba(239,68,68,0.25);
-  border-color: rgba(239,68,68,0.5);
+.tileMineHidden {
+  background: rgba(239,68,68,0.3);
+  border-color: rgba(239,68,68,0.6);
 }
-.tile.gem-hidden {
-  background: rgba(0,245,255,0.15);
-  border-color: rgba(0,245,255,0.3);
+.tileGemHidden {
+  background: rgba(0,245,255,0.2);
+  border-color: rgba(0,245,255,0.4);
 }
 
 .gem { filter: drop-shadow(0 0 8px #00F5FF); }

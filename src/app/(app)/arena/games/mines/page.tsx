@@ -100,11 +100,11 @@ export default function MinesPage() {
 
   const getTileState = (idx: number) => {
     if (revealed.includes(idx)) {
-      if (board && board[idx]) return "mine";
-      return "gem";
+      if (board && board[idx]) return "tileMine";
+      return "tileGem";
     }
-    if (board) return board[idx] ? "mine-hidden" : "gem-hidden";
-    return "hidden";
+    if (board) return board[idx] ? "tileMineHidden" : "tileGemHidden";
+    return "tileHidden";
   };
 
   const isIdle = status === "idle" || status === "cashed_out" || status === "exploded";
@@ -181,10 +181,10 @@ export default function MinesPage() {
               <button key={i} className={`${styles.tile} ${styles[s]}`}
                 onClick={() => revealTile(i)}
                 disabled={status !== "playing" || revealed.includes(i)}>
-                {s === "gem"         && <span className={styles.gem}>💎</span>}
-                {s === "mine"        && <span className={styles.mineIcon}>💥</span>}
-                {s === "mine-hidden" && <span className={styles.mineIcon} style={{ opacity: 0.7 }}>💣</span>}
-                {s === "gem-hidden"  && <span className={styles.gem} style={{ opacity: 0.7 }}>💎</span>}
+                {s === "tileGem"         && <span className={styles.gem}>💎</span>}
+                {s === "tileMine"        && <span className={styles.mineIcon}>💥</span>}
+                {s === "tileMineHidden"  && <span className={styles.mineIcon} style={{ opacity: 0.7 }}>💣</span>}
+                {s === "tileGemHidden"   && <span className={styles.gem} style={{ opacity: 0.7 }}>💎</span>}
               </button>
             );
           })}

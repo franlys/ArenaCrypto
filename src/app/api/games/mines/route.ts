@@ -38,14 +38,22 @@ function calcMinesMultiplier(mines: number, revealed: number): number {
 }
 
 function generateBoard(serverSeed: string, minesCount: number): boolean[] {
-  const hash = crypto.createHash("sha256").update(serverSeed).digest("hex");
+  let hash = crypto.createHash("sha256").update(serverSeed).digest("hex");
   const board = Array(25).fill(false);
   const positions = new Set<number>();
-  let offset = 0;
-  while (positions.size < minesCount) {
-    const val = parseInt(hash.slice(offset, offset + 2), 16) % 25;
-    positions.add(val);
-    offset = (offset + 2) % 62;
+  let attempts = 0;
+
+  while (positions.size < minesCount && attempts < 10) {
+    for (let i = 0; i < hash.length - 1; i += 2) {
+      if (positions.size >= minesCount) break;
+      const val = parseInt(hash.slice(i, i + 2), 16) % 25;
+      positions.add(val);
+    }
+    if (positions.size < minesCount) {
+      // If not enough unique positions, re-hash for more entropy
+      hash = crypto.createHash("sha256").update(hash).digest("hex");
+    }
+    attempts++;
   }
   positions.forEach(p => { board[p] = true; });
   return board;
