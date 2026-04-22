@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/lib/supabase";
 import styles from "./dragon-tower.module.css";
@@ -59,6 +59,36 @@ export default function DragonTowerPage() {
     });
     return res.json();
   }, []);
+
+  // Auto-recovery
+  useEffect(() => {
+    async function checkActive() {
+      setLoading(true);
+      const data = await apiCall({ action: "get-active" });
+      if (data.active) {
+        setGameId(data.game_id);
+        setDifficulty(data.difficulty as Difficulty);
+        setLevel(data.current_level);
+        setMultiplier(data.current_multiplier);
+        setIsTest(data.is_test);
+        setAmount(data.amount);
+        setStatus("playing");
+        
+        // Restore tile states
+        const newStates: TileState[][] = Array.from({ length: MAX_LEVELS }, () => 
+          Array(data.tiles_per_row).fill("hidden")
+        );
+        data.path.forEach((tileIdx: number, levelIdx: number) => {
+          // Row index in UI is MAX_LEVELS - 1 - levelIdx
+          newStates[MAX_LEVELS - 1 - levelIdx][tileIdx] = "selected";
+        });
+        setTileStates(newStates);
+        setMsg("");
+      }
+      setLoading(false);
+    }
+    checkActive();
+  }, [apiCall]);
 
   const initBoard = (diff: Difficulty) =>
     Array.from({ length: MAX_LEVELS }, () =>
@@ -187,7 +217,20 @@ export default function DragonTowerPage() {
             </button>
           )}
 
-          {msg && <p className={`${styles.msg} ${status === "cashed_out" ? styles.win : status === "dead" ? styles.lose : ""}`}>{msg}</p>}
+          {msg && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <p className={`${styles.msg} ${status === "cashed_out" ? styles.win : status === "dead" ? styles.lose : ""}`}>{msg}</p>
+              {msg.includes("activa") && (
+                <button 
+                  className={styles.pill} 
+                  onClick={() => window.location.reload()}
+                  style={{ width: 'fit-content', alignSelf: 'center' }}
+                >
+                  REINTENTAR / RECUPERAR
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className={styles.tower}>

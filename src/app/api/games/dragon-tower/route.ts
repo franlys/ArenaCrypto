@@ -59,6 +59,24 @@ export async function POST(req: NextRequest) {
   const db = admin();
   const field = isTest ? "test_balance" : "balance_stablecoin";
 
+  if (action === "get-active") {
+    const { data: active } = await db.from("dragon_tower_games")
+      .select("*").eq("user_id", user.id).eq("status", "active").maybeSingle();
+    if (!active) return NextResponse.json({ active: false });
+    return NextResponse.json({
+      active: true,
+      game_id: active.id,
+      difficulty: active.difficulty,
+      current_level: active.current_level,
+      current_multiplier: active.current_multiplier,
+      path: active.path,
+      amount: active.amount,
+      is_test: active.is_test,
+      tiles_per_row: DIFFICULTY_CONFIG[active.difficulty as keyof typeof DIFFICULTY_CONFIG].tiles,
+      multipliers: LEVEL_MULTIPLIERS[active.difficulty],
+    });
+  }
+
   if (action === "start") {
     const { amount, difficulty = "medium" } = body;
     if (!amount || amount <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
