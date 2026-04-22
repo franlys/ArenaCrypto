@@ -3,6 +3,16 @@ import Link from 'next/link'
 
 const GAMES = [
   {
+    href: "/arena/games/limbo",
+    icon: "🚀",
+    name: "LIMBO",
+    color: "#00F5FF",
+    borderColor: "rgba(0,245,255,0.12)",
+    desc: "Apunta a un multiplicador y observa el cohete subir. ¡Gana si el resultado supera tu objetivo!",
+    tags: ["Hasta ×10000x", "RTP 96%", "Instantáneo"],
+    badge: "NUEVO",
+  },
+  {
     href: "/arena/games/dice",
     icon: "◈",
     name: "DICE",
