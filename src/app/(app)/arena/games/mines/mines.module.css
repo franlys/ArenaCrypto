@@ -29,7 +29,7 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 1.5rem;
   align-items: start;
 }
@@ -49,21 +49,22 @@
 .controlGroup { display: flex; flex-direction: column; gap: 0.5rem; }
 .label { font-family: Rajdhani, sans-serif; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
 
-.amountRow { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.amountRow { display: flex; flex-direction: column; gap: 0.75rem; }
 .input {
-  flex: 1;
+  width: 100%;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(0,245,255,0.15);
   border-radius: 8px;
   color: #fff;
   font-family: Orbitron, sans-serif;
   font-size: 0.95rem;
-  padding: 0.5rem 0.75rem;
-  min-width: 160px;
+  padding: 0.6rem 0.75rem;
 }
 .input:focus { outline: none; border-color: rgba(0,245,255,0.5); }
 
+.pillRow { display: flex; gap: 0.4rem; }
 .pill {
+  flex: 1;
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 6px;
@@ -74,6 +75,7 @@
   padding: 0.4rem 0.6rem;
   cursor: pointer;
   transition: border-color 150ms, color 150ms;
+  text-align: center;
 }
 .pill:hover:not(:disabled) { border-color: rgba(0,245,255,0.4); color: #00F5FF; }
 .pill:disabled { opacity: 0.4; cursor: not-allowed; }

@@ -131,12 +131,14 @@ export default function MinesPage() {
           <div className={styles.controlGroup}>
             <label className={styles.label}>APUESTA</label>
             <div className={styles.amountRow}>
-              <input type="number" className={styles.input} value={amount}
+              <input type="number" step="0.5" className={styles.input} value={amount}
                 onChange={e => setAmount(Number(e.target.value))} disabled={!isIdle} />
-              {[5, 10, 25, 50].map(v => (
-                <button key={v} className={styles.pill}
-                  onClick={() => setAmount(v)} disabled={!isIdle || v > activeBalance}>${v}</button>
-              ))}
+              <div className={styles.pillRow}>
+                {[5, 10, 25, 50].map(v => (
+                  <button key={v} className={styles.pill}
+                    onClick={() => setAmount(v)} disabled={!isIdle || v > activeBalance}>${v}</button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -170,6 +170,7 @@
   font-family: 'Rajdhani', sans-serif;
   font-size: 0.9rem;
   outline: none;
+  min-width: 160px;
   transition: border-color 150ms ease-out;
 }
 

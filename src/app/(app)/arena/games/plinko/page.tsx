@@ -147,7 +147,9 @@ export default function PlinkoPage() {
           <div className={styles.controlGroup}><label className={styles.label}>APUESTA</label>
             <div className={styles.amountRow}>
               <input type="number" className={styles.input} value={amount} onChange={e => setAmount(Number(e.target.value))} disabled={loading} />
-              {[5, 10, 25, 50].map(v => <button key={v} className={styles.pill} onClick={() => setAmount(v)} disabled={loading || v > activeBalance}>${v}</button>)}
+              <div className={styles.pillRow}>
+                {[5, 10, 25, 50].map(v => <button key={v} className={styles.pill} onClick={() => setAmount(v)} disabled={loading || v > activeBalance}>${v}</button>)}
+              </div>
             </div>
           </div>
           <div className={styles.controlGroup}><label className={styles.label}>RIESGO</label>
