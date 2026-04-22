@@ -47,7 +47,7 @@
 .statValue { font-family: Orbitron,sans-serif; font-size: 1rem; font-weight: 700; }
 
 /* Board */
-.board { background: var(--color-bg-card); border: 1px solid rgba(245,158,11,0.08); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-height: 300px; }
+.board { position: relative; background: var(--color-bg-card); border: 1px solid rgba(245,158,11,0.08); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; align-items: center; min-height: 400px; overflow: hidden; }
 .pegsArea { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; align-items: center; }
 .pegRow { display: flex; gap: 1rem; justify-content: center; }
 .peg { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: background 200ms; }
@@ -58,4 +58,10 @@
 .slotHit { transform: scale(1.15); box-shadow: 0 0 12px currentColor; animation: slotPop 400ms ease-out; }
 
 @keyframes slotPop { 0% { transform: scale(0.8); } 60% { transform: scale(1.25); } 100% { transform: scale(1.15); } }
+
+.ball { position: absolute; width: 14px; height: 14px; background: #F59E0B; border-radius: 50%; box-shadow: 0 0 15px #F59E0B, 0 0 5px #fff; z-index: 10; transition: all 120ms linear; pointer-events: none; }
+
+.payoutMsg { margin-top: 0.5rem; animation: slideUp 0.3s ease-out forwards; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
 @media (prefers-reduced-motion: reduce) { .peg, .slot, .btnDrop, .riskBtn { transition: none; animation: none; } }

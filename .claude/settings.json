@@ -37,7 +37,9 @@
       "Bash(git diff *)",
       "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npx supabase db push --profile arena 2>&1\")",
       "Read(//c/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/**)",
-      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npm run build\")"
+      "Bash(cmd /c \"cd /d c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto && npm run build\")",
+      "Bash(cmd.exe /c \"cd /d \\\\\"c:\\\\Users\\\\elmae\\\\.gemini\\\\antigravity\\\\scratch\\\\ArenaCrypto\\\\\" && npm run build 2>&1\")",
+      "Read(//mnt/c/Users/elmae/.gemini/antigravity/scratch/ArenaCrypto/node_modules/.bin/**)"
     ]
   }
 }

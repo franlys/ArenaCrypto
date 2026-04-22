@@ -32,7 +32,7 @@ function calcMinesMultiplier(mines: number, revealed: number): number {
   for (let i = 0; i < revealed; i++) {
     prob *= (25 - mines - i) / (25 - i);
   }
-  return Math.max(1, Number((0.97 / prob).toFixed(4)));
+  return Math.max(1, Number((0.92 / prob).toFixed(4)));
 }
 
 function generateBoard(serverSeed: string, minesCount: number): boolean[] {

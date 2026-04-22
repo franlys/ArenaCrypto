@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useUser } from '@/contexts/UserContext'
 import styles from './dice.module.css'
 
-const HOUSE_EDGE = 0.03
+const HOUSE_EDGE = 0.08
 const QUICK      = [1, 5, 10, 25]
 
 interface RollResult {

@@ -10,14 +10,14 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { tiles: number; label: string; colo
   easy:   { tiles: 4, label: "FÁCIL",   color: "#22c55e" },
   medium: { tiles: 3, label: "MEDIO",   color: "#F59E0B" },
   hard:   { tiles: 2, label: "DIFÍCIL", color: "#f97316" },
-  expert: { tiles: 2, label: "EXPERTO", color: "#ef4444" },
+  expert: { tiles: 4, label: "EXPERTO", color: "#ef4444" },
 };
 
 const LEVEL_MULTIPLIERS: Record<Difficulty, number[]> = {
-  easy:   [1.20,1.44,1.73,2.07,2.49,2.98,3.58,4.30,5.16],
-  medium: [1.40,1.96,2.75,3.85,5.39,7.55,10.57,14.80,20.72],
-  hard:   [1.88,3.52,6.64,12.49,23.49,44.14,83.00,156.0,293.0],
-  expert: [3.60,12.96,46.66,168.0,604.0,0,0,0,0],
+  easy:   [1.23, 1.51, 1.85, 2.27, 2.79, 3.42, 4.20, 5.16, 6.34],
+  medium: [1.38, 1.90, 2.62, 3.62, 5.00, 6.90, 9.52, 13.14, 18.13],
+  hard:   [1.84, 3.38, 6.22, 11.45, 21.06, 38.75, 71.30, 131.2, 241.4],
+  expert: [3.68, 13.54, 49.83, 183.3, 674.5, 2482, 9134, 33613, 123700],
 };
 
 const MAX_LEVELS = 9;
