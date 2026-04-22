@@ -61,6 +61,7 @@ export default function PlinkoPage() {
     const boardWidth = boardRef.current.clientWidth;
     const centerX = boardWidth / 2;
     const startY = 40;
+    const stepDelay = 250; 
     const rowHeight = 350 / rows; 
     const N = rows + 1; // Total slots
     
@@ -72,7 +73,7 @@ export default function PlinkoPage() {
     let currentY = startY;
 
     for (let i = 0; i < path.length; i++) {
-      await new Promise(r => setTimeout(r, 110));
+      await new Promise(r => setTimeout(r, stepDelay));
       const dir = path[i];
       
       // Each step moves the ball 0.5 slots left or right

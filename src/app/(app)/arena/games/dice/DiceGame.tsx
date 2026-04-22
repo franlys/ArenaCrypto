@@ -55,8 +55,9 @@ export function DiceGame() {
 
   const handleRoll = useCallback(async () => {
     if (!canRoll || rolling) return
-    setRolling(true)
-    setShowResult(false)
+    setRolling(true);
+    setShowResult(false);
+    const start = Date.now();
 
     try {
       const res = await fetch('/api/games/dice/roll', {
@@ -65,6 +66,10 @@ export function DiceGame() {
         body: JSON.stringify({ amount: numAmount, target, direction, isTest }),
       })
       const data = await res.json()
+
+      // Artificial delay to build suspense
+      const elapsed = Date.now() - start;
+      if (elapsed < 1200) await new Promise(r => setTimeout(r, 1200 - elapsed));
 
       if (data.result !== undefined) {
         setResult(data)

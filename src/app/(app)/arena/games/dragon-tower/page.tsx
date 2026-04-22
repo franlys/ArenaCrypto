@@ -109,6 +109,9 @@ export default function DragonTowerPage() {
     if (status !== "playing" || loading) return;
     setLoading(true);
     const data = await apiCall({ action: "step", game_id: gameId, tile_index: tileIndex });
+    
+    // Suspense delay
+    await new Promise(r => setTimeout(r, 400));
     setLoading(false);
     if (data.error) { setMsg(data.error); return; }
 

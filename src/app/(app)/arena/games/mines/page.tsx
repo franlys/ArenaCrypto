@@ -74,6 +74,9 @@ export default function MinesPage() {
     if (status !== "playing" || revealed.includes(idx) || loading) return;
     setLoading(true);
     const data = await apiCall({ action: "reveal", game_id: gameId, tile_index: idx });
+    
+    // Suspense delay
+    await new Promise(r => setTimeout(r, 350));
     setLoading(false);
     if (data.error) { setMsg(data.error); return; }
     if (data.is_mine) {
