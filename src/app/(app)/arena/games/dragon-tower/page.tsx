@@ -242,14 +242,14 @@ export default function DragonTowerPage() {
               display: status === "idle" ? "none" : "flex"
             }} 
           >
-            <svg viewBox="0 0 100 100" className={`${styles.neonDragon} ${styles.slithering}`}>
-              {/* Serpentine Body */}
-              <path d="M80,80 C70,90 50,90 40,80 C30,70 30,50 40,40 C50,30 70,30 80,40 C90,50 90,70 80,80" />
-              <path d="M40,40 C30,30 20,40 10,30 C0,20 10,10 20,20" />
-              {/* Head with Whiskers */}
-              <path d="M20,20 L15,10 M20,20 L30,15" strokeWidth="1" />
-              <circle cx="22" cy="18" r="2" fill="currentColor" />
-              <path d="M25,25 Q35,25 30,35" strokeWidth="1" />
+            <svg viewBox="0 0 120 40" className={`${styles.neonDragon} ${styles.slithering}`}>
+              {/* Serpentine Body - Long and Slender */}
+              <path d="M110,20 C105,10 95,10 90,20 C85,30 75,30 70,20 C65,10 55,10 50,20 C45,30 35,30 30,20 C25,10 15,10 10,20" />
+              {/* Dragon Head */}
+              <path d="M110,20 L115,12 M110,20 L118,22" strokeWidth="1" />
+              <circle cx="112" cy="18" r="1.5" fill="currentColor" />
+              {/* Whiskers */}
+              <path d="M115,20 Q120,20 118,28" strokeWidth="0.5" />
             </svg>
           </div>
           {Array.from({ length: MAX_LEVELS }, (_, i) => {

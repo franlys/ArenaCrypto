@@ -28,10 +28,10 @@ async function getAuthUser(req: NextRequest) {
 }
 
 const DIFFICULTY_CONFIG = {
-  easy:   { tiles: 4 },
-  medium: { tiles: 3 },
-  hard:   { tiles: 2 },
-  expert: { tiles: 5 }, // Expert: 4 mines, 1 safe (20% chance)
+  easy:   { tiles: 4, mines: 1 }, // 75% win
+  medium: { tiles: 3, mines: 1 }, // 66.6% win
+  hard:   { tiles: 2, mines: 1 }, // 50% win
+  expert: { tiles: 5, mines: 4 }, // 20% win
 };
 
 const LEVEL_MULTIPLIERS: Record<string, number[]> = {
@@ -46,8 +46,19 @@ const MAX_LEVELS = 9;
 function isLevelSafe(serverSeed: string, level: number, tile: number, difficulty: string): boolean {
   const cfg = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG];
   const hash = crypto.createHash("sha256").update(`${serverSeed}-${level}`).digest("hex");
-  const minePosition = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
-  return tile !== minePosition;
+  
+  // Deterministic safe positions (only 1 safe tile for high difficulties)
+  const safeTile = parseInt(hash.slice(0, 2), 16) % cfg.tiles;
+  
+  if (cfg.mines === 1) {
+    // If only 1 mine, any tile except that mine is safe
+    // Wait, let's keep it simple: 
+    // In easy/medium, one tile is the MINE.
+    return tile !== safeTile;
+  } else {
+    // In expert, only ONE tile is SAFE.
+    return tile === safeTile;
+  }
 }
 
 export async function POST(req: NextRequest) {
