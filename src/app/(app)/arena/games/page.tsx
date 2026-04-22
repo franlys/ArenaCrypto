@@ -3,16 +3,6 @@ import Link from 'next/link'
 
 const GAMES = [
   {
-    href: "/arena/games/crash",
-    icon: "↑×",
-    name: "CRASH",
-    color: "#00F5FF",
-    borderColor: "rgba(0,245,255,0.12)",
-    desc: "El multiplicador sube sin parar. Cobra antes de que explote o lo pierdes todo.",
-    tags: ["Hasta ×100+", "RTP 97%", "Multijugador"],
-    badge: null,
-  },
-  {
     href: "/arena/games/dice",
     icon: "◈",
     name: "DICE",

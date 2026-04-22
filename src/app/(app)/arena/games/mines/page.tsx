@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/lib/supabase";
 import styles from "./mines.module.css";
@@ -41,6 +41,23 @@ export default function MinesPage() {
     });
     return res.json();
   }, []);
+
+  // AUTO-RECOVERY: Detect active game on mount
+  useEffect(() => {
+    async function recover() {
+      const data = await apiCall({ action: "get-active" });
+      if (data?.active) {
+        setGameId(data.game_id);
+        setAmount(data.amount);
+        setMineCount(data.mines_count);
+        setIsTest(data.is_test);
+        setRevealed(data.revealed || []);
+        setMultiplier(data.current_multiplier || 1);
+        setStatus("playing");
+      }
+    }
+    recover();
+  }, [apiCall]);
 
   const startGame = async () => {
     setLoading(true); setMsg("");

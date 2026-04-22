@@ -60,6 +60,21 @@ export async function POST(req: NextRequest) {
   const db = admin();
   const field = isTest ? "test_balance" : "balance_stablecoin";
 
+  if (action === "get-active") {
+    const { data: active } = await db.from("mines_games")
+      .select("*").eq("user_id", user.id).eq("status", "active").maybeSingle();
+    if (!active) return NextResponse.json({ active: false });
+    return NextResponse.json({
+      active: true,
+      game_id: active.id,
+      amount: active.amount,
+      mines_count: active.mines_count,
+      revealed: active.revealed,
+      current_multiplier: active.current_multiplier,
+      is_test: active.is_test,
+    });
+  }
+
   if (action === "start") {
     const { amount, mines_count = 5 } = body;
     if (!amount || amount <= 0 || mines_count < 1 || mines_count > 24)
