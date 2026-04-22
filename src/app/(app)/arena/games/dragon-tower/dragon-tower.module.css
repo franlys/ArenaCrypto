@@ -60,7 +60,24 @@
 .lose { color: #ef4444; }
 
 /* Tower */
-.tower { display: flex; flex-direction: column; gap: 0.4rem; background: var(--color-bg-card); border: 1px solid rgba(167,139,250,0.08); border-radius: 16px; padding: 1rem; }
+.tower { display: flex; flex-direction: column; gap: 0.4rem; background: var(--color-bg-card); border: 1px solid rgba(167,139,250,0.08); border-radius: 16px; padding: 1rem; position: relative; }
+
+.dragonAvatar { 
+  position: absolute; 
+  left: -50px; 
+  width: 48px; 
+  height: 48px; 
+  background: url('/brain/2badf8fb-5228-4da6-9500-7bb77ca05eb7/cyber_dragon_avatar_1776871006631.png') no-repeat center/contain; 
+  z-index: 20; 
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  pointer-events: none; 
+  filter: drop-shadow(0 0 12px #A78BFA); 
+}
+
+@keyframes dragonFloat { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+.floating { animation: dragonFloat 1.5s infinite alternate ease-in-out; }
+
+@media (max-width: 700px) { .dragonAvatar { left: -35px; width: 32px; height: 32px; } }
 
 .towerRow { display: flex; align-items: center; gap: 0.75rem; padding: 0.4rem 0.5rem; border-radius: 10px; border: 1px solid transparent; transition: border-color 150ms, background 150ms; }
 .rowActive { border-color: rgba(167,139,250,0.5) !important; background: rgba(167,139,250,0.08); }

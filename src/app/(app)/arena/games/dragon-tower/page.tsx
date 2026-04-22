@@ -191,6 +191,14 @@ export default function DragonTowerPage() {
         </div>
 
         <div className={styles.tower}>
+          {/* Dragon Avatar Animation */}
+          <div className={`${styles.dragonAvatar} ${styles.floating}`} 
+            style={{ 
+              bottom: `${(currentLevel / MAX_LEVELS) * 100}%`,
+              opacity: status === "playing" || status === "cashed_out" ? 1 : 0,
+              display: status === "idle" ? "none" : "block"
+            }} 
+          />
           {Array.from({ length: MAX_LEVELS }, (_, i) => {
             const levelNum = MAX_LEVELS - i;
             const boardIdx = i;
