@@ -7,7 +7,6 @@ import styles from "./plinko.module.css";
 type RiskLevel = "low" | "medium" | "high";
 type RowCount  = 8 | 12 | 16;
 
-// 8% House Edge Multipliers (Matched with API)
 const MULTIPLIERS: Record<RiskLevel, Record<number, number[]>> = {
   low: {
     8:  [5.6, 2.1, 1.1, 1.0, 0.5, 1.0, 1.1, 2.1, 5.6],
@@ -62,47 +61,45 @@ export default function PlinkoPage() {
     const boardWidth = boardRef.current.clientWidth;
     const centerX = boardWidth / 2;
     const startY = 40;
-    const rowHeight = 22; 
+    const rowHeight = 350 / rows; 
+    const N = rows + 1; // Total slots
     
-    // We fixed the container max-width to 500px in CSS
-    const containerWidth = Math.min(500, boardWidth - 64);
-    const slotWidth = containerWidth / (rows + 1);
-    const pegGap = slotWidth; 
-
-    // Start exactly at the top center
+    // Start at top
     setBallVisible(true);
-    setBallCoord({ x: centerX - 6, y: startY });
+    setBallCoord({ x: centerX, y: startY });
 
-    let currentX = centerX - 6;
+    let currentSlotOffset = 0; // Relative to center in terms of slot widths
     let currentY = startY;
-    let currentSlot = 0;
 
     for (let i = 0; i < path.length; i++) {
       await new Promise(r => setTimeout(r, 110));
       const dir = path[i];
       
-      // Calculate next X based on centered slots
-      // Each move L/R shifts by half a slotWidth
+      // Each step moves the ball 0.5 slots left or right
       if (dir === "R") {
-        currentX += slotWidth / 2;
-        currentSlot++;
+        currentSlotOffset += 0.5;
       } else {
-        currentX -= slotWidth / 2;
+        currentSlotOffset -= 0.5;
       }
       currentY += rowHeight;
       
-      setBallCoord({ x: currentX, y: currentY });
-      setHitPeg({ row: i, col: currentSlot });
+      // Calculate X based on the center 50% + offset
+      // Each slot width is (100% / N) of the container
+      const xPercent = 50 + (currentSlotOffset / N) * 100;
+      const xPos = (xPercent / 100) * Math.min(500, boardWidth - 48) + (boardWidth - Math.min(500, boardWidth - 48)) / 2;
+
+      setBallCoord({ x: xPos, y: currentY });
+      // Identify which peg we hit
+      setHitPeg({ row: i, col: Math.round(i/2 + currentSlotOffset) });
       setTimeout(() => setHitPeg(null), 90);
     }
 
-    // Final drop into slot
+    // Drop to slot center
     const slotEl = slotsRef.current[finalSlot];
     if (slotEl) {
       const rect = slotEl.getBoundingClientRect();
       const bRect = boardRef.current.getBoundingClientRect();
-      const targetX = rect.left - bRect.left + (rect.width / 2) - 6;
-      setBallCoord({ x: targetX, y: currentY + 60 });
+      setBallCoord({ x: rect.left - bRect.left + rect.width / 2, y: currentY + 50 });
     }
     
     await new Promise(r => setTimeout(r, 250));
@@ -112,41 +109,23 @@ export default function PlinkoPage() {
   const dropBall = useCallback(async () => {
     if (loading) return;
     setLoading(true); setMsg(""); setResult(null);
-    
     const { data: { session } } = await supabase.auth.getSession();
     const token = session?.access_token;
 
     try {
       const res = await fetch("/api/games/plinko", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ amount, risk_level: risk, rows, isTest }),
       });
       const data = await res.json();
-      
-      if (data.error) {
-        setMsg(data.error);
-        setLoading(false);
-        return;
-      }
+      if (data.error) { setMsg(data.error); setLoading(false); return; }
 
-      // Start animation
       await animateBall(data.path, data.slot);
-
       setResult(data);
-      setMsg(data.multiplier >= 1
-        ? `💰 +$${data.payout.toFixed(2)} (${data.multiplier}x)`
-        : `📉 $${data.payout.toFixed(2)} (${data.multiplier}x)`);
-      
+      setMsg(data.multiplier >= 1 ? `💰 +$${data.payout.toFixed(2)}` : `📉 $${data.payout.toFixed(2)}`);
       refreshProfile();
-    } catch (err) {
-      setMsg("Error de conexión");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setMsg("Error de conexión"); } finally { setLoading(false); }
   }, [amount, risk, rows, isTest, refreshProfile, loading]);
 
   return (
@@ -154,12 +133,10 @@ export default function PlinkoPage() {
       <div className={styles.header}>
         <h1 className={`font-orbitron ${styles.title}`}>⬡ <span className="neon-text-gold">PLINKO</span></h1>
         <div className={styles.balanceRow}>
-          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`}
-            onClick={() => setIsTest(false)} disabled={loading}>
+          <button className={`${styles.modeBtn} ${!isTest ? styles.modeBtnActive : ""}`} onClick={() => setIsTest(false)} disabled={loading}>
             REAL <span>${balance.toFixed(2)}</span>
           </button>
-          <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ""}`}
-            onClick={() => setIsTest(true)} disabled={loading}>
+          <button className={`${styles.modeBtn} ${isTest ? styles.modeBtnActive : ""}`} onClick={() => setIsTest(true)} disabled={loading}>
             TEST <span>${testBalance.toFixed(2)}</span>
           </button>
         </div>
@@ -167,76 +144,40 @@ export default function PlinkoPage() {
 
       <div className={styles.layout}>
         <div className={styles.controls}>
-          <div className={styles.controlGroup}>
-            <label className={styles.label}>APUESTA</label>
+          <div className={styles.controlGroup}><label className={styles.label}>APUESTA</label>
             <div className={styles.amountRow}>
-              <input type="number" className={styles.input} value={amount}
-                onChange={e => setAmount(Number(e.target.value))} disabled={loading} />
-              {[5, 10, 25, 50].map(v => (
-                <button key={v} className={styles.pill}
-                  onClick={() => setAmount(v)} disabled={loading || v > activeBalance}>${v}</button>
-              ))}
+              <input type="number" className={styles.input} value={amount} onChange={e => setAmount(Number(e.target.value))} disabled={loading} />
+              {[5, 10, 25, 50].map(v => <button key={v} className={styles.pill} onClick={() => setAmount(v)} disabled={loading || v > activeBalance}>${v}</button>)}
             </div>
           </div>
-
-          <div className={styles.controlGroup}>
-            <label className={styles.label}>RIESGO</label>
-            <div className={styles.riskRow}>
-              {(["low","medium","high"] as RiskLevel[]).map(r => (
-                <button key={r} className={`${styles.riskBtn} ${risk === r ? styles.riskActive : ""}`}
-                  onClick={() => setRisk(r)} disabled={loading}>
-                  {r === "low" ? "BAJO" : r === "medium" ? "MEDIO" : "ALTO"}
-                </button>
-              ))}
-            </div>
+          <div className={styles.controlGroup}><label className={styles.label}>RIESGO</label>
+            <div className={styles.riskRow}>{(["low","medium","high"] as RiskLevel[]).map(r => <button key={r} className={`${styles.riskBtn} ${risk === r ? styles.riskActive : ""}`} onClick={() => setRisk(r)} disabled={loading}>{r.toUpperCase()}</button>)}</div>
           </div>
-
-          <div className={styles.controlGroup}>
-            <label className={styles.label}>FILAS</label>
-            <div className={styles.riskRow}>
-              {([8,12,16] as RowCount[]).map(r => (
-                <button key={r} className={`${styles.riskBtn} ${rows === r ? styles.riskActive : ""}`}
-                  onClick={() => setRows(r)} disabled={loading}>{r}</button>
-              ))}
-            </div>
+          <div className={styles.controlGroup}><label className={styles.label}>FILAS</label>
+            <div className={styles.riskRow}>{([8,12,16] as RowCount[]).map(r => <button key={r} className={`${styles.riskBtn} ${rows === r ? styles.riskActive : ""}`} onClick={() => setRows(r)} disabled={loading}>{r}</button>)}</div>
           </div>
-
-          <button className={styles.btnDrop} onClick={dropBall}
-            disabled={loading || amount > activeBalance || amount <= 0}>
-            {loading ? "CAYENDO..." : "⬇ SOLTAR BOLA"}
-          </button>
-
-          {msg && <p className={`${styles.msg} ${result && result.multiplier >= 1 ? styles.win : styles.lose} ${styles.payoutMsg}`}>{msg}</p>}
+          <button className={styles.btnDrop} onClick={dropBall} disabled={loading || amount > activeBalance || amount <= 0}>{loading ? "..." : "⬇ SOLTAR BOLA"}</button>
+          {msg && <p className={`${styles.msg} ${result && result.multiplier >= 1 ? styles.win : styles.lose}`}>{msg}</p>}
         </div>
 
         <div className={styles.board} ref={boardRef}>
-          {ballVisible && (
-            <div className={styles.ball} style={{ left: ballCoord.x, top: ballCoord.y }} />
-          )}
-
+          {ballVisible && <div className={styles.ball} style={{ left: ballCoord.x, top: ballCoord.y }} />}
           <div className={styles.pegsArea}>
-            {Array.from({ length: rows + 1 }, (_, row) => (
-              <div key={row} className={styles.pegRow}>
-                {Array.from({ length: row + 1 }, (_, i) => (
-                  <div key={i} className={`${styles.peg} ${hitPeg?.row === row && hitPeg?.col === i ? styles.pegHit : ""}`} />
-                ))}
-              </div>
+            {Array.from({ length: rows }, (_, row) => (
+              Array.from({ length: row + 1 }, (_, i) => {
+                const xPercent = 50 + (i - (row / 2)) * (100 / (rows + 1));
+                return (
+                  <div key={`${row}-${i}`} 
+                    className={`${styles.peg} ${hitPeg?.row === row && hitPeg?.col === i ? styles.pegHit : ""}`} 
+                    style={{ left: `${xPercent}%`, top: `${(row / rows) * 100}%` }} 
+                  />
+                );
+              })
             ))}
           </div>
-
-          <div className={styles.slots} style={{ 
-            gridTemplateColumns: `repeat(${rows + 1}, 1fr)`,
-          }}>
+          <div className={styles.slots} style={{ gridTemplateColumns: `repeat(${rows + 1}, 1fr)` }}>
             {mults.map((m, i) => (
-              <div key={i} 
-                ref={el => { slotsRef.current[i] = el; }}
-                className={`${styles.slot} ${result?.slot === i && !ballVisible ? styles.slotHit : ""}`}
-                style={{ 
-                  borderColor: SLOT_COLORS[risk](m)+"66", 
-                  color: SLOT_COLORS[risk](m),
-                }}>
-                {m}x
-              </div>
+              <div key={i} ref={el => { slotsRef.current[i] = el; }} className={`${styles.slot} ${result?.slot === i && !ballVisible ? styles.slotHit : ""}`} style={{ borderColor: SLOT_COLORS[risk](m)+"44", color: SLOT_COLORS[risk](m) }}>{m}x</div>
             ))}
           </div>
         </div>
