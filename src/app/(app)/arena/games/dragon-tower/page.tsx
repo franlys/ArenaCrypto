@@ -17,7 +17,7 @@ const LEVEL_MULTIPLIERS: Record<Difficulty, number[]> = {
   easy:   [1.20, 1.44, 1.73, 2.07, 2.49, 2.99, 3.58, 4.30, 5.16],
   medium: [1.35, 1.82, 2.46, 3.32, 4.48, 6.05, 8.17, 11.0, 14.8],
   hard:   [1.80, 3.24, 5.83, 10.5, 18.9, 34.0, 61.2, 110, 198],
-  expert: [4.50, 20.25, 91.12, 410.0, 1845, 8303, 37367, 168153, 756690],
+  expert: [4.40, 18.0, 75.0, 300, 1200, 4500, 15000, 50000, 120000],
 };
 
 const MAX_LEVELS = 9;
@@ -237,24 +237,6 @@ export default function DragonTowerPage() {
         </div>
 
         <div className={styles.tower}>
-          {/* Neon Japanese Dragon Avatar */}
-          <div className={styles.dragonAvatar} 
-            style={{ 
-              bottom: `${(currentLevel / MAX_LEVELS) * 100}%`,
-              opacity: status === "playing" || status === "cashed_out" ? 1 : 0,
-              display: status === "idle" ? "none" : "flex"
-            }} 
-          >
-            <svg viewBox="0 0 120 40" className={`${styles.neonDragon} ${styles.slithering}`}>
-              {/* Serpentine Body - Long and Slender */}
-              <path d="M110,20 C105,10 95,10 90,20 C85,30 75,30 70,20 C65,10 55,10 50,20 C45,30 35,30 30,20 C25,10 15,10 10,20" />
-              {/* Dragon Head */}
-              <path d="M110,20 L115,12 M110,20 L118,22" strokeWidth="1" />
-              <circle cx="112" cy="18" r="1.5" fill="currentColor" />
-              {/* Whiskers */}
-              <path d="M115,20 Q120,20 118,28" strokeWidth="0.5" />
-            </svg>
-          </div>
           {Array.from({ length: MAX_LEVELS }, (_, i) => {
             const levelNum = MAX_LEVELS - i;
             const boardIdx = i;

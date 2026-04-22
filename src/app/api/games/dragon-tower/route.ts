@@ -38,10 +38,11 @@ const LEVEL_MULTIPLIERS: Record<string, number[]> = {
   easy:   [1.20, 1.44, 1.73, 2.07, 2.49, 2.99, 3.58, 4.30, 5.16],
   medium: [1.35, 1.82, 2.46, 3.32, 4.48, 6.05, 8.17, 11.0, 14.8],
   hard:   [1.80, 3.24, 5.83, 10.5, 18.9, 34.0, 61.2, 110, 198],
-  expert: [4.50, 20.25, 91.12, 410.0, 1845, 8303, 37367, 168153, 756690],
+  expert: [4.40, 18.0, 75.0, 300, 1200, 4500, 15000, 50000, 120000],
 };
 
 const MAX_LEVELS = 9;
+const MAX_PAYOUT = 50000; // Platform safety cap
 
 function getLevelSafeTiles(serverSeed: string, level: number, difficulty: string): number[] {
   const cfg = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG];
@@ -142,7 +143,8 @@ export async function POST(req: NextRequest) {
     }).eq("id", game_id);
 
     if (nextLevel >= MAX_LEVELS) {
-    const payout = Number((game.amount * multipliers[nextLevel - 1]).toFixed(2));
+    const payoutRaw = Number((game.amount * multipliers[nextLevel - 1]).toFixed(2));
+    const payout = Math.min(payoutRaw, MAX_PAYOUT);
     const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
     const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
     await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
@@ -162,7 +164,8 @@ export async function POST(req: NextRequest) {
     if (!game || game.status !== "active" || game.current_level === 0)
       return NextResponse.json({ error: "Nada que cobrar" }, { status: 400 });
 
-    const payout = Number((game.amount * game.current_multiplier).toFixed(2));
+    const payoutRaw = Number((game.amount * game.current_multiplier).toFixed(2));
+    const payout = Math.min(payoutRaw, MAX_PAYOUT);
     const targetField = game.is_test ? "test_balance" : "balance_stablecoin";
     const { data: w } = await db.from("wallets").select(targetField).eq("user_id", user.id).single();
     await db.from("wallets").update({ [targetField]: (w as any)[targetField] + payout }).eq("user_id", user.id);
