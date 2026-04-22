@@ -59,7 +59,7 @@
   font-family: Orbitron, sans-serif;
   font-size: 0.95rem;
   padding: 0.5rem 0.75rem;
-  min-width: 70px;
+  min-width: 160px;
 }
 .input:focus { outline: none; border-color: rgba(0,245,255,0.5); }
 

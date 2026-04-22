@@ -38,7 +38,8 @@ const LEVEL_MULTIPLIERS: Record<string, number[]> = {
 };
 
 const MAX_LEVELS = 9;
-const MAX_PAYOUT = 50000;
+const MAX_PAYOUT = 25000;
+const MAX_BET = 1000;
 
 function getLevelSafeTiles(serverSeed: string, level: number, difficulty: string): number[] {
   const cfg = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG];
@@ -89,6 +90,7 @@ export async function POST(req: NextRequest) {
   if (action === "start") {
     const { amount, difficulty = "medium" } = body;
     if (!amount || amount <= 0) return NextResponse.json({ error: "Monto inválido" }, { status: 400 });
+    if (amount > MAX_BET && !isTest) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
 
     const { data: active } = await db.from("dragon_tower_games")
       .select("id").eq("user_id", user.id).eq("status", "active").maybeSingle();
