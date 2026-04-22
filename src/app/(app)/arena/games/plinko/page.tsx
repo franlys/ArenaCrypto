@@ -164,6 +164,7 @@ export default function PlinkoPage() {
             <div className={styles.riskRow}>{([8,12,16] as RowCount[]).map(r => <button key={r} className={`${styles.riskBtn} ${rows === r ? styles.riskActive : ""}`} onClick={() => setRows(r)} disabled={loading}>{r}</button>)}</div>
           </div>
           <button className={styles.btnDrop} onClick={dropBall} disabled={loading || amount > activeBalance || amount <= 0 || amount > 1000}>{loading ? "..." : "⬇ SOLTAR BOLA"}</button>
+          {amount > 1000 && <p style={{ color: '#ef4444', fontSize: '0.75rem', textAlign: 'center', marginTop: '-0.5rem', fontWeight: 600, fontFamily: 'Rajdhani, sans-serif' }}>⚠ Límite máximo: $1,000</p>}
           {msg && <p className={`${styles.msg} ${result && result.multiplier >= 1 ? styles.win : styles.lose}`}>{msg}</p>}
         </div>
 

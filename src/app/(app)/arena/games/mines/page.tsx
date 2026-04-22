@@ -176,6 +176,7 @@ export default function MinesPage() {
             </button>
           )}
 
+          {amount > 1000 && <p style={{ color: '#ef4444', fontSize: '0.75rem', textAlign: 'center', marginTop: '-0.5rem', fontWeight: 600, fontFamily: 'Rajdhani, sans-serif' }}>⚠ Límite máximo: $1,000</p>}
           {msg && <p className={styles.msg}>{msg}</p>}
         </div>
 

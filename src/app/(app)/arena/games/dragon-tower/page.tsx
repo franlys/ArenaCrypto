@@ -226,6 +226,8 @@ export default function DragonTowerPage() {
             </button>
           )}
 
+          {amount > 1000 && <p style={{ color: '#ef4444', fontSize: '0.75rem', textAlign: 'center', marginTop: '-0.5rem', fontWeight: 600, fontFamily: 'Rajdhani, sans-serif' }}>⚠ Límite máximo: $1,000</p>}
+
           {msg && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <p className={`${styles.msg} ${status === "cashed_out" ? styles.win : status === "dead" ? styles.lose : ""}`}>{msg}</p>
