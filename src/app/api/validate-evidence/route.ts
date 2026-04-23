@@ -22,16 +22,16 @@ PLAYER 1: "${player1Username}"
 PLAYER 2: "${player2Username}"
 
 Analyze the provided screenshot/image carefully. Look for:
-- Victory/defeat screens, match result screens
+- Victory/defeat screens, match result screens (e.g., "¡GANADOR!", "Victory", "Victory Royale")
 - Final scoreboards, kill counts, match summary
-- Player names or gamertags in the results
-- Scores, rankings, or outcome indicators specific to ${game}
+- Player names or gamertags in the results (Check for banners OVER specific names)
+- Scores, rankings, crowns (Clash Royale), or outcome indicators specific to ${game}
 
 Respond ONLY with valid JSON (no markdown, no extra text):
 {
   "winner": "player1" | "player2" | "unclear",
   "confidence": <number between 0.0 and 1.0>,
-  "reasoning": "<brief explanation of what you see in the image>"
+  "reasoning": "<brief explanation of what you see in the image, e.g., 'Banner GANADOR is over Player 2 name with 3 crowns'> "
 }
 
 If the image is unclear, not a game screenshot, or you cannot determine the winner with confidence > 0.7, set winner to "unclear".`;
@@ -45,23 +45,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "submission_id required" }, { status: 400 });
     }
 
-    // 1. Fetch submission + match data
-    const { data: submission, error: subError } = await supabaseAdmin
-      .from("submissions")
-      .select(`
-        *,
-        match:matches(
-          id, stake_amount, house_commission, status,
-          player1:profiles!player1_id(id, username),
-          player2:profiles!player2_id(id, username),
-          game_id
-        )
-      `)
-      .eq("id", submission_id)
-      .single();
+    // 1. Fetch submission + match data (With Retries to prevent race conditions)
+    let submission = null;
+    let subError = null;
 
-    if (subError || !submission) {
-      return NextResponse.json({ error: "Submission not found" }, { status: 404 });
+    for (let i = 0; i < 3; i++) {
+      const result = await supabaseAdmin
+        .from("submissions")
+        .select(`
+          *,
+          match:matches(
+            id, stake_amount, house_commission, status,
+            player1:profiles!player1_id(id, username),
+            player2:profiles!player2_id(id, username),
+            game_id
+          )
+        `)
+        .eq("id", submission_id)
+        .maybeSingle();
+      
+      if (result.data) {
+        submission = result.data;
+        break;
+      }
+      subError = result.error;
+      if (i < 2) await new Promise(resolve => setTimeout(resolve, 800)); // Wait 800ms
+    }
+
+    if (!submission) {
+      console.error("[validate-evidence] Submission not found:", submission_id, subError);
+      return NextResponse.json({ error: "Submission not found after retries" }, { status: 404 });
     }
 
     const match = submission.match;
