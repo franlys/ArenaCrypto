@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       .from("matches")
       .update({ 
         status: "disputed",
-        updated_at: new Promise(resolve => resolve(new Date().toISOString())) 
+        updated_at: new Date().toISOString()
       })
       .eq("id", submission.match.id);
 

@@ -121,6 +121,41 @@ export default function MatchRoomPage() {
             </motion.div>
           )}
 
+          {isPlayer && matchData.status === "active" && (
+            <motion.div
+              className={"glass-panel " + styles.concedeCard}
+              initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.25, ease: EASE_OUT }}
+              style={{ marginTop: "1rem", border: "1px solid rgba(255, 77, 77, 0.2)", background: "rgba(255, 77, 77, 0.03)" }}
+            >
+              <h3 className={styles.sectionTitle} style={{ color: "#F87171" }}>HONESTIDAD / FAIR PLAY</h3>
+              <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginBottom: "1rem" }}>
+                ¿Has perdido el combate? Sé honesto y libera los fondos a tu rival.
+              </p>
+              <button 
+                className="btn-primary" 
+                style={{ width: "100%", background: "transparent", border: "1px solid #F87171", color: "#F87171", fontSize: "0.65rem" }}
+                onClick={async () => {
+                  if (confirm("⚠️ ADVERTENCIA: ¿Estás seguro de confirmar tu derrota? Esta acción es irreversible y entregará los fondos a tu oponente inmediatamente.")) {
+                    const opponentId = currentUser.id === matchData.player1_id ? matchData.player2_id : matchData.player1_id;
+                    const { error } = await supabase.rpc("resolve_match", {
+                      p_match_id: matchId,
+                      p_winner_id: opponentId,
+                      p_ai_data: { source: "manual_concede", player_id: currentUser.id }
+                    });
+                    if (error) {
+                      alert("Error: " + error.message);
+                    } else {
+                      window.location.reload();
+                    }
+                  }
+                }}
+              >
+                🏳️ CONFIRMAR MI DERROTA
+              </button>
+            </motion.div>
+          )}
+
           {matchData.status === "resolved" && (
             <motion.div
               className="glass-panel"
