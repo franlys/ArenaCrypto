@@ -7,8 +7,7 @@ import { AdminSidebar } from "@/components/Navigation/AdminSidebar";
 import styles from "./admin-shell.module.css";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
-  const { isAdmin, loading } = useUser();
-  const router = useRouter();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAdmin) router.replace("/dashboard");
@@ -28,9 +27,33 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className={styles.shell}>
-      <aside className={styles.sidebar}>
-        <AdminSidebar />
+      {/* Mobile Hamburger Toggle */}
+      <button 
+        className={styles.mobileToggle}
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        aria-label="Toggle Menu"
+      >
+        <div className={styles.hamburgerIcon + (isMenuOpen ? " " + styles.open : "")}>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+
+      {/* Overlay for mobile */}
+      {isMenuOpen && (
+        <div 
+          className={styles.overlay} 
+          onClick={() => setIsMenuOpen(false)}
+        />
+      )}
+
+      <aside className={styles.sidebar + (isMenuOpen ? " " + styles.sidebarOpen : "")}>
+        <div className={styles.sidebarInner}>
+          <AdminSidebar onNavigate={() => setIsMenuOpen(false)} />
+        </div>
       </aside>
+
       <main className={styles.content}>
         {children}
       </main>
