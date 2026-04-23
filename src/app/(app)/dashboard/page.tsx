@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [selectedMode, setMode]     = useState<GameMode>(FALLBACK_MODES["valorant"][0]);
   const [stake, setStake]           = useState(10);
   const [isSearching, setSearching] = useState(false);
+  const [resumedQueue, setResumedQueue] = useState<any>(null);
   const [liveTournaments, setLiveT] = useState<any[]>([]);
 
   // Cargar juegos al montar
@@ -80,7 +81,42 @@ export default function DashboardPage() {
       .in("status", ["active", "draft"])
       .order("created_at", { ascending: false })
       .limit(3)
-      .then(({ data }) => setLiveT(data ?? []));
+    // Check for existing searching queue OR active matches
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        // 1. Check for active matches first (highest priority)
+        supabase
+          .from("matches")
+          .select("id")
+          .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+          .then(({ data: match }) => {
+            if (match) {
+              window.location.href = `/arena/${match.id}`;
+              return;
+            }
+
+            // 2. Check for searching queue
+            supabase
+              .from("matchmaking_queue")
+              .select("*")
+              .eq("user_id", user.id)
+              .eq("status", "searching")
+              .maybeSingle()
+              .then(({ data }) => {
+                if (data) {
+                  setGame(data.game_id);
+                  setStake(data.stake_amount);
+                  setResumedQueue(data);
+                  setSearching(true);
+                }
+              });
+          });
+      }
+    });
   }, []);
 
   const loadModes = async (gameSlug: string) => {
@@ -301,12 +337,16 @@ export default function DashboardPage() {
           ) : (
             <div className={`glass-panel ${styles.searchingCard}`} style={{ padding: "1.75rem" }}>
               <MatchmakingQueue
-                gameId={selectedGame}
-                mode={selectedMode?.mode ?? "1v1_ranked"}
-                modeLabel={selectedMode?.label ?? "1v1 Ranked"}
-                stake={stake}
-                isTest={isTestUser}
-                onCancel={() => setSearching(false)}
+                gameId={resumedQueue?.game_id ?? selectedGame}
+                mode={resumedQueue?.mode ?? selectedMode?.mode ?? "1v1_ranked"}
+                modeLabel={resumedQueue?.mode === selectedMode?.mode ? selectedMode?.label : (resumedQueue?.mode ?? "1v1")}
+                stake={resumedQueue?.stake_amount ?? stake}
+                isTest={resumedQueue?.is_test ?? isTestUser}
+                initialQueueId={resumedQueue?.id}
+                onCancel={() => {
+                  setSearching(false);
+                  setResumedQueue(null);
+                }}
               />
             </div>
           )}

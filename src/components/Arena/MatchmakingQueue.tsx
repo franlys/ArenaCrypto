@@ -13,10 +13,11 @@ interface MatchmakingQueueProps {
   stake: number;
   isTest?: boolean;
   onCancel: () => void;
+  initialQueueId?: string | null;
 }
 
 export default function MatchmakingQueue({
-  gameId, mode, modeLabel, stake, isTest = false, onCancel,
+  gameId, mode, modeLabel, stake, isTest = false, onCancel, initialQueueId = null,
 }: MatchmakingQueueProps) {
   const router = useRouter();
   const [status, setStatus]   = useState<'joining' | 'searching' | 'found' | 'confirming' | 'error'>('joining');
@@ -26,9 +27,14 @@ export default function MatchmakingQueue({
   const [timer, setTimer]     = useState(45);
   const cancelledRef          = useRef(false);
 
-  // Auto-join on mount
+  // Auto-join or Resume on mount
   useEffect(() => {
-    joinQueue();
+    if (initialQueueId) {
+      setQueueId(initialQueueId);
+      setStatus('searching');
+    } else {
+      joinQueue();
+    }
     return () => { cancelledRef.current = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
