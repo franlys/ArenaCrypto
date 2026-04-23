@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     const mimeType = (fileData.type || "image/jpeg") as string;
 
     // 5. Call Gemini Vision
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     // Fallback usernames if match join is messy
     const p1Name = submission.match?.player1_id || "Player 1";
