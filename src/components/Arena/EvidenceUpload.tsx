@@ -181,7 +181,7 @@ export default function EvidenceUpload({ matchId, playerId }: EvidenceUploadProp
                 style={{ flex: 1 }}
                 onClick={handleSubmit}
               >
-                ENVIAR PARA VALIDACIÓN IA
+                ENVIAR PARA REVISIÓN
               </button>
               <button
                 className={styles.btnClear}
@@ -197,7 +197,7 @@ export default function EvidenceUpload({ matchId, playerId }: EvidenceUploadProp
               style={{ width: "100%" }}
               onClick={() => inputRef.current?.click()}
             >
-              SELECCIONAR EVIDENCIA
+              SUBIR CAPTURA DE RESULTADO
             </button>
           )}
         </div>
