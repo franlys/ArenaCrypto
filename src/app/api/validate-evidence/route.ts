@@ -9,6 +9,7 @@ const supabaseAdmin = createClient(
 );
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// The current SDK version usually uses v1 by default, but we'll stick to standard init.
 
 // Structured prompt for eSports evidence validation
 function buildPrompt(
@@ -106,8 +107,8 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const mimeType = (fileData.type || "image/jpeg") as string;
 
-    // 5. Call Gemini Vision
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    // 5. Call Gemini Vision - Explicitly using v1 to avoid beta 404s
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
 
     // Fallback usernames if match join is messy
     const p1Name = submission.match?.player1_id || "Player 1";
