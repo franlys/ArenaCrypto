@@ -13,65 +13,20 @@ export default function DisputesPage() {
 
   useEffect(() => {
     async function load() {
-      // 1. Fetch all submissions that are NOT resolved
-      const { data: subs, error: subError } = await supabase
-        .from("submissions")
-        .select(`
-          id, evidence_url, ai_status, player_id, created_at,
-          match_id
-        `)
-        .neq("ai_status", "resolved")
-        .order("created_at", { ascending: false });
-
-      if (subError) {
-        console.error("Submissions error:", subError);
+      try {
+        const res = await fetch("/api/admin/disputes");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setDisputes(data);
+        } else {
+          console.error("API Error:", data);
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      if (!subs || subs.length === 0) {
-        setDisputes([]);
-        setLoading(false);
-        return;
-      }
-
-      // 2. Fetch the associated matches for these submissions
-      const matchIds = Array.from(new Set(subs.map(s => s.match_id)));
-      const { data: matches, error: matchError } = await supabase
-        .from("matches")
-        .select(`
-          id, stake_amount, status, player1_id, player2_id,
-          player1:profiles!player1_id(username),
-          player2:profiles!player2_id(username)
-        `)
-        .in("id", matchIds);
-
-      if (matchError) {
-        console.error("Matches error:", matchError);
-        setLoading(false);
-        return;
-      }
-
-      // 3. Combine them
-      const combined = (matches ?? []).map(m => {
-        const relatedSubs = subs.filter(s => s.match_id === m.id);
-        
-        // Normalize players
-        const p1 = Array.isArray(m.player1) ? m.player1[0] : m.player1;
-        const p2 = Array.isArray(m.player2) ? m.player2[0] : m.player2;
-
-        return {
-          ...m,
-          player1: p1,
-          player2: p2,
-          submissions: relatedSubs
-        };
-      });
-
-      setDisputes(combined);
-      setLoading(false);
     }
-
     load();
   }, []);
 
