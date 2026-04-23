@@ -54,12 +54,7 @@ export async function POST(req: NextRequest) {
         .from("submissions")
         .select(`
           *,
-          match:matches(
-            id, stake_amount, house_commission, status,
-            player1:profiles!player1_id(id, username),
-            player2:profiles!player2_id(id, username),
-            game_id
-          )
+          match:matches(*)
         `)
         .eq("id", submission_id)
         .maybeSingle();
@@ -74,7 +69,10 @@ export async function POST(req: NextRequest) {
 
     if (!submission) {
       console.error("[validate-evidence] Submission not found:", submission_id, subError);
-      return NextResponse.json({ error: "Submission not found after retries" }, { status: 404 });
+      return NextResponse.json({ 
+        error: "Submission not found after retries", 
+        details: subError?.message || "Record missing in database"
+      }, { status: 404 });
     }
 
     const match = submission.match;
@@ -111,12 +109,13 @@ export async function POST(req: NextRequest) {
     // 5. Call Gemini Vision
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    // Fallback usernames if match join is messy
+    const p1Name = submission.match?.player1_id || "Player 1";
+    const p2Name = submission.match?.player2_id || "Player 2";
+    const gameId = submission.match?.game_id || "eSports Game";
+
     const result = await model.generateContent([
-      buildPrompt(
-        match.game_id,
-        match.player1?.username ?? "Player 1",
-        match.player2?.username ?? "Player 2"
-      ),
+      buildPrompt(gameId, p1Name, p2Name),
       {
         inlineData: { data: base64, mimeType },
       },
@@ -130,6 +129,7 @@ export async function POST(req: NextRequest) {
       const jsonStr = rawText.replace(/```json\n?|\n?```/g, "").trim();
       aiData = JSON.parse(jsonStr);
     } catch {
+      console.error("[validate-evidence] AI Response Parse Error:", rawText);
       await supabaseAdmin
         .from("submissions")
         .update({ ai_status: "failed", ai_data: { raw: rawText } })
@@ -140,9 +140,9 @@ export async function POST(req: NextRequest) {
     // 6. Store AI result in submission
     const winnerId =
       aiData.winner === "player1"
-        ? match.player1?.id
+        ? submission.match?.player1_id
         : aiData.winner === "player2"
-        ? match.player2?.id
+        ? submission.match?.player2_id
         : null;
 
     await supabaseAdmin
