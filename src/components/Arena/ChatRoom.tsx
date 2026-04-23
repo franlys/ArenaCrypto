@@ -39,11 +39,18 @@ export default function ChatRoom({ matchId }: ChatRoomProps) {
         event: 'INSERT',
         schema: 'public',
         table: 'chat_messages',
-        filter: `match_id=eq.${matchId}`
       }, (payload) => {
-        setMessages(prev => [...prev, payload.new]);
+        if (payload.new.match_id === matchId) {
+          setMessages(prev => {
+            // Evitar duplicados (en caso de que el insert local y el realtime se crucen)
+            if (prev.find(m => m.id === payload.new.id)) return prev;
+            return [...prev, payload.new];
+          });
+        }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log("Chat subscription status:", status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
