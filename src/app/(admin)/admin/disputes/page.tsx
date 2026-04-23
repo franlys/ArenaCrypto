@@ -12,54 +12,67 @@ export default function DisputesPage() {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    // Simplified query: Get all submissions and their associated matches
-    supabase
-      .from("submissions")
-      .select(`
-        id, evidence_url, ai_status, ai_confidence, ai_data, player_id, created_at,
-        match:matches (
+    async function load() {
+      // 1. Fetch all submissions that are NOT resolved
+      const { data: subs, error: subError } = await supabase
+        .from("submissions")
+        .select(`
+          id, evidence_url, ai_status, player_id, created_at,
+          match_id
+        `)
+        .neq("ai_status", "resolved")
+        .order("created_at", { ascending: false });
+
+      if (subError) {
+        console.error("Submissions error:", subError);
+        setLoading(false);
+        return;
+      }
+
+      if (!subs || subs.length === 0) {
+        setDisputes([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fetch the associated matches for these submissions
+      const matchIds = Array.from(new Set(subs.map(s => s.match_id)));
+      const { data: matches, error: matchError } = await supabase
+        .from("matches")
+        .select(`
           id, stake_amount, status, player1_id, player2_id,
           player1:profiles!player1_id(username),
           player2:profiles!player2_id(username)
-        )
-      `)
-      .neq("ai_status", "resolved") // Only show those not yet resolved
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        // Group by match to avoid duplicates if both players upload
-        const uniqueMatches: any[] = [];
-        const seenMatches = new Set();
+        `)
+        .in("id", matchIds);
 
-        (data ?? []).forEach((sub: any) => {
-          // Normalize match object (Supabase joins can return arrays)
-          const m = Array.isArray(sub.match) ? sub.match[0] : sub.match;
-          if (!m) return;
-
-          if (!seenMatches.has(m.id)) {
-            seenMatches.add(m.id);
-
-            // Normalize player objects inside match
-            const p1 = Array.isArray(m.player1) ? m.player1[0] : m.player1;
-            const p2 = Array.isArray(m.player2) ? m.player2[0] : m.player2;
-
-            // Attach all submissions for this match
-            const allSubs = data?.filter(s => {
-              const sm = Array.isArray(s.match) ? s.match[0] : s.match;
-              return sm?.id === m.id;
-            });
-
-            uniqueMatches.push({
-              ...m,
-              player1: p1,
-              player2: p2,
-              submissions: allSubs
-            });
-          }
-        });
-
-        setDisputes(uniqueMatches);
+      if (matchError) {
+        console.error("Matches error:", matchError);
         setLoading(false);
+        return;
+      }
+
+      // 3. Combine them
+      const combined = (matches ?? []).map(m => {
+        const relatedSubs = subs.filter(s => s.match_id === m.id);
+        
+        // Normalize players
+        const p1 = Array.isArray(m.player1) ? m.player1[0] : m.player1;
+        const p2 = Array.isArray(m.player2) ? m.player2[0] : m.player2;
+
+        return {
+          ...m,
+          player1: p1,
+          player2: p2,
+          submissions: relatedSubs
+        };
       });
+
+      setDisputes(combined);
+      setLoading(false);
+    }
+
+    load();
   }, []);
 
   const resolveDispute = async (matchId: string, winnerId: string) => {

@@ -1,8 +1,16 @@
 .adminLayout {
   display: flex;
-  min-height: calc(100vh - 80px); /* Adjust for RootLayout top-bar */
+  min-height: calc(100vh - 80px);
   gap: 2rem;
   padding: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .adminLayout {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
 }
 
 .adminSidebar {
@@ -16,6 +24,17 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 1.5rem 1rem;
+}
+
+@media (max-width: 1024px) {
+  .adminSidebar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 0.75rem;
+    scrollbar-width: none;
+  }
+  .adminSidebar::-webkit-scrollbar { display: none; }
 }
 
 .adminContent {
