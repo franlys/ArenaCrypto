@@ -121,7 +121,7 @@ export default function MatchRoomPage() {
             </motion.div>
           )}
 
-          {isPlayer && matchData.status === "active" && (
+          {isPlayer && (matchData.status === "active" || matchData.status === "disputed") && (
             <motion.div
               className={"glass-panel " + styles.concedeCard}
               initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
