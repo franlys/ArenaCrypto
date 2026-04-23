@@ -12,24 +12,37 @@ export default function DisputesPage() {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
-    // Fetch matches that are active but have submissions OR are explicitly marked as disputed
+    // Simplified query: Get all submissions and their associated matches
     supabase
-      .from("matches")
+      .from("submissions")
       .select(`
-        id, stake_amount, created_at, updated_at, status,
-        player1_id, player2_id,
-        player1:profiles!player1_id(username),
-        player2:profiles!player2_id(username),
-        submissions(id, evidence_url, ai_status, ai_confidence, ai_data, player_id, created_at)
+        id, evidence_url, ai_status, ai_confidence, ai_data, player_id, created_at,
+        match:matches (
+          id, stake_amount, status, player1_id, player2_id,
+          player1:profiles!player1_id(username),
+          player2:profiles!player2_id(username)
+        )
       `)
-      .or('status.eq.disputed,status.eq.active')
-      .order("updated_at", { ascending: false })
+      .neq("ai_status", "resolved") // Only show those not yet resolved
+      .order("created_at", { ascending: false })
       .then(({ data }) => {
-        // Filter: only active matches that have AT LEAST one submission
-        const filtered = (data ?? []).filter(m => 
-          m.status === 'disputed' || (m.status === 'active' && m.submissions && m.submissions.length > 0)
-        );
-        setDisputes(filtered);
+        // Group by match to avoid duplicates if both players upload
+        const uniqueMatches: any[] = [];
+        const seenMatches = new Set();
+
+        (data ?? []).forEach((sub: any) => {
+          if (sub.match && !seenMatches.has(sub.match.id)) {
+            seenMatches.add(sub.match.id);
+            // Attach all submissions for this match
+            const allSubs = data?.filter(s => s.match?.id === sub.match.id);
+            uniqueMatches.push({
+              ...sub.match,
+              submissions: allSubs
+            });
+          }
+        });
+
+        setDisputes(uniqueMatches);
         setLoading(false);
       });
   }, []);

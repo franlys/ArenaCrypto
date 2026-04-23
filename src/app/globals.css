@@ -401,21 +401,32 @@ a {
 
 @media (max-width: 640px) {
   .app-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 100vw;
     grid-template-areas:
       "main"
       "footer";
     height: auto;
-    overflow: visible;
-  }
-
-  .sidebar-left {
-    display: none;
+    overflow-x: hidden;
   }
 
   .main-content {
-    height: auto;
-    overflow: visible;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  .top-bar {
+    padding: 0.5rem 1rem;
+    width: 100%;
   }
 }
 

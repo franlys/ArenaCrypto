@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useUser();
+  const { user, profile, isAdmin, loading } = useUser();
   const router = useRouter();
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
 
   useEffect(() => {
     if (loading) return;
@@ -14,7 +15,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       const t = setTimeout(() => router.replace("/login"), 400);
       return () => clearTimeout(t);
     }
-  }, [user, loading, router]);
+
+    // Auto-redirect Admin to the administrative dashboard
+    // Only redirect if they are on a non-admin page and it's the root app entry
+    if (isAdmin && !pathname.startsWith("/admin") && (pathname === "/dashboard" || pathname === "/")) {
+      router.replace("/admin");
+    }
+  }, [user, isAdmin, loading, router, pathname]);
 
   // While loading — show a minimal spinner so there's no flash of content
   if (loading) {
