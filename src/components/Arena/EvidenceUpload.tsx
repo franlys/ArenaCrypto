@@ -10,7 +10,7 @@ interface EvidenceUploadProps {
   playerId: string;
 }
 
-type UploadState = "idle" | "uploading" | "validating" | "resolved" | "disputed" | "error";
+type UploadState = "idle" | "uploading" | "pending_review" | "error";
 
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
@@ -71,22 +71,9 @@ export default function EvidenceUpload({ matchId, playerId }: EvidenceUploadProp
       if (subError) throw subError;
       setProgress(60);
 
-      // 3. Trigger Gemini validation via API route
-      setState("validating");
-
-      const res  = await fetch("/api/validate-evidence", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ submission_id: sub.id }),
-      });
-
+      // 3. Inform user (No longer waiting for AI)
+      setState("pending_review");
       setProgress(100);
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Validation failed");
-
-      setResult(data);
-      setState(data.resolved ? "resolved" : "disputed");
 
     } catch (err: any) {
       setError(err.message);
@@ -155,73 +142,25 @@ export default function EvidenceUpload({ matchId, playerId }: EvidenceUploadProp
           </motion.div>
         )}
 
-        {/* ── Validating (Gemini) ── */}
-        {state === "validating" && (
+        {/* ── Pending Review ── */}
+        {state === "pending_review" && (
           <motion.div
-            key="validating"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            key="pending"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, ease: EASE_OUT }}
             className={styles.statusCard}
           >
-            <motion.span
-              className={styles.statusIcon}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              🤖
-            </motion.span>
-            <p className={`font-orbitron ${styles.statusLabel}`}>IA ANALIZANDO EVIDENCIA</p>
-            <p className={styles.statusHint}>Gemini Vision está evaluando tu captura de pantalla…</p>
-          </motion.div>
-        )}
-
-        {/* ── Resolved ── */}
-        {state === "resolved" && result && (
-          <motion.div
-            key="resolved"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: EASE_OUT }}
-            className={`${styles.resultCard} ${styles.resolved}`}
-          >
-            <span className={styles.resultIcon}>🏆</span>
-            <h3 className={`font-orbitron ${styles.resultTitle}`}>
-              VICTORIA VALIDADA
+            <span className={styles.statusIcon}>⚖️</span>
+            <h3 className={`font-orbitron ${styles.statusLabel}`}>
+              EVIDENCIA ENVIADA
             </h3>
-            <p className={styles.resultReasoning}>{result.reasoning}</p>
-            <div className={styles.confidenceRow}>
-              <span className={styles.confidenceLabel}>CONFIANZA IA</span>
-              <span className={`font-orbitron ${styles.confidenceValue}`} style={{ color: "#00F5FF" }}>
-                {confidencePct}%
-              </span>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ── Disputed ── */}
-        {state === "disputed" && result && (
-          <motion.div
-            key="disputed"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: EASE_OUT }}
-            className={`${styles.resultCard} ${styles.disputed}`}
-          >
-            <span className={styles.resultIcon}>⚠️</span>
-            <h3 className={`font-orbitron ${styles.resultTitle}`}>
-              REVISIÓN MANUAL
-            </h3>
-            <p className={styles.resultReasoning}>{result.reasoning}</p>
-            <div className={styles.confidenceRow}>
-              <span className={styles.confidenceLabel}>CONFIANZA IA</span>
-              <span className={`font-orbitron ${styles.confidenceValue}`} style={{ color: "#ffd700" }}>
-                {confidencePct}%
-              </span>
-            </div>
-            <p className={styles.disputeNote}>
-              Confianza baja. Un árbitro revisará la evidencia en menos de 24h.
+            <p className={styles.statusHint}>
+              Tu captura ha sido recibida correctamente. Un árbitro de ArenaCrypto la revisará en los próximos minutos para confirmar el resultado.
             </p>
+            <div className={styles.progressBar} style={{ maxWidth: "100%", marginTop: "1rem" }}>
+              <div className={styles.progressFill} style={{ width: "100%", background: "#F59E0B" }} />
+            </div>
           </motion.div>
         )}
 

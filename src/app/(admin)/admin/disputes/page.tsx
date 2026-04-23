@@ -12,18 +12,24 @@ export default function DisputesPage() {
   const [loading, setLoading]   = useState(true);
 
   useEffect(() => {
+    // Fetch matches that are active but have submissions OR are explicitly marked as disputed
     supabase
       .from("matches")
       .select(`
-        id, stake_amount, created_at, updated_at,
+        id, stake_amount, created_at, updated_at, status,
+        player1_id, player2_id,
         player1:profiles!player1_id(username),
         player2:profiles!player2_id(username),
-        submissions(id, evidence_url, ai_status, ai_confidence, ai_data, player_id)
+        submissions(id, evidence_url, ai_status, ai_confidence, ai_data, player_id, created_at)
       `)
-      .eq("status", "disputed")
+      .or('status.eq.disputed,status.eq.active')
       .order("updated_at", { ascending: false })
       .then(({ data }) => {
-        setDisputes(data ?? []);
+        // Filter: only active matches that have AT LEAST one submission
+        const filtered = (data ?? []).filter(m => 
+          m.status === 'disputed' || (m.status === 'active' && m.submissions && m.submissions.length > 0)
+        );
+        setDisputes(filtered);
         setLoading(false);
       });
   }, []);
@@ -73,43 +79,73 @@ export default function DisputesPage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06, ease: EASE_OUT }}
+                style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}
               >
-                <div className={styles.disputeHeader}>
+                <div className={styles.disputeHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                   <div>
-                    <span className="font-orbitron" style={{ fontSize: "0.8rem" }}>
-                      {d.player1?.username} <span style={{ color: "hsl(var(--text-muted))" }}>vs</span> {d.player2?.username}
+                    <span className="font-orbitron" style={{ fontSize: "0.9rem", color: "#fff" }}>
+                      {d.player1?.username} <span style={{ color: "rgba(255,255,255,0.2)", margin: "0 0.5rem" }}>VS</span> {d.player2?.username}
                     </span>
-                    <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>
-                      ID: {d.id.slice(0, 8)}… · Apuesta: ${d.stake_amount} USDC
+                    <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.35rem" }}>
+                      ID: <span style={{ color: "rgba(255,255,255,0.4)" }}>{d.id}</span> · Apuesta: <span style={{ color: "#00F5FF" }}>${d.stake_amount} USDC</span>
                     </p>
                   </div>
-                  {confidence !== null && (
-                    <span style={{
-                      fontFamily: "Rajdhani, sans-serif", fontSize: "0.72rem", fontWeight: 700,
-                      padding: "0.2rem 0.6rem", borderRadius: "20px",
-                      background: "rgba(255,215,0,0.08)", border: "1px solid rgba(255,215,0,0.25)", color: "#ffd700"
+                  <div style={{ textAlign: "right" }}>
+                    <span style={{ 
+                      display: "inline-block", padding: "0.3rem 0.75rem", borderRadius: "100px", 
+                      fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
+                      background: d.status === "disputed" ? "rgba(245, 158, 11, 0.1)" : "rgba(0, 245, 255, 0.1)",
+                      border: d.status === "disputed" ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid rgba(0, 245, 255, 0.3)",
+                      color: d.status === "disputed" ? "#F59E0B" : "#00F5FF"
                     }}>
-                      IA: {confidence}% confianza
+                      {d.status === "disputed" ? "Disputa Abierta" : "Esperando Revisión"}
                     </span>
-                  )}
+                  </div>
                 </div>
 
-                {sub?.ai_data?.reasoning && (
-                  <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.8rem", color: "var(--text-secondary)", padding: "0.75rem", background: "rgba(255,255,255,0.02)", borderRadius: "6px" }}>
-                    {sub.ai_data.reasoning}
-                  </p>
-                )}
+                {/* Evidence Previews */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                  {d.submissions?.map((sub: any) => (
+                    <div key={sub.id} style={{ position: "relative" }}>
+                      <p style={{ fontSize: "0.6rem", color: "var(--text-muted)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+                        Subido por: {sub.player_id === d.player1_id ? d.player1?.username : d.player2?.username}
+                      </p>
+                      <a 
+                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className={styles.evidenceLink}
+                      >
+                        <img 
+                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
+                          alt="Evidence" 
+                          style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}
+                        />
+                      </a>
+                    </div>
+                  ))}
+                </div>
 
-                <div className={styles.disputeActions}>
-                  <span style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em", color: "var(--text-muted)" }}>
-                    ADJUDICAR VICTORIA A:
+                <div className={styles.disputeActions} style={{ display: "flex", alignItems: "center", gap: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <span style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.15em", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                    ADJUDICAR VICTORIA:
                   </span>
-                  <button className={styles.btnResolve} onClick={() => resolveDispute(d.id, d.player1?.id)}>
-                    {d.player1?.username}
-                  </button>
-                  <button className={styles.btnResolve} onClick={() => resolveDispute(d.id, d.player2?.id)}>
-                    {d.player2?.username}
-                  </button>
+                  <div style={{ display: "flex", gap: "0.75rem", flex: 1 }}>
+                    <button 
+                      className="btn-primary" 
+                      style={{ flex: 1, padding: "0.6rem", fontSize: "0.65rem" }}
+                      onClick={() => resolveDispute(d.id, d.player1_id)}
+                    >
+                      {d.player1?.username}
+                    </button>
+                    <button 
+                      className="btn-primary" 
+                      style={{ flex: 1, padding: "0.6rem", fontSize: "0.65rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
+                      onClick={() => resolveDispute(d.id, d.player2_id)}
+                    >
+                      {d.player2?.username}
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             );
