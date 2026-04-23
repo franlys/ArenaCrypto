@@ -65,6 +65,22 @@ export default function MatchmakingQueue({
       if (!cancelledRef.current) setStatus('searching');
     } catch (err: any) {
       if (!cancelledRef.current) {
+        // If already in queue, try to recover the ID
+        if (err.message?.includes('Ya estás en cola')) {
+          const { data: existing } = await supabase
+            .from('matchmaking_queue')
+            .select('id')
+            .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+            .eq('status', 'searching')
+            .maybeSingle();
+          
+          if (existing) {
+            setQueueId(existing.id);
+            setStatus('searching');
+            return;
+          }
+        }
+
         setErrorMsg(err.message);
         setStatus('error');
       }
@@ -121,6 +137,19 @@ export default function MatchmakingQueue({
         .eq('id', queueId);
     }
     onCancel();
+  };
+
+  const handleForceCancel = async () => {
+    setStatus('joining');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('matchmaking_queue')
+        .update({ status: 'cancelled' })
+        .eq('user_id', user.id)
+        .eq('status', 'searching');
+    }
+    joinQueue();
   };
 
   return (
@@ -210,11 +239,15 @@ export default function MatchmakingQueue({
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ textAlign: 'center', padding: '1rem' }}
           >
-            <p style={{ fontFamily: 'Rajdhani, sans-serif', color: '#f87171', marginBottom: '1rem', fontSize: '0.9rem' }}>
+            <p style={{ fontFamily: 'Rajdhani, sans-serif', color: '#f87171', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
               {errorMsg}
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button className="btn-primary" onClick={joinQueue}>REINTENTAR</button>
+              {errorMsg.includes('Ya estás en cola') ? (
+                <button className="btn-primary" onClick={handleForceCancel}>CANCELAR COLA Y REINTENTAR</button>
+              ) : (
+                <button className="btn-primary" onClick={joinQueue}>REINTENTAR</button>
+              )}
               <button className={styles.cancelBtn} onClick={onCancel}>VOLVER</button>
             </div>
           </motion.div>
