@@ -31,12 +31,27 @@ export default function DisputesPage() {
         const seenMatches = new Set();
 
         (data ?? []).forEach((sub: any) => {
-          if (sub.match && !seenMatches.has(sub.match.id)) {
-            seenMatches.add(sub.match.id);
+          // Normalize match object (Supabase joins can return arrays)
+          const m = Array.isArray(sub.match) ? sub.match[0] : sub.match;
+          if (!m) return;
+
+          if (!seenMatches.has(m.id)) {
+            seenMatches.add(m.id);
+
+            // Normalize player objects inside match
+            const p1 = Array.isArray(m.player1) ? m.player1[0] : m.player1;
+            const p2 = Array.isArray(m.player2) ? m.player2[0] : m.player2;
+
             // Attach all submissions for this match
-            const allSubs = data?.filter(s => s.match?.id === sub.match.id);
+            const allSubs = data?.filter(s => {
+              const sm = Array.isArray(s.match) ? s.match[0] : s.match;
+              return sm?.id === m.id;
+            });
+
             uniqueMatches.push({
-              ...sub.match,
+              ...m,
+              player1: p1,
+              player2: p2,
               submissions: allSubs
             });
           }
