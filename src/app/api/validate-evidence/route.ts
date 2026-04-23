@@ -105,13 +105,19 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const mimeType = (fileData.type || "image/jpeg") as string;
 
-    // 5. Call OpenRouter AI (with Fallback for high availability)
+    // 5. Call OpenRouter AI (with Fallback + Retries for high availability)
     const p1Name = submission.match?.player1_id || "Player 1";
     const p2Name = submission.match?.player2_id || "Player 2";
     const gameId = submission.match?.game_id || "eSports Game";
     const prompt = buildPrompt(gameId, p1Name, p2Name);
 
+    // Check size — Vercel limit is ~4.5MB
+    if (buffer.length > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: "Image too large (>4MB). Please compress or use a smaller screenshot." }, { status: 413 });
+    }
+
     const FALLBACK_MODELS = [
+      "google/gemma-3-4b-it:free", // Extremely fast
       "nvidia/nemotron-nano-12b-v2-vl:free",
       "google/gemma-3-27b-it:free"
     ];
@@ -120,49 +126,59 @@ export async function POST(req: NextRequest) {
     let lastError = "";
 
     for (const modelId of FALLBACK_MODELS) {
-      try {
-        console.log(`[validate-evidence] Attempting validation with model: ${modelId}`);
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://arenacrypto.com",
-            "X-Title": "ArenaCrypto"
-          },
-          body: JSON.stringify({
-            model: modelId,
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: prompt },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `data:${mimeType};base64,${base64}`
+      // Try each model up to 2 times
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          console.log(`[validate-evidence] Model: ${modelId} (Attempt ${attempt + 1})`);
+          const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": "https://arenacrypto.com",
+              "X-Title": "ArenaCrypto"
+            },
+            body: JSON.stringify({
+              model: modelId,
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    { type: "text", text: prompt },
+                    {
+                      type: "image_url",
+                      image_url: {
+                        url: `data:${mimeType};base64,${base64}`
+                      }
                     }
-                  }
-                ]
-              }
-            ],
-            response_format: { type: "json_object" }
-          })
-        });
+                  ]
+                }
+              ],
+              response_format: { type: "json_object" }
+            }),
+            signal: AbortSignal.timeout(15000) // 15s timeout
+          });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.warn(`[validate-evidence] Model ${modelId} failed:`, errorText);
-          lastError = errorText;
-          continue; // Try next model
+          if (!response.ok) {
+            const errorText = await response.text();
+            lastError = errorText;
+            console.warn(`[validate-evidence] ${modelId} failed:`, errorText);
+            
+            // If rate limited, wait a bit
+            if (response.status === 429) {
+              await new Promise(r => setTimeout(r, 1000));
+            }
+            continue; 
+          }
+
+          aiResponse = await response.json();
+          break; // Success!
+        } catch (err: any) {
+          console.error(`[validate-evidence] ${modelId} error:`, err.message);
+          lastError = err.message;
         }
-
-        aiResponse = await response.json();
-        break; // Success!
-      } catch (err: any) {
-        console.error(`[validate-evidence] Error calling model ${modelId}:`, err.message);
-        lastError = err.message;
       }
+      if (aiResponse) break;
     }
 
     if (!aiResponse) {
