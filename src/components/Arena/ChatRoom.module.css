@@ -1,59 +1,62 @@
 .chatWrapper {
-  height: 600px;
+  height: 560px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: rgba(10, 10, 15, 0.8);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
 }
 
 .chatHeader {
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border-bottom: 1px solid var(--glass-border);
+  gap: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .statusIndicator {
-  width: 10px;
-  height: 10px;
-  background: hsl(var(--neon-cyan));
+  width: 6px;
+  height: 6px;
+  background: #00F5FF;
   border-radius: 50%;
-  box-shadow: 0 0 10px hsl(var(--neon-cyan));
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
 }
 
 .chatHeader span {
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #737373;
+  text-transform: uppercase;
 }
 
 .messageFeed {
   flex: 1;
-  padding: 2rem;
+  padding: 1.5rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   scroll-behavior: smooth;
 }
 
 /* Custom Scrollbar */
 .messageFeed::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 .messageFeed::-webkit-scrollbar-track {
   background: transparent;
 }
 .messageFeed::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
 }
 
 .message {
-  max-width: 80%;
+  max-width: 85%;
   align-self: flex-start;
 }
 
@@ -62,25 +65,28 @@
 }
 
 .msgContent {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.8rem 1.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.75rem 1rem;
   border-radius: 4px 12px 12px 12px;
-  font-size: 0.95rem;
-  line-height: 1.4;
-  border-left: 2px solid var(--glass-border);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .ownMsg .msgContent {
-  background: hsla(182, 100%, 50%, 0.1);
-  border-left: none;
-  border-right: 2px solid hsl(var(--neon-cyan));
+  background: rgba(0, 245, 255, 0.05);
+  border: 1px solid rgba(0, 245, 255, 0.15);
   border-radius: 12px 4px 12px 12px;
+  color: #fff;
 }
 
 .timestamp {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  margin-top: 0.4rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 0.35rem;
   text-transform: uppercase;
 }
 
@@ -89,25 +95,26 @@
 }
 
 .chatInput {
-  padding: 1.5rem;
+  padding: 1.25rem;
   background: rgba(0, 0, 0, 0.2);
   display: flex;
-  gap: 1rem;
-  border-top: 1px solid var(--glass-border);
+  gap: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .chatInput input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  padding: 0.8rem 1.2rem;
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   color: white;
-  transition: all 0.3s;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 150ms var(--ease-out), background 150ms var(--ease-out);
 }
 
 .chatInput input:focus {
-  outline: none;
-  border-color: hsl(var(--neon-cyan));
-  background: rgba(255, 255, 255, 0.08);
+  border-color: #00F5FF;
+  background: rgba(0, 245, 255, 0.04);
 }
