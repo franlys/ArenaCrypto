@@ -134,17 +134,27 @@ export default function MatchRoomPage() {
               </p>
               <button 
                 className="btn-primary" 
-                style={{ width: "100%", background: "transparent", border: "1px solid #F87171", color: "#F87171", fontSize: "0.65rem" }}
-                onClick={async () => {
+                disabled={loading}
+                style={{ width: "100%", background: "transparent", border: "1px solid #F87171", color: "#F87171", fontSize: "0.65rem", opacity: loading ? 0.5 : 1 }}
+                onClick={async (e) => {
+                  const btn = e.currentTarget;
+                  if (btn.disabled) return;
+                  
                   if (confirm("⚠️ ADVERTENCIA: ¿Estás seguro de confirmar tu derrota? Esta acción es irreversible y entregará los fondos a tu oponente inmediatamente.")) {
+                    btn.disabled = true;
+                    btn.innerText = "PROCESANDO...";
+                    
                     const opponentId = currentUser.id === matchData.player1_id ? matchData.player2_id : matchData.player1_id;
                     const { error } = await supabase.rpc("resolve_match", {
                       p_match_id: matchId,
                       p_winner_id: opponentId,
                       p_ai_data: { source: "manual_concede", player_id: currentUser.id }
                     });
+                    
                     if (error) {
                       alert("Error: " + error.message);
+                      btn.disabled = false;
+                      btn.innerText = "🏳️ CONFIRMAR MI DERROTA";
                     } else {
                       window.location.reload();
                     }
