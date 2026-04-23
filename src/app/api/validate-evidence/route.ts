@@ -107,8 +107,8 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const mimeType = (fileData.type || "image/jpeg") as string;
 
-    // 5. Call Gemini Pro Vision (Legacy but ultra-stable)
-    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+    // 5. Call Gemini 2.0 Flash (Optimized for 2026 availability)
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
     // Fallback usernames if match join is messy
     const p1Name = submission.match?.player1_id || "Player 1";
