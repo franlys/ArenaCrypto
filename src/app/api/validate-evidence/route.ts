@@ -3,7 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 
 // Using OpenRouter for free vision validation (no credit card required)
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -106,48 +105,70 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const mimeType = (fileData.type || "image/jpeg") as string;
 
-    // 5. Call OpenRouter AI
+    // 5. Call OpenRouter AI (with Fallback for high availability)
     const p1Name = submission.match?.player1_id || "Player 1";
     const p2Name = submission.match?.player2_id || "Player 2";
     const gameId = submission.match?.game_id || "eSports Game";
-
     const prompt = buildPrompt(gameId, p1Name, p2Name);
 
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://arenacrypto.com",
-        "X-Title": "ArenaCrypto"
-      },
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType};base64,${base64}`
-                }
-              }
-            ]
-          }
-        ],
-        response_format: { type: "json_object" }
-      })
-    });
+    const FALLBACK_MODELS = [
+      "nvidia/nemotron-nano-12b-v2-vl:free",
+      "google/gemma-3-27b-it:free"
+    ];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[validate-evidence] OpenRouter API Error:", errorText);
-      return NextResponse.json({ error: "AI Service Unavailable", details: errorText }, { status: 502 });
+    let aiResponse = null;
+    let lastError = "";
+
+    for (const modelId of FALLBACK_MODELS) {
+      try {
+        console.log(`[validate-evidence] Attempting validation with model: ${modelId}`);
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://arenacrypto.com",
+            "X-Title": "ArenaCrypto"
+          },
+          body: JSON.stringify({
+            model: modelId,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: prompt },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${mimeType};base64,${base64}`
+                    }
+                  }
+                ]
+              }
+            ],
+            response_format: { type: "json_object" }
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`[validate-evidence] Model ${modelId} failed:`, errorText);
+          lastError = errorText;
+          continue; // Try next model
+        }
+
+        aiResponse = await response.json();
+        break; // Success!
+      } catch (err: any) {
+        console.error(`[validate-evidence] Error calling model ${modelId}:`, err.message);
+        lastError = err.message;
+      }
     }
 
-    const aiResponse = await response.json();
+    if (!aiResponse) {
+      return NextResponse.json({ error: "AI Service Unavailable", details: lastError }, { status: 502 });
+    }
+
     const rawText = aiResponse.choices?.[0]?.message?.content || "";
 
     // Parse JSON
