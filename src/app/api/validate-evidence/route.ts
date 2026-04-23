@@ -36,15 +36,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Submission not found" }, { status: 404 });
     }
 
+    // @ts-ignore
+    const matchId = Array.isArray(submission.match) ? submission.match[0]?.id : submission.match?.id;
+
+    if (!matchId) {
+      return NextResponse.json({ error: "Match not found for this submission" }, { status: 404 });
+    }
+
     // 2. Mark match as 'disputed' to flag it for manual admin review
-    // This removes the AI dependency and puts the match in the Arbitration Queue
     const { error: updateError } = await supabaseAdmin
       .from("matches")
       .update({ 
         status: "disputed",
         updated_at: new Date().toISOString()
       })
-      .eq("id", submission.match.id);
+      .eq("id", matchId);
 
     if (updateError) {
       console.error("[validate-evidence] Match update error:", updateError);
