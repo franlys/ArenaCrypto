@@ -13,9 +13,9 @@ const EASE_OUT = [0.23, 1, 0.32, 1];
 const STATUS_MAP = {
   active:           { label: "EN COMBATE",          cls: "statusActive"    },
   evidence_pending: { label: "EVIDENCIA PENDIENTE",  cls: "statusPending"   },
-  validating:       { label: "VALIDANDO IA",          cls: "statusPending"   },
+  validating:       { label: "REVISANDO RESULTADO",   cls: "statusPending"   },
   resolved:         { label: "RESUELTO",              cls: "statusResolved"  },
-  disputed:         { label: "EN DISPUTA",            cls: "statusDisputed"  },
+  disputed:         { label: "EN REVISIÓN JUDICIAL",  cls: "statusDisputed"  },
 };
 
 export default function MatchRoomPage() {
@@ -99,8 +99,8 @@ export default function MatchRoomPage() {
             <ul className={styles.rulesList}>
               {[
                 "El ganador debe subir evidencia clara del resultado final.",
-                "Gemini Vision analiza la evidencia y determina el ganador.",
-                "Si la confianza de la IA es baja, un árbitro revisa en 24h.",
+                "Un árbitro de ArenaCrypto analiza la evidencia recibida.",
+                "La revisión se completa normalmente en pocos minutos.",
                 "Los fondos se liberan al ganador verificado.",
               ].map((rule, i) => (
                 <li key={i} className={styles.ruleItem}>
