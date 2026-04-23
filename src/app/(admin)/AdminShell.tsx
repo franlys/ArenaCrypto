@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import { AdminSidebar } from "@/components/Navigation/AdminSidebar";
 import styles from "./admin-shell.module.css";
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
+  const { isAdmin, loading } = useUser();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
