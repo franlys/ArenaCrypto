@@ -5,6 +5,11 @@ import { createClient } from "@supabase/supabase-js";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
 
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 // Structured prompt for eSports evidence validation
 function buildPrompt(
   game: string,
@@ -71,10 +76,6 @@ export async function POST(req: NextRequest) {
     }
 
     const match = submission.match;
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     if (!match || match.status === "resolved") {
       return NextResponse.json({ error: "Match already resolved or not found" }, { status: 400 });
