@@ -5,13 +5,14 @@ import { supabase } from "../../lib/supabase";
 import { useAccount } from "wagmi";
 import styles from "./ChatRoom.module.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@/contexts/UserContext";
 
 interface ChatRoomProps {
   matchId: string;
 }
 
 export default function ChatRoom({ matchId }: ChatRoomProps) {
-  const { address } = useAccount();
+  const { user } = useUser();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -93,7 +94,7 @@ export default function ChatRoom({ matchId }: ChatRoomProps) {
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`${styles.message} ${msg.sender_id === address ? styles.ownMsg : ""}`}
+              className={`${styles.message} ${msg.sender_id === user?.id ? styles.ownMsg : ""}`}
             >
               <div className={styles.msgContent}>{msg.content}</div>
               <div className={styles.timestamp}>
