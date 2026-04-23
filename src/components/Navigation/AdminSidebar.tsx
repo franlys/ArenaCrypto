@@ -17,7 +17,11 @@ const ADMIN_NAV = [
   { href: "/admin/users",       label: "USUARIOS", icon: Users },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onNavigate?: () => void;
+}
+
+export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -39,7 +43,11 @@ export function AdminSidebar() {
 
           return (
             <li key={item.href}>
-              <Link href={item.href} className={`${styles.link} ${isActive ? styles.active : ""}`}>
+              <Link 
+                href={item.href} 
+                className={`${styles.link} ${isActive ? styles.active : ""}`}
+                onClick={() => onNavigate?.()}
+              >
                 <Icon size={18} />
                 <span className="font-orbitron">{item.label}</span>
                 {isActive && (
