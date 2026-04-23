@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/generative-ai": "latest",
+    "@google/generative-ai": "^0.11.0",
     "@rainbow-me/rainbowkit": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
     "@supabase/ssr": "^0.10.2",
