@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     const prompt = buildPrompt(gameId, p1Name, p2Name);
 
     // Check size — Vercel limit is ~4.5MB
-    if (buffer.length > 4 * 1024 * 1024) {
+    if (buffer.byteLength > 4 * 1024 * 1024) {
       return NextResponse.json({ error: "Image too large (>4MB). Please compress or use a smaller screenshot." }, { status: 413 });
     }
 
