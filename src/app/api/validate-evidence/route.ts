@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
 
-// Service-role client — bypasses RLS for server-side resolution
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-// The current SDK version usually uses v1 by default, but we'll stick to standard init.
+// Using OpenRouter for free vision validation (no credit card required)
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
 
 // Structured prompt for eSports evidence validation
 function buildPrompt(
@@ -77,6 +71,10 @@ export async function POST(req: NextRequest) {
     }
 
     const match = submission.match;
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     if (!match || match.status === "resolved") {
       return NextResponse.json({ error: "Match already resolved or not found" }, { status: 400 });
@@ -107,24 +105,51 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(buffer).toString("base64");
     const mimeType = (fileData.type || "image/jpeg") as string;
 
-    // 5. Call Gemini 2.0 Flash (Optimized for 2026 availability)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // Fallback usernames if match join is messy
+    // 5. Call OpenRouter AI
     const p1Name = submission.match?.player1_id || "Player 1";
     const p2Name = submission.match?.player2_id || "Player 2";
     const gameId = submission.match?.game_id || "eSports Game";
 
-    const result = await model.generateContent([
-      buildPrompt(gameId, p1Name, p2Name),
-      {
-        inlineData: { data: base64, mimeType },
+    const prompt = buildPrompt(gameId, p1Name, p2Name);
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://arenacrypto.com",
+        "X-Title": "ArenaCrypto"
       },
-    ]);
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${mimeType};base64,${base64}`
+                }
+              }
+            ]
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    });
 
-    const rawText = result.response.text().trim();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[validate-evidence] OpenRouter API Error:", errorText);
+      return NextResponse.json({ error: "AI Service Unavailable", details: errorText }, { status: 502 });
+    }
 
-    // Parse JSON — strip any accidental markdown fences
+    const aiResponse = await response.json();
+    const rawText = aiResponse.choices?.[0]?.message?.content || "";
+
+    // Parse JSON
     let aiData: { winner: string; confidence: number; reasoning: string };
     try {
       const jsonStr = rawText.replace(/```json\n?|\n?```/g, "").trim();
@@ -135,7 +160,7 @@ export async function POST(req: NextRequest) {
         .from("submissions")
         .update({ ai_status: "failed", ai_data: { raw: rawText } })
         .eq("id", submission_id);
-      return NextResponse.json({ error: "Failed to parse Gemini response", raw: rawText }, { status: 500 });
+      return NextResponse.json({ error: "Failed to parse AI response", raw: rawText }, { status: 500 });
     }
 
     // 6. Store AI result in submission
