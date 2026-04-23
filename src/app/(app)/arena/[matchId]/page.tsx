@@ -152,9 +152,14 @@ export default function MatchRoomPage() {
                     });
                     
                     if (error) {
-                      alert("Error: " + error.message);
-                      btn.disabled = false;
-                      btn.innerText = "🏳️ CONFIRMAR MI DERROTA";
+                      // If it's already resolved, just reload to show the winner UI
+                      if (error.message.includes("already resolved")) {
+                        window.location.reload();
+                      } else {
+                        alert("Error: " + error.message);
+                        btn.disabled = false;
+                        btn.innerText = "🏳️ CONFIRMAR MI DERROTA";
+                      }
                     } else {
                       window.location.reload();
                     }
