@@ -90,14 +90,20 @@ export default function DragonTowerPage() {
 
     if (!data.survived) {
       setBoard(data.board_full); // If API provides it
-      setRevealedPath(prev => [...prev, tileIdx]);
+      setRevealedPath(prev => {
+        if (prev.length > currentLevel) return prev;
+        return [...prev, tileIdx];
+      });
       setStatus("dead");
       setMsg("QUEMADO");
       refreshProfile();
       return;
     }
 
-    setRevealedPath(prev => [...prev, tileIdx]);
+    setRevealedPath(prev => {
+      if (prev.length > currentLevel) return prev;
+      return [...prev, tileIdx];
+    });
     setLevel(data.level);
     setMultiplier(data.multiplier);
 

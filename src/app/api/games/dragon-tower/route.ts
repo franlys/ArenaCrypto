@@ -65,13 +65,7 @@ export async function POST(req: NextRequest) {
   let { action, isTest = false } = body;
   const db = admin();
 
-  // SECURITY: Force test mode for test users
-  const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
-  if (profile?.is_test_user) {
-    isTest = true;
-  }
-
-  const field = isTest ? "test_balance" : "balance_stablecoin";
+  // Move profile check to 'start' action only to save latency on 'step'/'cashout'
 
   if (action === "get-active") {
     const { data: active } = await db.from("dragon_tower_games")
@@ -97,14 +91,22 @@ export async function POST(req: NextRequest) {
     // Enforce hard limit for everyone
     if (amount > MAX_BET) return NextResponse.json({ error: `Apuesta máxima permitida: $${MAX_BET}` }, { status: 400 });
 
-    const { data: active } = await db.from("dragon_tower_games")
-      .select("id").eq("user_id", user.id).eq("status", "active").maybeSingle();
-    if (active) return NextResponse.json({ error: "Ya tienes una partida activa" }, { status: 400 });
+    // SECURITY: Force test mode for test users
+    const { data: profile } = await db.from("profiles").select("is_test_user").eq("id", user.id).single();
+    if (profile?.is_test_user) {
+      isTest = true;
+    }
+    const field = isTest ? "test_balance" : "balance_stablecoin";
 
-    const { data: wallet } = await db.from("wallets").select(field).eq("user_id", user.id).single();
-    if (!wallet) return NextResponse.json({ error: "Wallet no encontrada" }, { status: 400 });
+    const [activeRes, walletRes] = await Promise.all([
+      db.from("dragon_tower_games").select("id").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      db.from("wallets").select(field).eq("user_id", user.id).single()
+    ]);
 
-    const bal = Number((wallet as Record<string, unknown>)[field]);
+    if (activeRes.data) return NextResponse.json({ error: "Ya tienes una partida activa" }, { status: 400 });
+    if (!walletRes.data) return NextResponse.json({ error: "Wallet no encontrada" }, { status: 400 });
+
+    const bal = Number((walletRes.data as Record<string, unknown>)[field]);
     if (bal < amount) return NextResponse.json({ error: "Saldo insuficiente" }, { status: 400 });
 
     await db.from("wallets").update({ [field]: bal - amount }).eq("user_id", user.id);
@@ -128,6 +130,8 @@ export async function POST(req: NextRequest) {
     const { data: game } = await db.from("dragon_tower_games")
       .select("*").eq("id", game_id).eq("user_id", user.id).single();
     if (!game || game.status !== "active") return NextResponse.json({ error: "Partida no activa" }, { status: 400 });
+
+    const field = game.is_test ? "test_balance" : "balance_stablecoin";
 
     const nextLevel = game.current_level + 1;
     const safeTiles = getLevelSafeTiles(game.server_seed, nextLevel, game.difficulty);
@@ -169,6 +173,8 @@ export async function POST(req: NextRequest) {
       .select("*").eq("id", game_id).eq("user_id", user.id).single();
     if (!game || game.status !== "active" || game.current_level === 0)
       return NextResponse.json({ error: "Nada que cobrar" }, { status: 400 });
+
+    const field = game.is_test ? "test_balance" : "balance_stablecoin";
 
     const payoutRaw = Number((game.amount * game.current_multiplier).toFixed(2));
     const payout = Math.min(payoutRaw, MAX_PAYOUT);
