@@ -388,7 +388,7 @@ export default function PlinkoPage() {
               <span>MEJOR <strong>{best > 0 ? best + '×' : '—'}</strong></span>
             </div>
             <div className="stage-meta">
-              <span>HOUSE EDGE <strong>1%</strong></span>
+              <span>HOUSE EDGE <strong>3%</strong></span>
             </div>
           </div>
 

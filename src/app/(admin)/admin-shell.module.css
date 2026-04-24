@@ -131,5 +131,14 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  padding: 1.5rem;
+  background: #080c18; /* Solid background for mobile */
+  border-right: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+@media (min-width: 1025px) {
+  .sidebarInner {
+    background: transparent;
+    border-right: none;
+  }
 }
