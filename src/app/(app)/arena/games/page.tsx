@@ -2,7 +2,7 @@
 import Link from 'next/link'
 
 const GAMES = [
-  {
+  /* {
     href: "/arena/games/crash",
     icon: "📈",
     name: "CRASH",
@@ -11,7 +11,7 @@ const GAMES = [
     desc: "Observa el multiplicador subir y retírate antes de que el cohete explote. ¡Adrenalina pura en tiempo real!",
     tags: ["Multijugador", "Tiempo Real", "Social"],
     badge: "PREMIUM",
-  },
+  }, */
   {
     href: "/arena/games/mines",
     icon: "💣",
@@ -22,7 +22,7 @@ const GAMES = [
     tags: ["Hasta ×24x", "Estrategia"],
     badge: "NUEVO",
   },
-  {
+  /* {
     href: "/arena/games/plinko",
     icon: "⬡",
     name: "PLINKO",
@@ -31,7 +31,7 @@ const GAMES = [
     desc: "Suelta la bola por la pirámide de clavos. Aterriza en slots con distintos multiplicadores.",
     tags: ["Visual", "Efectos Físicos"],
     badge: "NUEVO",
-  },
+  }, */
   {
     href: "/arena/games/dice",
     icon: "◈",
@@ -52,7 +52,7 @@ const GAMES = [
     tags: ["Niveles", "Grandes Premios"],
     badge: "NUEVO",
   },
-  {
+  /* {
     href: "/arena/games/limbo",
     icon: "🚀",
     name: "LIMBO",
@@ -61,7 +61,7 @@ const GAMES = [
     desc: "Apunta a un multiplicador y observa el cohete subir. ¡Gana si el resultado supera tu objetivo!",
     tags: ["Instantáneo", "Provably Fair"],
     badge: null,
-  },
+  }, */
 ]
 
 export default function GamesHubPage() {
@@ -77,7 +77,7 @@ export default function GamesHubPage() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px,1fr))', gap: '1rem' }}>
-        {GAMES.map((g) => (
+        {GAMES.filter(g => typeof g === 'object' && g !== null && 'name' in g).map((g: any) => (
           <Link key={g.href} href={g.href} style={{ textDecoration: 'none', position: 'relative' }}>
             {g.badge && (
               <span style={{
