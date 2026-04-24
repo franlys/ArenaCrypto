@@ -95,5 +95,38 @@ export const ACGames = {
     if (v >= 1.1) return '#8B5CF6'; // Purple
     if (v >= 1.0) return 'rgba(255,255,255,0.75)'; // White-ish
     return '#00F5FF'; // Cyan (Worst)
+  },
+
+  /**
+   * Crash Multiplier — Exponential growth
+   */
+  crashMult: (t: number) => {
+    return Math.pow(1.06, t);
+  },
+
+  /**
+   * Mines Multiplier calculation
+   */
+  minesMultiplier: (picks: number, mines: number, total: number = 25) => {
+    if (picks <= 0) return 1.0;
+    const combination = (n: number, k: number): number => {
+      if (k < 0 || k > n) return 0;
+      if (k === 0 || k === n) return 1;
+      if (k > n / 2) k = n - k;
+      let res = 1;
+      for (let i = 1; i <= k; i++) res = res * (n - i + 1) / i;
+      return res;
+    };
+    const prob = combination(total - mines, picks) / combination(total, picks);
+    return (0.99 / prob);
+  },
+
+  /**
+   * Dice Multiplier calculation
+   */
+  diceMultiplier: (target: number) => {
+    // target is the probability of winning (0-100)
+    const winChance = target / 100;
+    return (0.99 / winChance);
   }
 };
