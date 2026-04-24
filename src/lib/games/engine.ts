@@ -128,5 +128,27 @@ export const ACGames = {
     // target is the probability of winning (0-100)
     const winChance = target / 100;
     return (0.99 / winChance);
+  },
+
+  /**
+   * Dragon Tower Modes Configuration
+   */
+  TOWER_MODES: {
+    easy:   { tiles: 4, safe: 3 },
+    medium: { tiles: 3, safe: 2 },
+    hard:   { tiles: 2, safe: 1 },
+    expert: { tiles: 3, safe: 1 },
+    master: { tiles: 4, safe: 1 },
+  } as Record<string, { tiles: number, safe: number }>,
+
+  /**
+   * Dragon Tower Multiplier — Cumulative
+   */
+  towerMultiplier: (level: number, difficulty: string) => {
+    const cfg = ACGames.TOWER_MODES[difficulty] || ACGames.TOWER_MODES.medium;
+    const probPerLevel = cfg.safe / cfg.tiles;
+    // Cumulative probability for 'level' steps
+    const totalProb = Math.pow(probPerLevel, level);
+    return (0.99 / totalProb);
   }
 };
