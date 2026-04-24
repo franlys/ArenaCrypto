@@ -64,23 +64,29 @@ export default function PlinkoPage() {
     
     const W = canvas.width;
     const H = canvas.height;
-    const topPad = 30 * dpr;
-    const botPad = 40 * dpr;
-    const pegSpacingY = (H - topPad - botPad) / rows;
-    const pegSpacingX = pegSpacingY;
-    const widthNeeded = (rows + 1) * pegSpacingX;
-    const scale = Math.min(1, (W - 40 * dpr) / widthNeeded);
-    const sx = pegSpacingX * scale;
-    const sy = pegSpacingY * scale;
+    const topPad = 40 * dpr;
+    const botPad = 50 * dpr;
+    
+    // We want the pyramid to be "square" (spacingX = spacingY)
+    // and fit within both W and H
+    const availableH = H - topPad - botPad;
+    const availableW = W - 40 * dpr;
+    
+    const spacingY = availableH / (rows + 1);
+    const spacingX = availableW / (rows + 2);
+    
+    const s = Math.min(spacingX, spacingY);
+    const sx = s;
+    const sy = s;
     const cx = W / 2;
 
     layoutRef.current = {
       W, H, topPad, botPad, sx, sy, cx, dpr,
-      pegR: 3 * dpr,
-      ballR: 6 * dpr,
+      pegR: 2.5 * dpr,
+      ballR: 5 * dpr,
       bucketCount: rows + 1,
-      bucketH: 34 * dpr,
-      bucketsY: H - botPad + 4 * dpr
+      bucketH: s * 0.85,
+      bucketsY: topPad + rows * sy + 15 * dpr
     };
 
     // Recalculate pegs

@@ -90,11 +90,10 @@ export const ACGames = {
   } as Record<number, Record<string, number[]>>,
 
   getBucketColor: (v: number) => {
-    if (v >= 10) return '#F87171'; // Red
-    if (v >= 3)  return '#F59E0B'; // Gold
-    if (v >= 1.1) return '#8B5CF6'; // Purple
-    if (v >= 1.0) return 'rgba(255,255,255,0.75)'; // White-ish
-    return '#00F5FF'; // Cyan (Worst)
+    if (v < 1.0)  return '#F87171'; // Red (Danger)
+    if (v < 2.0)  return 'rgba(255,255,255,0.7)'; // White (Neutral)
+    if (v < 10.0) return '#F59E0B'; // Gold (Good)
+    return '#00F5FF'; // Cyan (Mega)
   },
 
   /**
