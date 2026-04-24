@@ -66,63 +66,78 @@ export default function DragonTowerPage() {
   const startGame = async () => {
     if (loading || amount > activeBalance || amount <= 0) return;
     setLoading(true); setMsg("");
-    const data = await apiCall({ action: "start", amount, difficulty, isTest });
-    setLoading(false);
-    if (data.error) { setMsg(data.error); return; }
-    setGameId(data.game_id);
-    setLevel(0); 
-    setMultiplier(1);
-    setRevealedPath([]);
-    setBoard(null);
-    setStatus("playing");
+    try {
+      const data = await apiCall({ action: "start", amount, difficulty, isTest });
+      setLoading(false);
+      if (data.error) { setMsg(data.error); return; }
+      setGameId(data.game_id);
+      setLevel(0); 
+      setMultiplier(1);
+      setRevealedPath([]);
+      setBoard(null);
+      setStatus("playing");
+    } catch (err) {
+      setLoading(false);
+      setMsg("Error de conexión al iniciar.");
+    }
   };
 
   const chooseTile = async (tileIdx: number) => {
     if (status !== "playing" || loading) return;
     setLoading(true);
-    const data = await apiCall({ action: "step", game_id: gameId, tile_index: tileIdx });
-    
-    // Smooth climb delay
-    await new Promise(r => setTimeout(r, 300));
-    setLoading(false);
+    try {
+      const data = await apiCall({ action: "step", game_id: gameId, tile_index: tileIdx });
+      
+      // Smooth climb delay
+      await new Promise(r => setTimeout(r, 300));
+      setLoading(false);
 
-    if (data.error) { setMsg(data.error); return; }
+      if (data.error) { setMsg(data.error); return; }
 
-    if (!data.survived) {
-      setBoard(data.board_full); // If API provides it
+      if (!data.survived) {
+        setBoard(data.board_full); // If API provides it
+        setRevealedPath(prev => {
+          if (prev.length > currentLevel) return prev;
+          return [...prev, tileIdx];
+        });
+        setStatus("dead");
+        setMsg("QUEMADO");
+        refreshProfile();
+        return;
+      }
+
       setRevealedPath(prev => {
         if (prev.length > currentLevel) return prev;
         return [...prev, tileIdx];
       });
-      setStatus("dead");
-      setMsg("QUEMADO");
-      refreshProfile();
-      return;
-    }
+      setLevel(data.level);
+      setMultiplier(data.multiplier);
 
-    setRevealedPath(prev => {
-      if (prev.length > currentLevel) return prev;
-      return [...prev, tileIdx];
-    });
-    setLevel(data.level);
-    setMultiplier(data.multiplier);
-
-    if (data.auto_cashout) {
-      setStatus("cashed_out");
-      setMsg("¡CIMA!");
-      refreshProfile();
+      if (data.auto_cashout) {
+        setStatus("cashed_out");
+        setMsg("¡CIMA!");
+        refreshProfile();
+      }
+    } catch (err) {
+      setLoading(false);
+      setMsg("Error de red.");
     }
   };
 
   const cashOut = async () => {
     if (!gameId || status !== "playing" || currentLevel === 0) return;
     setLoading(true);
-    const data = await apiCall({ action: "cashout", game_id: gameId });
-    setLoading(false);
-    if (data.error) { setMsg(data.error); return; }
-    setStatus("cashed_out");
-    setMsg("COBRADO");
-    refreshProfile();
+    try {
+      const data = await apiCall({ action: "cashout", game_id: gameId });
+      setLoading(false);
+      if (data.error) { setMsg(data.error); return; }
+      setStatus("cashed_out");
+      setMsg("COBRADO");
+      refreshProfile();
+    } catch (err) {
+      setLoading(false);
+      setMsg("Error al cobrar.");
+    }
   };
 
   const isIdle = status === "idle" || status === "dead" || status === "cashed_out";

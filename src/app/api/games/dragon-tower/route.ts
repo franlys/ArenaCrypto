@@ -27,7 +27,8 @@ const DIFFICULTY_CONFIG = {
   easy:   { tiles: 4, mines: 1 }, 
   medium: { tiles: 3, mines: 1 }, 
   hard:   { tiles: 2, mines: 1 }, 
-  expert: { tiles: 5, mines: 4 }, 
+  expert: { tiles: 3, mines: 2 }, 
+  master: { tiles: 4, mines: 3 }, 
 };
 
 const LEVEL_MULTIPLIERS: Record<string, number[]> = {
@@ -39,6 +40,8 @@ const LEVEL_MULTIPLIERS: Record<string, number[]> = {
   hard:   [1.94, 3.88, 7.76, 15.52, 31.04, 62.08, 124.16, 248.32, 496.64],
   // prob = 1/3 per level. mult = 0.97 / (0.33^level)
   expert: [2.91, 8.73, 26.19, 78.57, 235.71, 707.13, 2121.39, 6364.17, 19092.51],
+  // prob = 1/4 per level. mult = 0.97 / (0.25^level)
+  master: [3.88, 15.52, 62.08, 248.32, 993.28, 3973.12, 15892.48, 63569.92, 254279.68],
 };
 
 const MAX_LEVELS = 9;
