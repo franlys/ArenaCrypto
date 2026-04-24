@@ -20,6 +20,8 @@ interface Ball {
   trail: { x: number; y: number }[];
   bucket?: number;
   settledAt?: number;
+  path: string[];
+  step: number;
 }
 
 export default function PlinkoPage() {
@@ -206,6 +208,15 @@ export default function PlinkoPage() {
     ballsRef.current.forEach(b => {
       if (b.done) return;
 
+      // FORCED PATH LOGIC: Sync visuals with server result
+      const currentRow = Math.floor((b.y - L.topPad) / L.sy);
+      if (currentRow >= 0 && currentRow < rows && b.step === currentRow) {
+        const dir = b.path[b.step];
+        const kick = (dir === 'R' ? 1 : -1) * (20 + Math.random() * 10) * L.dpr;
+        b.vx = kick;
+        b.step++;
+      }
+
       b.vy += GRAV * L.dpr * dt;
       b.vx *= FRICTION;
       b.x += b.vx * dt;
@@ -252,8 +263,9 @@ export default function PlinkoPage() {
         b.done = true;
         b.settledAt = performance.now();
         
-        // Finalize payout (this would normally be from the server response)
-        // For now we'll handle the UI update here
+        // Finalize payout 
+        refreshProfile(); // Sync test/real balance after landed
+        
         const mult = ACGames.PLINKO_PAYOUTS[rows][risk][idx];
         setHistory(prev => [{ mult, color: ACGames.getBucketColor(mult) }, ...prev.slice(0, 11)]);
         if (mult > best) setBest(mult);
@@ -305,7 +317,9 @@ export default function PlinkoPage() {
         vy: 0,
         done: false,
         bet: amount,
-        trail: []
+        trail: [],
+        path: data.path,
+        step: 0
       });
 
       setDrops(d => d + 1);
