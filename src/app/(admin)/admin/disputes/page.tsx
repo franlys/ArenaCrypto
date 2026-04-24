@@ -101,25 +101,33 @@ export default function DisputesPage() {
 
                 {/* Evidence Previews */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                  {d.submissions?.map((sub: any) => (
-                    <div key={sub.id} style={{ position: "relative" }}>
-                      <p style={{ fontSize: "0.6rem", color: "var(--text-muted)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
-                        Subido por: {sub.player_id === d.player1_id ? d.player1?.username : d.player2?.username}
+                  {d.submissions && d.submissions.length > 0 ? (
+                    d.submissions.map((sub: any) => (
+                      <div key={sub.id} style={{ position: "relative" }}>
+                        <p style={{ fontSize: "0.6rem", color: "var(--text-muted)", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+                          Subido por: {sub.player_id === d.player1_id ? d.player1?.username : d.player2?.username}
+                        </p>
+                        <a 
+                          href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className={styles.evidenceLink}
+                        >
+                          <img 
+                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
+                            alt="Evidence" 
+                            style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}
+                          />
+                        </a>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ gridColumn: "1 / -1", padding: "2rem", textAlign: "center", background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                      <p style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "0.8rem", color: "var(--text-muted)", letterSpacing: "0.05em" }}>
+                        AÚN NO SE HAN CARGADO EVIDENCIAS PARA ESTA PARTIDA
                       </p>
-                      <a 
-                        href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className={styles.evidenceLink}
-                      >
-                        <img 
-                          src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/evidence/${sub.evidence_url}`} 
-                          alt="Evidence" 
-                          style={{ width: "100%", height: "150px", objectFit: "cover", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)" }}
-                        />
-                      </a>
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <div className={styles.disputeActions} style={{ display: "flex", alignItems: "center", gap: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import { Orbitron } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-orbitron",
+});
 
 export const metadata: Metadata = {
   title: "ArenaCrypto | Elite Gaming Betting Platform",
@@ -14,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className={`${orbitron.variable}`}>
       <body>
         <UserProvider>{children}</UserProvider>
       </body>

@@ -17,8 +17,8 @@
   color: rgba(255,255,255,0.35); cursor: pointer; transition: all 150ms;
   display: flex; gap: 0.4rem; align-items: center;
 }
-.modeBtn span { font-family: Orbitron,sans-serif; font-size: 0.7rem; }
-.modeBtnActive { border-color: rgba(0,245,255,0.5) !important; background: rgba(0,245,255,0.08) !important; color: #00F5FF !important; }
+.modeBtn span { font-family: var(--font-game); font-size: 0.7rem; }
+.modeBtnActive { border-color: rgba(0,245,255,0.5) !important; background: rgba(0,245,255,0.08) !important; color: #00F5FF !important; box-shadow: 0 0 15px rgba(0,245,255,0.2); }
 
 .layout {
   display: grid;
@@ -44,13 +44,14 @@
 .inputRow { display: flex; flex-direction: column; gap: 0.5rem; }
 .input {
   width: 100%;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(0,245,255,0.15);
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--game-border);
   border-radius: 8px;
   color: #fff;
-  font-family: Orbitron, sans-serif;
+  font-family: var(--font-game);
   font-size: 1.1rem;
   padding: 0.75rem;
+  transition: all 0.2s ease;
 }
 .input:focus { outline: none; border-color: rgba(0,245,255,0.5); }
 
@@ -73,16 +74,20 @@
 .infoItem { display: flex; justify-content: space-between; font-family: Rajdhani, sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.4); }
 
 .btnPlay {
-  background: linear-gradient(135deg, #00F5FF22, #00F5FF11);
-  border: 1px solid #00F5FF;
-  border-radius: 10px;
-  color: #00F5FF;
-  font-family: Orbitron, sans-serif;
+  width: 100%;
+  padding: 16px;
+  background: var(--neon-cyan);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-game);
   font-size: 1.1rem;
-  font-weight: 700;
-  padding: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 0 20px #00F5FF33;
+  box-shadow: 0 0 20px rgba(0,245,255,0.25);
+  transition: all 0.2s var(--ease-out-expo);
 }
 .btnPlay:hover:not(:disabled) { background: linear-gradient(135deg, #00F5FF33, #00F5FF22); }
 .btnPlay:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -116,7 +121,7 @@
 }
 
 .multValue {
-  font-family: Orbitron, sans-serif;
+  font-family: var(--font-game);
   font-size: clamp(3rem, 8vw, 5rem);
   font-weight: 900;
   text-shadow: 0 0 30px currentColor;

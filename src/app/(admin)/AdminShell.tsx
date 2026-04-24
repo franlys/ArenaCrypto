@@ -35,7 +35,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         onClick={() => setIsMenuOpen(!isMenuOpen)}
         aria-label="Toggle Menu"
       >
-        <div className={styles.hamburgerIcon + (isMenuOpen ? " " + styles.open : "")}>
+        <div className={`${styles.hamburgerIcon} ${isMenuOpen ? styles.open : ""}`}>
           <span></span>
           <span></span>
           <span></span>
@@ -50,8 +50,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         />
       )}
 
-      <aside className={styles.sidebar + (isMenuOpen ? " " + styles.sidebarOpen : "")}>
+      <aside className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarOpen : ""}`}>
         <div className={styles.sidebarInner}>
+          {/* Close button inside sidebar for mobile */}
+          <button className={styles.closeBtn} onClick={() => setIsMenuOpen(false)}>×</button>
           <AdminSidebar onNavigate={() => setIsMenuOpen(false)} />
         </div>
       </aside>

@@ -9,35 +9,34 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // 1. Fetch non-resolved submissions
-    const { data: subs, error: subError } = await supabaseAdmin
-      .from("submissions")
-      .select("id, evidence_url, ai_status, player_id, created_at, match_id")
-      .neq("ai_status", "resolved")
-      .order("created_at", { ascending: false });
-
-    if (subError) throw subError;
-    if (!subs || subs.length === 0) return NextResponse.json([]);
-
-    // 2. Fetch associated matches
-    const matchIds = Array.from(new Set(subs.map(s => s.match_id)));
+    // 1. Fetch matches that need attention
     const { data: matches, error: matchError } = await supabaseAdmin
       .from("matches")
       .select(`
-        id, stake_amount, status, player1_id, player2_id,
+        id, stake_amount, status, player1_id, player2_id, created_at,
         player1:profiles!player1_id(username),
         player2:profiles!player2_id(username)
       `)
-      .in("id", matchIds);
+      .in("status", ["disputed", "validating", "evidence_pending"])
+      .order("created_at", { ascending: false });
 
     if (matchError) throw matchError;
+    if (!matches || matches.length === 0) return NextResponse.json([]);
+
+    // 2. Fetch all submissions for these matches
+    const matchIds = matches.map(m => m.id);
+    const { data: subs, error: subError } = await supabaseAdmin
+      .from("submissions")
+      .select("*")
+      .in("match_id", matchIds);
+
+    if (subError) throw subError;
 
     // 3. Combine
-    const combined = (matches ?? []).map(m => {
-      const relatedSubs = subs.filter(s => s.match_id === m.id);
+    const combined = matches.map(m => {
+      const relatedSubs = subs?.filter(s => s.match_id === m.id) || [];
       return {
         ...m,
-        // Normalize player objects (profiles joins can return arrays in some versions)
         player1: Array.isArray(m.player1) ? m.player1[0] : m.player1,
         player2: Array.isArray(m.player2) ? m.player2[0] : m.player2,
         submissions: relatedSubs

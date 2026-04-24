@@ -88,7 +88,7 @@ BEGIN
       v_opponent.user_id,
       v_user_id,
       LEAST(p_stake, v_opponent.stake_amount),
-      LEAST(p_stake, v_opponent.stake_amount) * 0.05,
+      (LEAST(p_stake, v_opponent.stake_amount) * 2) * 0.03, -- 3% of total pool (stake1 + stake2)
       'active',
       p_game_id,
       p_is_test

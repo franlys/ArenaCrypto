@@ -1,0 +1,166 @@
+/* ============================================================
+   ArenaCrypto — Games Shared Design System
+   Inspired by Claude's Premium Gaming UI
+   ============================================================ */
+
+:root {
+  --game-bg: #09090b;
+  --game-panel: rgba(255, 255, 255, 0.03);
+  --game-border: rgba(255, 255, 255, 0.08);
+  --neon-cyan: #00F5FF;
+  --neon-purple: #8B5CF6;
+  --neon-gold: #F59E0B;
+  --neon-red: #F87171;
+  --font-game: var(--font-orbitron), 'Orbitron', sans-serif;
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --glow-cyan: 0 0 20px rgba(0, 245, 255, 0.4);
+  --glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.gameBody {
+  min-height: 100vh;
+  background: var(--game-bg);
+  color: #fff;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.gameBody::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(0,245,255,0.05), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(139,92,246,0.07), transparent 45%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Scanlines effect */
+.gameBody::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: repeating-linear-gradient(0deg, rgba(0,245,255,0.01) 0, rgba(0,245,255,0.01) 1px, transparent 1px, transparent 3px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+.gameShell {
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  min-height: calc(100vh - 80px);
+}
+
+@media (max-width: 900px) {
+  .gameShell { grid-template-columns: 1fr; }
+}
+
+/* Topbar Styles */
+.gameTopbar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--game-border);
+  margin-bottom: 10px;
+}
+
+/* Control Panel */
+.gamePanel {
+  background: var(--game-panel);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--game-border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-self: flex-start;
+}
+
+.gameInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gameLabel {
+  font-family: var(--font-game);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #737373;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+}
+
+.gameInput {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--game-border);
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-family: var(--font-game);
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.gameInput:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 245, 255, 0.1);
+}
+
+/* Primary Action Button */
+.btnPlay {
+  width: 100%;
+  padding: 16px;
+  background: var(--neon-cyan);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-game);
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,245,255,0.25);
+  transition: all 0.2s var(--ease-out-expo);
+}
+
+.btnPlay:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0,245,255,0.4);
+}
+
+.btnPlay:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btnPlay:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* Game Stage (The Screen) */
+.gameStage {
+  background: rgba(255,255,255,0.01);
+  border: 1px solid var(--game-border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+}

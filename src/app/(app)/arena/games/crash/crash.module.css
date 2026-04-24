@@ -1,0 +1,71 @@
+.autoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.history {
+  margin-top: 10px;
+}
+
+.historyList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.canvasWrap {
+  flex: 1;
+  position: relative;
+  background: radial-gradient(ellipse at bottom, rgba(0, 245, 255, 0.05), transparent 70%);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvas {
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mult {
+  font-family: var(--font-orbitron);
+  font-size: clamp(3rem, 12vw, 6rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(0, 245, 255, 0.4);
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.mult.crashed {
+  color: var(--neon-red);
+  text-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
+}
+
+.mult.cashed {
+  color: #2ECC71;
+  text-shadow: 0 0 40px rgba(46, 204, 113, 0.5);
+}
+
+.status {
+  margin-top: 15px;
+  font-family: var(--font-orbitron);
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+}
