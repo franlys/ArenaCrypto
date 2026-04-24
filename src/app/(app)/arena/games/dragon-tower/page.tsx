@@ -218,8 +218,8 @@ export default function DragonTowerPage() {
                     <div className={styles.rowTiles}>
                       {Array.from({ length: cfg.tiles }, (_, tIdx) => {
                         const isPicked = revealedPath[levelIdx] === tIdx;
-                        const isDead = status === 'dead' && isPicked;
-                        const isSafe = (isPicked && !isDead) || isCleared;
+                        const isDead = status === 'dead' && isPicked && currentLevel === levelIdx;
+                        const isSafe = isPicked && !isDead;
                         
                         return (
                           <button 
