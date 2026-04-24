@@ -131,23 +131,32 @@ export default function PlinkoPage() {
       const w = L.sx * 0.88;
       const h = L.bucketH;
       const color = ACGames.getBucketColor(v);
+      
+      // Check if any ball just landed here
+      const isHighlighted = ballsRef.current.some(b => b.done && b.bucket === i && (performance.now() - (b.settledAt || 0)) < 400);
 
       ctx.fillStyle = color;
-      ctx.globalAlpha = 0.15;
+      ctx.globalAlpha = isHighlighted ? 0.6 : 0.15;
       
       // Round rect helper
       ctx.beginPath();
       ctx.roundRect(x - w / 2, L.bucketsY, w, h, 6 * L.dpr);
       ctx.fill();
       
+      if (isHighlighted) {
+        ctx.shadowBlur = 20 * L.dpr;
+        ctx.shadowColor = color;
+      }
+
       ctx.globalAlpha = 1;
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1 * L.dpr;
+      ctx.lineWidth = (isHighlighted ? 3 : 1) * L.dpr;
       ctx.stroke();
+      ctx.shadowBlur = 0;
 
       // Label
-      ctx.fillStyle = color;
-      ctx.font = `900 ${Math.min(L.sx * 0.28, 13 * L.dpr)}px Orbitron, sans-serif`;
+      ctx.fillStyle = isHighlighted ? '#fff' : color;
+      ctx.font = `${isHighlighted ? 900 : 700} ${Math.min(L.sx * 0.28, 13 * L.dpr)}px Orbitron, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(v + '×', x, L.bucketsY + h/2);

@@ -194,7 +194,7 @@ export default function MinesPage() {
 
         <section className="gameStage">
           <div className={styles.statusWrap}>
-            <div className={`${styles.status} ${!isIdle ? styles.active : ''} ${status === 'exploded' ? styles.bad : ''} ${status === 'cashed_out' ? styles.good : ''}`}>
+            <div className={`${styles.status} ${!isIdle ? styles.active : ''} ${status === 'exploded' ? styles.bad : ''} ${status === 'cashed_out' ? styles.good + ' winAnimate' : ''}`}>
               {status === 'idle' && "ELIGE MINAS Y EMPIEZA"}
               {status === 'playing' && "ELIGE GEMAS · EVITA MINAS"}
               {status === 'exploded' && "BOOM · PERDISTE"}
@@ -221,7 +221,7 @@ export default function MinesPage() {
             })}
           </div>
 
-          <div className="history-strip" style={{ marginTop: 'auto' }}>
+          <div className="historyStrip">
             {/* Historial de rondas podría ir aquí */}
           </div>
         </section>

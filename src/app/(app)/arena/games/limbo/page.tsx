@@ -137,22 +137,22 @@ export default function LimboPage() {
             {loading ? "..." : "JUGAR"}
           </button>
 
-          {msg && <p className={`${styles.msg} ${result && result >= target ? styles.win : styles.lose}`}>{msg}</p>}
+          {msg && <p className={`${styles.msg} ${result && result >= target ? styles.win + ' winAnimate' : styles.lose}`}>{msg}</p>}
         </div>
 
         <div className={styles.displayArea}>
           <div className={styles.multCard}>
             <AnimatePresence mode="wait">
-              <motion.div 
-                key={status}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.2 }}
-                className={styles.multValue}
-                style={{ color: status === "finished" ? (result! >= target ? "#22c55e" : "#ef4444") : "#fff" }}
-              >
-                {displayMult.toFixed(2)}x
-              </motion.div>
+                <motion.div 
+                  key={status}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.2 }}
+                  className={`${styles.multValue} ${status === "finished" && result! >= target ? 'winAnimate' : ''}`}
+                  style={{ color: status === "finished" ? (result! >= target ? "#2ecc71" : "#ef4444") : "#fff" }}
+                >
+                  {displayMult.toFixed(2)}x
+                </motion.div>
             </AnimatePresence>
             <div className={styles.rocketContainer}>
               <motion.div 

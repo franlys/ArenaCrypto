@@ -118,7 +118,7 @@ export const ACGames = {
       return res;
     };
     const prob = combination(total - mines, picks) / combination(total, picks);
-    return (0.99 / prob);
+    return (0.97 / prob);
   },
 
   /**
@@ -127,7 +127,7 @@ export const ACGames = {
   diceMultiplier: (target: number) => {
     // target is the probability of winning (0-100)
     const winChance = target / 100;
-    return (0.99 / winChance);
+    return (0.97 / winChance);
   },
 
   /**
@@ -149,6 +149,6 @@ export const ACGames = {
     const probPerLevel = cfg.safe / cfg.tiles;
     // Cumulative probability for 'level' steps
     const totalProb = Math.pow(probPerLevel, level);
-    return (0.99 / totalProb);
+    return (0.97 / totalProb);
   }
 };

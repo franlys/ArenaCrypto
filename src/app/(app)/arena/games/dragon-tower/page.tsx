@@ -190,7 +190,7 @@ export default function DragonTowerPage() {
 
         <section className="gameStage">
           <div className={styles.statusWrap}>
-            <div className={`${styles.status} ${!isIdle ? styles.active : ''} ${status === 'dead' ? styles.bad : ''} ${status === 'cashed_out' ? styles.good : ''}`}>
+            <div className={`${styles.status} ${!isIdle ? styles.active : ''} ${status === 'dead' ? styles.bad : ''} ${status === 'cashed_out' ? styles.good + ' winAnimate' : ''}`}>
               {status === 'idle' && "ELIGE DIFICULTAD Y EMPIEZA"}
               {status === 'playing' && "ELIGE UN HUEVO · EVITA DRAGONES"}
               {status === 'dead' && "QUEMADO EN NIVEL " + (currentLevel + 1)}
@@ -207,7 +207,7 @@ export default function DragonTowerPage() {
                 const rowRevealed = revealedPath[levelIdx] !== undefined;
                 
                 return (
-                  <div key={levelIdx} className={`${styles.row} ${isActive ? styles.active : ''} ${isCleared ? styles.cleared : ''}`}>
+                  <div key={levelIdx} className={`${styles.row} ${isActive ? styles.active : ''} ${isCleared ? styles.cleared + ' winAnimate' : ''}`}>
                     <div className={styles.rowLabel}>{levelIdx + 1}</div>
                     <div className={styles.rowTiles}>
                       {Array.from({ length: cfg.tiles }, (_, tIdx) => {

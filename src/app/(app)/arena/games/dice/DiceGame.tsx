@@ -189,7 +189,7 @@ export function DiceGame() {
           </div>
 
           <div className={styles.diceDisplay}>
-            <div className={`${styles.rollNumber} ${rolling ? styles.spinning : ''} ${winStatus === 'win' ? styles.win : ''} ${winStatus === 'loss' ? styles.loss : ''}`}>
+            <div className={`${styles.rollNumber} ${rolling ? styles.spinning : ''} ${winStatus === 'win' ? styles.win + ' winAnimate' : ''} ${winStatus === 'loss' ? styles.loss : ''}`}>
               {resultNum.toFixed(2)}
             </div>
           </div>
@@ -213,7 +213,7 @@ export function DiceGame() {
             <div className={styles.scale}><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
           </div>
 
-          <div className="history-strip">
+          <div className="historyStrip">
             {history.map((h, i) => (
               <span key={i} className={`pill ${h.win ? 'green' : 'red'}`}>
                 {h.roll.toFixed(2)}

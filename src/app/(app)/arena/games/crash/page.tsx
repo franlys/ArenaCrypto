@@ -225,13 +225,10 @@ export default function CrashPage() {
             </button>
           )}
 
-          <div className={styles.history}>
-            <label className="gameLabel">HISTORIAL</label>
-            <div className={styles.historyList}>
-              {history.map((m, i) => (
-                <span key={i} className={`pill ${m < 2 ? 'red' : 'cyan'}`}>{m.toFixed(2)}x</span>
-              ))}
-            </div>
+          <div className="historyStrip">
+            {history.map((m, i) => (
+              <span key={i} className={`pill ${m < 2 ? 'red' : 'green'}`}>{m.toFixed(2)}x</span>
+            ))}
           </div>
         </aside>
 
@@ -239,7 +236,7 @@ export default function CrashPage() {
           <div className={styles.canvasWrap} ref={wrapRef}>
             <canvas ref={canvasRef} className={styles.canvas} />
             <div className={styles.overlay}>
-              <div className={`${styles.mult} ${status === 'crashed' ? styles.crashed : ''} ${cashedAt ? styles.cashed : ''}`}>
+              <div className={`${styles.mult} ${status === 'crashed' ? styles.crashed : ''} ${cashedAt ? styles.cashed + ' winAnimate' : ''}`}>
                 {multiplier.toFixed(2)}x
               </div>
               <div className={styles.status}>

@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 const MAX_PAYOUT = 25000;
 const MAX_BET = 1000;
-const BASE_HOUSE_EDGE = 0.20; // 20% base edge (80% RTP)
+const BASE_HOUSE_EDGE = 0.03; // 3% base edge
 
 function admin() {
   return createClient(
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   await db.from("wallets").update({ [field]: Number((balance - amount).toFixed(2)) }).eq("user_id", user.id);
 
   // Dynamic Difficulty: Stronger edge for high stakes
-  const effectiveEdge = amount > 100 ? 0.30 : BASE_HOUSE_EDGE;
+  const effectiveEdge = BASE_HOUSE_EDGE;
   const randomValue = crypto.randomBytes(4).readUInt32BE(0) / Math.pow(2, 32);
   const result = Math.floor(((1 - effectiveEdge) / (1 - randomValue)) * 100) / 100;
   

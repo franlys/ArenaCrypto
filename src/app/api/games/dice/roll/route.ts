@@ -3,7 +3,7 @@ import { createClient as createAnon } from '@/lib/supabase/server'
 import { createClient }              from '@supabase/supabase-js'
 import crypto                        from 'crypto'
 
-const HOUSE_EDGE = 0.24 // 24% edge (76% RTP)
+const HOUSE_EDGE = 0.03 // 3% edge
 const MAX_BET = 1000
 
 function admin() {
