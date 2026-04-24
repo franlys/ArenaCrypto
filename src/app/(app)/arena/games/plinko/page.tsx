@@ -64,8 +64,8 @@ export default function PlinkoPage() {
     
     const W = canvas.width;
     const H = canvas.height;
-    const topPad = 50 * dpr;
-    const botPad = 70 * dpr;
+    const topPad = 30 * dpr;
+    const botPad = 40 * dpr;
     const pegSpacingY = (H - topPad - botPad) / rows;
     const pegSpacingX = pegSpacingY;
     const widthNeeded = (rows + 1) * pegSpacingX;
@@ -79,8 +79,8 @@ export default function PlinkoPage() {
       pegR: 3 * dpr,
       ballR: 6 * dpr,
       bucketCount: rows + 1,
-      bucketH: 42 * dpr,
-      bucketsY: H - botPad + 12 * dpr
+      bucketH: 34 * dpr,
+      bucketsY: H - botPad + 4 * dpr
     };
 
     // Recalculate pegs
