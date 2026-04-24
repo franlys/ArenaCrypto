@@ -402,7 +402,7 @@ export default function PlinkoPage() {
             <canvas ref={canvasRef} className={styles.canvas} />
           </div>
 
-          <div className="history-strip">
+          <div className="historyStrip">
             {history.map((h, i) => (
               <span key={i} className="pill" style={{ 
                 background: h.color + '15', 
