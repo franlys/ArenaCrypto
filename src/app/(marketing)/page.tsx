@@ -13,19 +13,27 @@ export default function MarketingPage() {
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Track scroll specifically within the 300vh hero section
-  const { scrollY, scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end end"]
-  });
+  const { scrollY, scrollYProgress } = useScroll();
 
   // Use a continuous rAF loop for smooth video scrubbing
   useEffect(() => {
+    // Unlock video on mount for aggressive browsers (like Safari/iOS)
+    if (videoRef.current) {
+      videoRef.current.load();
+      const p = videoRef.current.play();
+      if (p !== undefined) {
+        p.then(() => { videoRef.current?.pause(); }).catch(() => {});
+      }
+    }
+
     let frameId: number;
     const renderLoop = () => {
-      if (videoRef.current && videoRef.current.duration) {
-        const progress = scrollYProgress.get();
-        videoRef.current.currentTime = progress * videoRef.current.duration;
+      if (videoRef.current) {
+        const dur = videoRef.current.duration;
+        if (dur > 0) {
+          const progress = scrollYProgress.get();
+          videoRef.current.currentTime = progress * dur;
+        }
       }
       frameId = requestAnimationFrame(renderLoop);
     };
@@ -76,10 +84,9 @@ export default function MarketingPage() {
   return (
     <div className="ac">
       {/* ---------- HERO ---------- */}
-      <section ref={heroRef} className="v1-hero">
-        <div className="hero-sticky-container">
-          <video 
-            ref={videoRef}
+      <section className="v1-hero">
+        <video 
+          ref={videoRef}
           muted 
           playsInline
           preload="auto"
@@ -158,7 +165,6 @@ export default function MarketingPage() {
           >
             <Link href="/login" className="btn primary xl arrow">ENTRAR AHORA</Link>
           </motion.div>
-        </div>
         </div>
       </section>
 
