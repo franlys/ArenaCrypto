@@ -612,3 +612,166 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
   z-index: 0;
 }
 .v1-final > *{ position: relative; z-index: 1; }
+
+/* ============================================================
+   RESPONSIVE — Mobile First
+   ============================================================ */
+
+/* ── Tablet (≤ 1024px) ─────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .v1-games {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v1-games .gcard.big {
+    grid-column: span 2;
+    min-height: 320px;
+  }
+  .v1-games .gcard.plinko {
+    grid-column: span 2;
+  }
+  .v1-esports {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v1-how {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v1-trust {
+    grid-template-columns: repeat(2, 1fr);
+    border-radius: 14px;
+  }
+  .v1-trust .tcell:nth-child(1) { border-radius: 14px 0 0 0; }
+  .v1-trust .tcell:nth-child(2) { border-radius: 0 14px 0 0; }
+  .v1-trust .tcell:nth-child(3) { border-radius: 0 0 0 14px; }
+  .v1-trust .tcell:nth-child(4) { border-radius: 0 0 14px 0; }
+  .v1-fair {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* ── Mobile (≤ 768px) ─────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Video: portrait mode — zoom-in center so it fills the vertical screen */
+  .page-video-bg {
+    object-position: center center;
+    width: 100vw;
+    height: 100vh;
+    /* Scale up to cover portrait without black bars */
+    transform: scale(1.4);
+  }
+
+  /* Hero section */
+  .v1-hero-section {
+    padding: 100px 20px 48px;
+    text-align: center;
+    align-items: flex-end;
+  }
+
+  .v1-copy {
+    max-width: 100%;
+  }
+
+  /* Hide floating tiles on small screens */
+  .v1-tiles {
+    display: none;
+  }
+
+  /* Nav */
+  .ac-nav {
+    padding: 16px 20px;
+  }
+
+  /* Sections */
+  .section {
+    padding: 48px 20px;
+  }
+  .section.tight {
+    padding: 32px 20px;
+  }
+
+  /* Games grid: single column */
+  .v1-games {
+    grid-template-columns: 1fr;
+  }
+  .v1-games .gcard.big,
+  .v1-games .gcard.plinko {
+    grid-column: span 1;
+    min-height: 220px;
+  }
+
+  /* Esports: single column */
+  .v1-esports {
+    grid-template-columns: 1fr;
+  }
+
+  /* How it works: single column */
+  .v1-how {
+    grid-template-columns: 1fr;
+  }
+
+  /* Trust stats: 2 col */
+  .v1-trust {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Ticker */
+  .v1-ticker {
+    margin-top: -32px;
+  }
+
+  /* Final CTA */
+  .v1-final {
+    padding: 60px 20px;
+  }
+
+  /* Footer */
+  .ac-footer {
+    padding: 32px 20px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  /* Content glass sections */
+  .content-glass {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+}
+
+/* ── Small mobile (≤ 480px) ─────────────────────────────────── */
+@media (max-width: 480px) {
+  .v1-trust {
+    grid-template-columns: 1fr;
+  }
+  .v1-trust .tcell:first-child { border-radius: 14px 14px 0 0; }
+  .v1-trust .tcell:last-child  { border-radius: 0 0 14px 14px; }
+  .v1-trust .tcell:not(:first-child):not(:last-child) { border-radius: 0; }
+
+  .v1-fair .hash-demo {
+    font-size: 0.65rem;
+    padding: 16px;
+  }
+
+  .btn.xl {
+    padding: 16px 28px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Portrait-specific (phones held vertically) ─────────────── */
+@media (orientation: portrait) and (max-width: 768px) {
+  /* Make video fill portrait screen without distortion */
+  .page-video-bg {
+    height: 100dvh;
+    width: 100vw;
+    object-fit: cover;
+    object-position: 35% center; /* keep center of video visible */
+    transform: scale(1.2);
+  }
+
+  .v1-hero-section {
+    min-height: 100dvh;
+  }
+}
