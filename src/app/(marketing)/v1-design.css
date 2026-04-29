@@ -186,22 +186,29 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
    ArenaCrypto — Home v1: "3D Tilted Arena"
    ============================================================ */
 
-.v1-hero{
+.hero-wrapper {
   position: relative;
-  min-height: 100vh;
-  padding: 120px 44px 24px;
+  height: 200vh;
+}
+
+.hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 120px 44px 24px;
 }
 
 .hero-video-bg {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   z-index: 0;
   opacity: 0.6;

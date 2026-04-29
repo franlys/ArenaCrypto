@@ -9,14 +9,22 @@ import "./v1-design.css";
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 export default function MarketingPage() {
-  const reduced = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [vidDur, setVidDur] = useState(0);
 
-  const { scrollY, scrollYProgress } = useScroll();
+  // Track scroll specifically within the 200vh hero section ("GSAP ScrollTrigger style")
+  const { scrollY, scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"] // from when top hits top, to when bottom hits top
+  });
+  
   const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
-  const videoScale = useTransform(smoothProgress, [0, 1], [1, 1.2]);
+  
+  // Transform elements based on local hero progress
+  const videoScale = useTransform(smoothProgress, [0, 1], [1, 1.5]);
+  const videoY = useTransform(smoothProgress, [0, 1], [0, -150]);
+  const videoOpacity = useTransform(smoothProgress, [0.8, 1], [0.6, 0]);
 
   // Unlock video on mount for aggressive browsers (like Safari/iOS)
   useEffect(() => {
@@ -79,11 +87,12 @@ export default function MarketingPage() {
   return (
     <div className="ac">
       {/* ---------- HERO ---------- */}
-      <section className="v1-hero">
-        <motion.video 
-          ref={videoRef}
-          style={{ scale: videoScale }}
-          onLoadedMetadata={(e) => setVidDur(e.currentTarget.duration)}
+      <section ref={heroRef} className="hero-wrapper">
+        <div className="hero-sticky">
+          <motion.video 
+            ref={videoRef}
+            style={{ scale: videoScale, y: videoY, opacity: videoOpacity }}
+            onLoadedMetadata={(e) => setVidDur(e.currentTarget.duration)}
           muted 
           playsInline
           preload="auto"
@@ -161,6 +170,7 @@ export default function MarketingPage() {
           >
             <Link href="/login" className="btn primary xl arrow">ENTRAR AHORA</Link>
           </motion.div>
+        </div>
         </div>
       </section>
 
