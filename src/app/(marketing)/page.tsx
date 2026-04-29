@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useTransform, useReducedMotion, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import "./v1-design.css";
@@ -10,7 +10,21 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 export default function MarketingPage() {
   const reduced = useReducedMotion();
-  const { scrollY } = useScroll();
+  const heroRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Track scroll specifically within the 300vh hero section
+  const { scrollY, scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end end"]
+  });
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    if (videoRef.current && videoRef.current.duration) {
+      // Map scroll progress (0 to 1) to video duration
+      videoRef.current.currentTime = latest * videoRef.current.duration;
+    }
+  });
 
   // Parallax for tiles
   const y1 = useTransform(scrollY, [0, 1000], [0, -100]);
@@ -55,12 +69,13 @@ export default function MarketingPage() {
   return (
     <div className="ac">
       {/* ---------- HERO ---------- */}
-      <section className="v1-hero">
-        <video 
-          autoPlay 
-          loop 
+      <section ref={heroRef} className="v1-hero">
+        <div className="hero-sticky-container">
+          <video 
+            ref={videoRef}
           muted 
-          playsInline 
+          playsInline
+          preload="auto"
           className="hero-video-bg"
           src="/media/arena_crypto_hero_bgmp_.mp4"
         />
@@ -136,6 +151,7 @@ export default function MarketingPage() {
           >
             <Link href="/login" className="btn primary xl arrow">ENTRAR AHORA</Link>
           </motion.div>
+        </div>
         </div>
       </section>
 

@@ -188,7 +188,14 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
 
 .v1-hero{
   position: relative;
-  min-height: 100vh;
+  height: 300vh; /* Creates scroll space for the video scrubbing */
+}
+
+.hero-sticky-container {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
   padding: 120px 44px 24px;
   overflow: hidden;
   display: flex;
@@ -198,13 +205,15 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
 
 .hero-video-bg {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   z-index: 0;
   opacity: 0.6;
   mix-blend-mode: screen;
+  pointer-events: none;
 }
 .hero-gradient-overlay {
   position: absolute;
