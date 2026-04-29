@@ -12,9 +12,11 @@ export default function MarketingPage() {
   const reduced = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [vidDur, setVidDur] = useState(0);
 
   const { scrollY, scrollYProgress } = useScroll();
   const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
+  const videoScale = useTransform(smoothProgress, [0, 1], [1, 1.2]);
 
   // Unlock video on mount for aggressive browsers (like Safari/iOS)
   useEffect(() => {
@@ -29,11 +31,8 @@ export default function MarketingPage() {
 
   // Scrub video based on smoothed scroll progress
   useMotionValueEvent(smoothProgress, "change", (latest) => {
-    if (videoRef.current) {
-      const dur = videoRef.current.duration;
-      if (dur > 0) {
-        videoRef.current.currentTime = latest * dur;
-      }
+    if (videoRef.current && vidDur > 0) {
+      videoRef.current.currentTime = latest * vidDur;
     }
   });
 
@@ -81,8 +80,10 @@ export default function MarketingPage() {
     <div className="ac">
       {/* ---------- HERO ---------- */}
       <section className="v1-hero">
-        <video 
+        <motion.video 
           ref={videoRef}
+          style={{ scale: videoScale }}
+          onLoadedMetadata={(e) => setVidDur(e.currentTarget.duration)}
           muted 
           playsInline
           preload="auto"
