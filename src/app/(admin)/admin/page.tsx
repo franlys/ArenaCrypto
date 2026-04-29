@@ -8,6 +8,62 @@ import { motion } from "framer-motion";
 import KronixBalance from "./KronixBalance"
 import TestEconomyPanel from "./TestEconomyPanel";
 
+function FeatureTogglesPanel() {
+  const [features, setFeatures] = useState<{sports: boolean, gaming: boolean} | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    async function fetchFeatures() {
+      const { data } = await supabase.from('platform_settings').select('value').eq('key', 'features').single();
+      if (data && data.value) {
+        setFeatures(data.value as {sports: boolean, gaming: boolean});
+      }
+      setLoading(false);
+    }
+    fetchFeatures();
+  }, []);
+
+  async function toggleFeature(key: 'sports' | 'gaming') {
+    if (!features) return;
+    setSaving(true);
+    const newFeatures = { ...features, [key]: !features[key] };
+    const { error } = await supabase.from('platform_settings').update({ value: newFeatures }).eq('key', 'features');
+    if (!error) {
+      setFeatures(newFeatures);
+    }
+    setSaving(false);
+  }
+
+  if (loading) return null;
+
+  return (
+    <div style={{ marginTop: '2rem', background: 'var(--color-bg-card)', border: '1px solid var(--glass-border)', borderRadius: 12, padding: '1.25rem' }}>
+      <h3 className="font-orbitron" style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.15em' }}>
+        MODULE VISIBILITY TOGGLES
+      </h3>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => toggleFeature('sports')}
+          disabled={saving}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: `1px solid ${features?.sports ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 8, background: features?.sports ? 'rgba(34,197,94,0.07)' : 'rgba(239,68,68,0.07)', color: features?.sports ? '#22c55e' : '#ef4444', fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+        >
+          {features?.sports ? <CheckCircle size={14} /> : <div style={{width: 14, height: 14, border: '2px solid currentColor', borderRadius: '50%'}} />}
+          SPORTS: {features?.sports ? 'ON' : 'OFF'}
+        </button>
+        <button
+          onClick={() => toggleFeature('gaming')}
+          disabled={saving}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: `1px solid ${features?.gaming ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: 8, background: features?.gaming ? 'rgba(34,197,94,0.07)' : 'rgba(239,68,68,0.07)', color: features?.gaming ? '#22c55e' : '#ef4444', fontFamily: 'Orbitron,sans-serif', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+        >
+          {features?.gaming ? <CheckCircle size={14} /> : <div style={{width: 14, height: 14, border: '2px solid currentColor', borderRadius: '50%'}} />}
+          GAMING: {features?.gaming ? 'ON' : 'OFF'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function SportsSyncPanel() {
   const [running, setRunning]   = useState<string | null>(null)
   const [result, setResult]     = useState<string | null>(null)
@@ -153,6 +209,8 @@ export default function EconomyDashboard() {
       </div>
 
       <KronixBalance />
+
+      <FeatureTogglesPanel />
 
       <SportsSyncPanel />
 

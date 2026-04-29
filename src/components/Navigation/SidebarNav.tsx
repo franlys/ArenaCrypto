@@ -7,7 +7,9 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/lib/supabase";
 import styles from "./SidebarNav.module.css";
 
 const EASE_OUT = [0.23, 1, 0.32, 1];
@@ -28,18 +30,41 @@ export function SidebarNav({ onItemClick }: SidebarNavProps = {}) {
   const { isAdmin } = useUser();
   const shouldReduceMotion = useReducedMotion();
 
+  const [features, setFeatures] = useState<{sports: boolean, gaming: boolean}>({sports: false, gaming: false});
+
+  useEffect(() => {
+    async function fetchFeatures() {
+      const { data } = await supabase.from('platform_settings').select('value').eq('key', 'features').single();
+      if (data && data.value) {
+        setFeatures(data.value as {sports: boolean, gaming: boolean});
+      }
+    }
+    fetchFeatures();
+    
+    const sub = supabase.channel('features-channel')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'platform_settings', filter: "key=eq.features" }, (payload) => {
+        setFeatures(payload.new.value as {sports: boolean, gaming: boolean});
+      })
+      .subscribe();
+      
+    return () => { supabase.removeChannel(sub); };
+  }, []);
+
   const navItems: NavItem[] = [
     { href: "/dashboard",    label: "HUB",       icon: "◈",  exact: true },
     { href: "/arena",        label: "ARENA",     icon: "⚔",  exact: true },
-    { href: "/arena/sport",  label: "SPORT",     icon: "⚽" },
-    { href: "/arena/gaming", label: "GAMING",    icon: "🎮" },
-    // { href: "/arena/games",  label: "GAMES",     icon: "◈" },
+  ];
+
+  if (features.sports) navItems.push({ href: "/arena/sport",  label: "SPORT",     icon: "⚽" });
+  if (features.gaming) navItems.push({ href: "/arena/gaming", label: "GAMING",    icon: "🎮" });
+
+  navItems.push(
     { href: "/tournaments",  label: "TORNEOS",   icon: "🏆" },
     { href: "/historial",    label: "HISTORIAL", icon: "📋" },
     { href: "/wallets",      label: "WALLET",    icon: "◎" },
     { href: "/premium",      label: "PREMIUM",   icon: "◆" },
-    { href: "/profile",      label: "PERFIL",    icon: "◉" },
-  ];
+    { href: "/profile",      label: "PERFIL",    icon: "◉" }
+  );
 
   if (isAdmin) {
     navItems.push({ href: "/admin", label: "ADMIN", icon: "⚙" });
