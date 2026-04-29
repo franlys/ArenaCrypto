@@ -47,11 +47,7 @@ export default function MarketingPage() {
     }
   });
 
-  // Parallax for tiles
-  const y1 = useTransform(scrollY, [0, 1000], [0, -100]);
-  const y2 = useTransform(scrollY, [0, 1000], [0, -150]);
-  const y3 = useTransform(scrollY, [0, 1000], [0, -80]);
-  
+
   // Platform settings state
   const [features, setFeatures] = useState({ gaming: true, sports: true });
 
