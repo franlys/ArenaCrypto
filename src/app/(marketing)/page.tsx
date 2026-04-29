@@ -19,12 +19,19 @@ export default function MarketingPage() {
     offset: ["start start", "end end"]
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (videoRef.current && videoRef.current.duration) {
-      // Map scroll progress (0 to 1) to video duration
-      videoRef.current.currentTime = latest * videoRef.current.duration;
-    }
-  });
+  // Use a continuous rAF loop for smooth video scrubbing
+  useEffect(() => {
+    let frameId: number;
+    const renderLoop = () => {
+      if (videoRef.current && videoRef.current.duration) {
+        const progress = scrollYProgress.get();
+        videoRef.current.currentTime = progress * videoRef.current.duration;
+      }
+      frameId = requestAnimationFrame(renderLoop);
+    };
+    frameId = requestAnimationFrame(renderLoop);
+    return () => cancelAnimationFrame(frameId);
+  }, [scrollYProgress]);
 
   // Parallax for tiles
   const y1 = useTransform(scrollY, [0, 1000], [0, -100]);
