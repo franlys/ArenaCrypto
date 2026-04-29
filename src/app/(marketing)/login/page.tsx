@@ -37,6 +37,17 @@ export default function LoginPage() {
 
   return (
     <div className={styles.wrapper}>
+      {/* ── Video background loop ── */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className={styles.videoBg}
+        src="/media/a_.mp4"
+      />
+      <div className={styles.videoOverlay} />
+
       {/* ── Left panel: branding ── */}
       <motion.div
         className={styles.brand}

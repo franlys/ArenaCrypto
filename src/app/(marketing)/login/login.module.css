@@ -6,11 +6,34 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: calc(100vh - 53px);
+  position: relative;
+}
+
+/* ── Video background ── */
+.videoBg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0.6;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.videoOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: rgba(9, 9, 11, 0.55);
+  pointer-events: none;
 }
 
 /* ── Left: Branding panel ─────────────────────────────────── */
 .brand {
   position: relative;
+  z-index: 2;
   overflow: hidden;
   display: flex;
   align-items: stretch;
@@ -21,9 +44,9 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(0, 245, 255, 0.1)  0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 55%),
-    rgba(9, 9, 11, 0.6);
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(0, 245, 255, 0.08)  0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 55%),
+    rgba(9, 9, 11, 0.25);
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -118,11 +141,13 @@
 
 /* ── Right: Form panel ────────────────────────────────────── */
 .formPanel {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 3rem 2rem;
-  background: rgba(9, 9, 11, 0.4);
+  background: rgba(9, 9, 11, 0.25);
 }
 
 /* ── Responsive ───────────────────────────────────────────── */
