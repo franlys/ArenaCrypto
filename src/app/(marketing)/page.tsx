@@ -15,7 +15,7 @@ export default function MarketingPage() {
   const [vidDur, setVidDur] = useState(0);
 
   // Track scroll specifically within the 200vh hero section ("GSAP ScrollTrigger style")
-  const { scrollYProgress } = useScroll({
+  const { scrollY, scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
   });
