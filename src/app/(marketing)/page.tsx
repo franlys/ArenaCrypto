@@ -14,20 +14,21 @@ export default function MarketingPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [vidDur, setVidDur] = useState(0);
 
-  // Track scroll specifically within the 200vh hero section ("GSAP ScrollTrigger style")
-  const { scrollY, scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
-  
-  const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
-  
-  // Transform elements based on local hero progress (0 to 1)
-  const videoScale = useTransform(smoothProgress, [0, 1], [1, 1.5]);
-  const videoY = useTransform(smoothProgress, [0, 1], [0, -150]);
-  const videoOpacity = useTransform(smoothProgress, [0.8, 1], [0.6, 0]);
+  // Track raw window scrollY — most reliable across all browsers/devices
+  const { scrollY } = useScroll();
+  const smoothY = useSpring(scrollY, { damping: 30, stiffness: 200, restDelta: 0.001 });
 
-  // Unlock video on mount for aggressive browsers (like Safari/iOS)
+  // Maps 0–2000px of window scroll to hero animations
+  const videoScale   = useTransform(smoothY, [0, 2000], [1, 1.4]);
+  const videoY       = useTransform(smoothY, [0, 2000], ["0%", "-8%"]);
+  const videoOpacity = useTransform(smoothY, [1600, 2200], [0.6, 0]);
+
+  // Tile parallax
+  const y1 = useTransform(smoothY, [0, 1000], [0, -100]);
+  const y2 = useTransform(smoothY, [0, 1000], [0, -150]);
+  const y3 = useTransform(smoothY, [0, 1000], [0, -80]);
+
+  // Unlock video on mount
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
@@ -38,10 +39,11 @@ export default function MarketingPage() {
     }
   }, []);
 
-  // Scrub video based on smoothed scroll progress (0 to 1 = 0 to 100% duration)
-  useMotionValueEvent(smoothProgress, "change", (latest) => {
+  // Scrub video: 0–2000px window scroll = full video duration
+  useMotionValueEvent(smoothY, "change", (latest) => {
     if (videoRef.current && vidDur > 0) {
-      videoRef.current.currentTime = latest * vidDur;
+      const progress = Math.min(Math.max(latest / 2000, 0), 1);
+      videoRef.current.currentTime = progress * vidDur;
     }
   });
 
