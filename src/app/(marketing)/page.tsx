@@ -10,25 +10,22 @@ const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 export default function MarketingPage() {
   const reduced = useReducedMotion();
-  const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [vidDur, setVidDur] = useState(0);
 
-  // Track raw window scrollY — most reliable across all browsers/devices
+  // Track raw window scrollY
   const { scrollY } = useScroll();
   const smoothY = useSpring(scrollY, { damping: 30, stiffness: 200, restDelta: 0.001 });
 
-  // Maps 0–2000px of window scroll to hero animations
-  const videoScale   = useTransform(smoothY, [0, 2000], [1, 1.4]);
-  const videoY       = useTransform(smoothY, [0, 2000], ["0%", "-8%"]);
-  const videoOpacity = useTransform(smoothY, [1600, 2200], [0.6, 0]);
+  // Video zoom as you scroll down the whole page
+  const videoScale = useTransform(smoothY, [0, 3000], [1, 1.5]);
 
   // Tile parallax
   const y1 = useTransform(smoothY, [0, 1000], [0, -100]);
   const y2 = useTransform(smoothY, [0, 1000], [0, -150]);
   const y3 = useTransform(smoothY, [0, 1000], [0, -80]);
 
-  // Unlock video on mount
+  // Unlock video for scrubbing on all browsers
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
@@ -39,33 +36,29 @@ export default function MarketingPage() {
     }
   }, []);
 
-  // Scrub video: 0–2000px window scroll = full video duration
+  // Scrub video through full duration across full page scroll
   useMotionValueEvent(smoothY, "change", (latest) => {
     if (videoRef.current && vidDur > 0) {
-      const progress = Math.min(Math.max(latest / 2000, 0), 1);
+      // Map 0px → 0s, 3000px → full duration
+      const progress = Math.min(Math.max(latest / 3000, 0), 1);
       videoRef.current.currentTime = progress * vidDur;
     }
   });
-
 
   // Platform settings state
   const [features, setFeatures] = useState({ gaming: true, sports: true });
 
   useEffect(() => {
-    // Fetch initial state
     const fetchSettings = async () => {
       const { data } = await supabase
         .from("platform_settings")
         .select("value")
         .eq("key", "features")
         .single();
-      if (data?.value) {
-        setFeatures(data.value);
-      }
+      if (data?.value) setFeatures(data.value);
     };
     fetchSettings();
 
-    // Listen for realtime updates
     const sub = supabase.channel("features-channel")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "platform_settings", filter: "key=eq.features" }, (payload) => {
         setFeatures(payload.new.value);
@@ -85,55 +78,40 @@ export default function MarketingPage() {
 
   return (
     <div className="ac">
-      {/* ---------- HERO ---------- */}
-      <section ref={heroRef} className="hero-wrapper">
-        <div className="hero-sticky">
-          <motion.video 
-            ref={videoRef}
-            style={{ scale: videoScale, y: videoY, opacity: videoOpacity }}
-            onLoadedMetadata={(e) => setVidDur(e.currentTarget.duration)}
-          muted 
-          playsInline
-          preload="auto"
-          className="hero-video-bg"
-          src="/media/arena_crypto_hero_bgmp_.mp4"
-        />
 
+      {/* ─── VIDEO: FIXED FULL-PAGE BACKGROUND ─── */}
+      <motion.video
+        ref={videoRef}
+        style={{ scale: videoScale }}
+        onLoadedMetadata={(e) => setVidDur(e.currentTarget.duration)}
+        muted
+        playsInline
+        preload="auto"
+        className="page-video-bg"
+        src="/media/arena_crypto_hero_bgmp_.mp4"
+      />
+      {/* Darkening overlay so text stays readable */}
+      <div className="page-video-overlay" />
+
+      {/* ─── HERO ─── */}
+      <section className="v1-hero-section">
+        {/* Floating tiles */}
         <div className="v1-tiles">
-          {/* Tile 1 */}
           <motion.div style={{ y: y1 }} className="v1-tile cyan t1">
             <div className="mini cyan">CR</div>
-            <div>
-              <div className="l1">Crash</div>
-              <div className="l2">14.72×</div>
-            </div>
+            <div><div className="l1">Crash</div><div className="l2">14.72×</div></div>
           </motion.div>
-          
-          {/* Tile 3 */}
           <motion.div style={{ y: y2 }} className="v1-tile gold t3">
             <div className="mini gold">TW</div>
-            <div>
-              <div className="l1">Tower · L7</div>
-              <div className="l2">64.7×</div>
-            </div>
+            <div><div className="l1">Tower · L7</div><div className="l2">64.7×</div></div>
           </motion.div>
-
-          {/* Tile 5 */}
           <motion.div style={{ y: y3 }} className="v1-tile purple t5">
             <div className="mini purple">PL</div>
-            <div>
-              <div className="l1">Plinko</div>
-              <div className="l2">+1,240</div>
-            </div>
+            <div><div className="l1">Plinko</div><div className="l2">+1,240</div></div>
           </motion.div>
-
-          {/* Tile 2 */}
           <motion.div style={{ y: y1 }} className="v1-tile red t2">
             <div className="mini red">MN</div>
-            <div>
-              <div className="l1">Mines</div>
-              <div className="l2">Boom</div>
-            </div>
+            <div><div className="l1">Mines</div><div className="l2">Boom</div></div>
           </motion.div>
         </div>
 
@@ -141,27 +119,27 @@ export default function MarketingPage() {
           <motion.div className="v1-meta" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
             <span className="dot" /> 12,847 JUGADORES EN LA ARENA · AHORA
           </motion.div>
-          <motion.h1 
+          <motion.h1
             className="h-title"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE_OUT }}
           >
-            <span className="stroke">ENTRA</span> <em>A</em><br/>
-            LA ARENA<br/>
-            DEMUESTRA<br/>
+            <span className="stroke">ENTRA</span> <em>A</em><br />
+            LA ARENA<br />
+            DEMUESTRA<br />
             QUIÉN MANDA
           </motion.h1>
-          <motion.p 
-            className="lede" 
-            style={{ margin: '20px auto 0' }}
+          <motion.p
+            className="lede"
+            style={{ margin: "20px auto 0" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: EASE_OUT }}
           >
             E-sports, juegos de casino provably fair, y matchmaking 1v1. Tu skill es tu ventaja. Pagos instantáneos on-chain.
           </motion.p>
-          <motion.div 
+          <motion.div
             className="v1-cta"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -170,10 +148,9 @@ export default function MarketingPage() {
             <Link href="/login" className="btn primary xl arrow">ENTRAR AHORA</Link>
           </motion.div>
         </div>
-        </div>
       </section>
 
-      {/* ---------- TICKER ---------- */}
+      {/* ─── TICKER ─── */}
       <div className="v1-ticker">
         <div className="v1-ticker-row">
           {[...Array(6)].map((_, i) => (
@@ -187,73 +164,53 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      {/* ---------- CONDITIONAL GAMES SECTION ---------- */}
+      {/* ─── CASINO SECTION (conditional) ─── */}
       {features.gaming && (
-        <section className="section container">
+        <section className="section container content-glass">
           <motion.div className="eyebrow" {...fadeUp()}>Casino Cripto</motion.div>
           <motion.h2 className="section-title" {...fadeUp(0.1)}>
             JUEGOS QUE PAGAN EN <em>SEGUNDOS</em>
           </motion.h2>
-          
           <div className="v1-games">
             <motion.div className="gcard big crash" {...fadeUp(0.2)}>
-              <div className="corner"><span className="chip live">EN VIVO · 1,247</span></div>
+              <div className="corner"><span className="chip live cyan">EN VIVO · 1,247</span></div>
               <div className="art" />
-              <div>
-                <div className="name">Crash</div>
-                <div className="desc">Entra al cohete. Cada segundo el multiplicador sube. Cobra antes del crash o piérdelo todo.</div>
-              </div>
+              <div><div className="name">Crash</div><div className="desc">Entra al cohete. Cada segundo el multiplicador sube. Cobra antes del crash o piérdelo todo.</div></div>
               <div className="mult">8.24×</div>
               <svg className="crash-curve" viewBox="0 0 100 100" preserveAspectRatio="none">
                 <path d="M0,100 Q60,90 100,0" />
               </svg>
             </motion.div>
-
             <motion.div className="gcard mines" {...fadeUp(0.3)}>
               <div className="corner"><span className="chip red">HOT</span></div>
               <div className="art" />
-              <div>
-                <div className="name">MINES</div>
-                <div className="desc">5×5 grid. Encuentra gemas, evita minas.</div>
-              </div>
-              <div className="mult" style={{ fontSize: '2.4rem', color: '#F87171' }}>999×</div>
+              <div><div className="name">MINES</div><div className="desc">5×5 grid. Encuentra gemas, evita minas.</div></div>
+              <div className="mult" style={{ fontSize: "2.4rem", color: "#F87171" }}>999×</div>
             </motion.div>
-
             <motion.div className="gcard tower" {...fadeUp(0.4)}>
               <div className="art" />
-              <div>
-                <div className="name">DRAGON TOWER</div>
-                <div className="desc">9 pisos. 5 modos. El dragón te espera.</div>
-              </div>
+              <div><div className="name">DRAGON TOWER</div><div className="desc">9 pisos. 5 modos. El dragón te espera.</div></div>
             </motion.div>
-
-            <motion.div className="gcard plinko" {...fadeUp(0.5)} style={{ gridColumn: 'span 2' }}>
+            <motion.div className="gcard plinko" {...fadeUp(0.5)} style={{ gridColumn: "span 2" }}>
               <div className="art" />
-              <div>
-                <div className="name">PLINKO</div>
-                <div className="desc">Lanza la bola, observa rebotar, multiplica.</div>
-              </div>
+              <div><div className="name">PLINKO</div><div className="desc">Lanza la bola, observa rebotar, multiplica.</div></div>
             </motion.div>
           </div>
         </section>
       )}
 
-      {/* ---------- CONDITIONAL ESPORTS SECTION ---------- */}
+      {/* ─── ESPORTS SECTION (conditional) ─── */}
       {features.sports && (
-        <section className="section container tight">
+        <section className="section container tight content-glass">
           <motion.div className="eyebrow cyan" {...fadeUp()}>E-Sports · En vivo</motion.div>
           <motion.h2 className="section-title" {...fadeUp(0.1)}>APUESTA AL <em>MEJOR EQUIPO</em></motion.h2>
-          
           <div className="v1-esports">
             <motion.div className="v1-match" {...fadeUp(0.2)}>
-              <div className="mhead">
-                <div className="game">🏆 CS2 · MAJOR FINAL</div>
-                <span className="chip live red">LIVE · MAP 2</span>
-              </div>
+              <div className="mhead"><div className="game">🏆 CS2 · MAJOR FINAL</div><span className="chip live red">LIVE · MAP 2</span></div>
               <div className="teams">
-                <div className="team"><div className="logo" style={{ background:'#FFDD00', color:'#000' }}>NAVI</div><div className="name">Na'Vi</div></div>
+                <div className="team"><div className="logo" style={{ background: "#FFDD00", color: "#000" }}>NAVI</div><div className="name">Na&apos;Vi</div></div>
                 <div className="vs">VS</div>
-                <div className="team"><div className="logo" style={{ background:'#000', border:'1px solid #333' }}>G2</div><div className="name">G2</div></div>
+                <div className="team"><div className="logo" style={{ background: "#000", border: "1px solid #333" }}>G2</div><div className="name">G2</div></div>
               </div>
               <div className="odds">
                 <div className="odd"><span className="ol">NAVI</span><span className="ov">1.84</span></div>
@@ -261,16 +218,12 @@ export default function MarketingPage() {
                 <div className="odd"><span className="ol">G2</span><span className="ov">2.04</span></div>
               </div>
             </motion.div>
-            
             <motion.div className="v1-match" {...fadeUp(0.3)}>
-              <div className="mhead">
-                <div className="game">⚔️ LOL · WORLDS</div>
-                <span className="chip live cyan">LIVE · GAME 3</span>
-              </div>
+              <div className="mhead"><div className="game">⚔️ LOL · WORLDS</div><span className="chip live cyan">LIVE · GAME 3</span></div>
               <div className="teams">
-                <div className="team"><div className="logo" style={{ background:'#E3002B', color:'#fff' }}>T1</div><div className="name">T1</div></div>
+                <div className="team"><div className="logo" style={{ background: "#E3002B", color: "#fff" }}>T1</div><div className="name">T1</div></div>
                 <div className="vs">VS</div>
-                <div className="team"><div className="logo" style={{ background:'#000', border:'1px solid #A78BFA' }}>GEN</div><div className="name">GEN.G</div></div>
+                <div className="team"><div className="logo" style={{ background: "#000", border: "1px solid #A78BFA" }}>GEN</div><div className="name">GEN.G</div></div>
               </div>
               <div className="odds">
                 <div className="odd"><span className="ol">T1</span><span className="ov">2.15</span></div>
@@ -282,13 +235,12 @@ export default function MarketingPage() {
         </section>
       )}
 
-      {/* ---------- HOW IT WORKS ---------- */}
-      <section className="section container">
+      {/* ─── HOW IT WORKS ─── */}
+      <section className="section container content-glass">
         <motion.div className="eyebrow gold" {...fadeUp()}>El Proceso</motion.div>
         <motion.h2 className="section-title" {...fadeUp(0.1)}>
-          DE 0 A GANANCIA EN <em style={{ color: '#F59E0B', textShadow: '0 0 12px rgba(245,158,11,0.35)' }}>MINUTOS</em>
+          DE 0 A GANANCIA EN <em style={{ color: "#F59E0B", textShadow: "0 0 12px rgba(245,158,11,0.35)" }}>MINUTOS</em>
         </motion.h2>
-
         <div className="v1-how">
           <motion.div className="v1-step" {...fadeUp(0.2)}>
             <div className="num">1</div>
@@ -306,34 +258,21 @@ export default function MarketingPage() {
             <p>Tus ganancias van directo a tu wallet. Cero demoras, cero burocracia.</p>
           </motion.div>
         </div>
-
         <motion.div className="v1-trust" {...fadeUp(0.5)}>
-          <div className="tcell">
-            <div className="n">1.2<em>K</em>+</div>
-            <div className="k">Partidas hoy</div>
-          </div>
-          <div className="tcell">
-            <div className="n">$45<em>K</em>+</div>
-            <div className="k">Pagados en 24h</div>
-          </div>
-          <div className="tcell">
-            <div className="n">99.9<em>%</em></div>
-            <div className="k">Uptime Smart Contract</div>
-          </div>
-          <div className="tcell">
-            <div className="n">0.5<em>%</em></div>
-            <div className="k">Comisión base</div>
-          </div>
+          <div className="tcell"><div className="n">1.2<em>K</em>+</div><div className="k">Partidas hoy</div></div>
+          <div className="tcell"><div className="n">$45<em>K</em>+</div><div className="k">Pagados en 24h</div></div>
+          <div className="tcell"><div className="n">99.9<em>%</em></div><div className="k">Uptime Smart Contract</div></div>
+          <div className="tcell"><div className="n">0.5<em>%</em></div><div className="k">Comisión base</div></div>
         </motion.div>
       </section>
 
-      {/* ---------- PROVABLY FAIR ---------- */}
-      <section className="section container">
+      {/* ─── PROVABLY FAIR ─── */}
+      <section className="section container content-glass">
         <div className="v1-fair">
           <div>
             <motion.div className="eyebrow purple" {...fadeUp()}>Transparencia</motion.div>
             <motion.h2 className="section-title" {...fadeUp(0.1)}>
-              SISTEMA <em style={{ color: '#A78BFA', textShadow: '0 0 12px rgba(139,92,246,0.35)' }}>PROVABLY FAIR</em>
+              SISTEMA <em style={{ color: "#A78BFA", textShadow: "0 0 12px rgba(139,92,246,0.35)" }}>PROVABLY FAIR</em>
             </motion.h2>
             <motion.p className="lede" {...fadeUp(0.2)}>
               Cada resultado es verificable. Combinamos un server seed encriptado con tu client seed para generar un hash inmutable. Nadie, ni siquiera nosotros, puede manipular los resultados.
@@ -342,33 +281,31 @@ export default function MarketingPage() {
           <motion.div className="hash-demo" {...fadeUp(0.3)}>
             <div className="hl">Server Seed Hash (SHA-256):</div>
             <div className="hv">a9b8c7d6e5f4g3h2i1j0k9l8m7n6o5p4q3r2s1t0u9v8w7x6y5z4a3b2c1d0e9f8</div>
-            <br/>
+            <br />
             <div className="hl">Client Seed:</div>
             <div className="hv">Player123_Nonce42</div>
-            <br/>
+            <br />
             <div className="hl">Result (HMAC-SHA256):</div>
-            <div className="hv" style={{ color: '#2ECC71' }}>Crash Point: 8.24×</div>
+            <div className="hv" style={{ color: "#2ECC71" }}>Crash Point: 8.24×</div>
           </motion.div>
         </div>
       </section>
 
-      {/* ---------- FINAL CTA ---------- */}
+      {/* ─── FINAL CTA ─── */}
       <section className="v1-final">
-        <motion.h2 className="h-title" {...fadeUp()}>
-          EL RING TE <em>ESPERA</em>
-        </motion.h2>
-        <motion.p className="lede" style={{ margin: '20px auto 30px' }} {...fadeUp(0.1)}>
+        <motion.h2 className="h-title" {...fadeUp()}>EL RING TE <em>ESPERA</em></motion.h2>
+        <motion.p className="lede" style={{ margin: "20px auto 30px" }} {...fadeUp(0.1)}>
           Únete a la nueva era de las apuestas competitivas en web3.
         </motion.p>
         <motion.div {...fadeUp(0.2)}>
           <Link href="/login" className="btn primary xl arrow">CREAR CUENTA GRATIS</Link>
         </motion.div>
       </section>
-      
-      {/* ---------- FOOTER ---------- */}
+
+      {/* ─── FOOTER ─── */}
       <footer className="ac-footer">
         <div>© 2026 ARENACRYPTO BY GONZALEZLABS</div>
-        <div style={{ display:'flex', gap:'20px' }}>
+        <div style={{ display: "flex", gap: "20px" }}>
           <span>TÉRMINOS</span>
           <span>PRIVACIDAD</span>
           <span>SOPORTE</span>
