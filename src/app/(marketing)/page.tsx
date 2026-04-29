@@ -9,6 +9,7 @@ import "./v1-design.css";
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
 export default function MarketingPage() {
+  const reduced = useReducedMotion();
   const heroRef = useRef<HTMLElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [vidDur, setVidDur] = useState(0);
