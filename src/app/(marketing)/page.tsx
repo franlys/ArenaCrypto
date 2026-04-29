@@ -14,18 +14,14 @@ export default function MarketingPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [vidDur, setVidDur] = useState(0);
 
-  // Track scroll specifically within the 200vh hero section ("GSAP ScrollTrigger style")
-  const { scrollY, scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"] // from when top hits top, to when bottom hits top
-  });
+  // Track absolute scroll pixels since target tracking may fail with Next.js global styles
+  const { scrollY } = useScroll();
+  const smoothY = useSpring(scrollY, { damping: 20, stiffness: 100 });
   
-  const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
-  
-  // Transform elements based on local hero progress
-  const videoScale = useTransform(smoothProgress, [0, 1], [1, 1.5]);
-  const videoY = useTransform(smoothProgress, [0, 1], [0, -150]);
-  const videoOpacity = useTransform(smoothProgress, [0.8, 1], [0.6, 0]);
+  // Transform elements based on absolute scroll (0 to 1000px)
+  const videoScale = useTransform(smoothY, [0, 1000], [1, 1.5]);
+  const videoY = useTransform(smoothY, [0, 1000], [0, -150]);
+  const videoOpacity = useTransform(smoothY, [800, 1000], [0.6, 0]);
 
   // Unlock video on mount for aggressive browsers (like Safari/iOS)
   useEffect(() => {
@@ -38,10 +34,11 @@ export default function MarketingPage() {
     }
   }, []);
 
-  // Scrub video based on smoothed scroll progress
-  useMotionValueEvent(smoothProgress, "change", (latest) => {
+  // Scrub video based on smoothed scroll pixels (0 to 1000px = 0 to 100% duration)
+  useMotionValueEvent(smoothY, "change", (latest) => {
     if (videoRef.current && vidDur > 0) {
-      videoRef.current.currentTime = latest * vidDur;
+      const progress = Math.min(Math.max(latest / 1000, 0), 1);
+      videoRef.current.currentTime = progress * vidDur;
     }
   });
 
