@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { motion, useScroll, useTransform, useReducedMotion, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useTransform, useReducedMotion, useMotionValueEvent, useSpring } from "framer-motion";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import "./v1-design.css";
@@ -14,10 +14,10 @@ export default function MarketingPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const { scrollY, scrollYProgress } = useScroll();
+  const smoothProgress = useSpring(scrollYProgress, { damping: 20, stiffness: 100 });
 
-  // Use a continuous rAF loop for smooth video scrubbing
+  // Unlock video on mount for aggressive browsers (like Safari/iOS)
   useEffect(() => {
-    // Unlock video on mount for aggressive browsers (like Safari/iOS)
     if (videoRef.current) {
       videoRef.current.load();
       const p = videoRef.current.play();
@@ -25,21 +25,17 @@ export default function MarketingPage() {
         p.then(() => { videoRef.current?.pause(); }).catch(() => {});
       }
     }
+  }, []);
 
-    let frameId: number;
-    const renderLoop = () => {
-      if (videoRef.current) {
-        const dur = videoRef.current.duration;
-        if (dur > 0) {
-          const progress = scrollYProgress.get();
-          videoRef.current.currentTime = progress * dur;
-        }
+  // Scrub video based on smoothed scroll progress
+  useMotionValueEvent(smoothProgress, "change", (latest) => {
+    if (videoRef.current) {
+      const dur = videoRef.current.duration;
+      if (dur > 0) {
+        videoRef.current.currentTime = latest * dur;
       }
-      frameId = requestAnimationFrame(renderLoop);
-    };
-    frameId = requestAnimationFrame(renderLoop);
-    return () => cancelAnimationFrame(frameId);
-  }, [scrollYProgress]);
+    }
+  });
 
   // Parallax for tiles
   const y1 = useTransform(scrollY, [0, 1000], [0, -100]);
@@ -93,7 +89,6 @@ export default function MarketingPage() {
           className="hero-video-bg"
           src="/media/arena_crypto_hero_bgmp_.mp4"
         />
-        <div className="hero-gradient-overlay" />
 
         <div className="v1-tiles">
           {/* Tile 1 */}

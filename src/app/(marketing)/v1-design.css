@@ -208,13 +208,7 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
   mix-blend-mode: screen;
   pointer-events: none;
 }
-.hero-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to top, #09090b 10%, transparent 60%),
-              radial-gradient(ellipse at center, transparent 30%, rgba(9,9,11,0.8) 100%);
-}
+
 
 /* ---------- floating tiles ---------- */
 .v1-tiles{
