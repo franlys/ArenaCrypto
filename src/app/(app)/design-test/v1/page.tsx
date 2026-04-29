@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import React from 'react';
 
-const HTML_CONTENT = \
+const HTML_CONTENT = `
 <!-- Home v1 â€” 3D Tilted Arena -->
 <div class="home-v1" data-screen-label="Home v1 Â· 3D Arena">
 <div class="mesh-bg"></div>
@@ -308,9 +308,9 @@ const HTML_CONTENT = \
 
 </div>
 
-\;
+`;
 
-const CSS_CONTENT = \
+const CSS_CONTENT = `
 :root {
   --font-display: 'Orbitron', sans-serif;
   --font-body: 'Rajdhani', sans-serif;
@@ -931,7 +931,7 @@ body.ac.intensity-low .skip-damp{ animation: none !important; }
 }
 .v1-final > *{ position: relative; z-index: 1; }
 
-\;
+`;
 
 export default function DesignTestV1() {
   React.useEffect(() => {
