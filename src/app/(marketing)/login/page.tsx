@@ -104,8 +104,31 @@ export default function LoginPage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.1, ease: EASE_OUT }}
       >
+        {/* Mobile-only logo */}
+        <div className={styles.mobileHeader}>
+          <div className={styles.logo}>
+            <span className="font-orbitron">ARENA</span>
+            <span className={`font-orbitron ${styles.logoCyan}`}>CRYPTO</span>
+          </div>
+          <p className={styles.mobileTagline}>Compite. Gana. Cobra en cripto.</p>
+        </div>
+
         <AuthTabs />
-        <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.05)", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", opacity: 0.4, userSelect: "none" }}>
+
+        {/* Mobile-only stats bar */}
+        <div className={styles.mobileStats}>
+          <div className={styles.mStat}>
+            <span className={`font-orbitron ${styles.mStatVal}`}>1.2K+</span>
+            <span className={styles.mStatLbl}>Partidas hoy</span>
+          </div>
+          <div className={styles.mDivider} />
+          <div className={styles.mStat}>
+            <span className={`font-orbitron ${styles.mStatVal}`}>$45K+</span>
+            <span className={styles.mStatLbl}>Pagados</span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: "1.5rem", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", opacity: 0.4, userSelect: "none" }}>
           <span className="font-orbitron" style={{ fontSize: "0.5rem", letterSpacing: "0.2em", color: "rgba(255,255,255,0.7)", textTransform: "uppercase" }}>Powered by</span>
           <span className="font-orbitron" style={{ fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.2em", color: "#00F5FF", textTransform: "uppercase", marginTop: "0.2rem" }}>GonzalezLabs</span>
         </div>
