@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Zap, Trophy } from "lucide-react";
@@ -19,76 +19,13 @@ const TRUST = [
 export default function LoginPage() {
   const { user, loading, isAdmin } = useUser();
   const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Ping-pong: play forward then backward smoothly
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    let direction = 1;
-    const SPEED = 0.018;
-    let frameId: number;
-    let isRunning = false;
-
-    const startLoop = () => {
-      if (isRunning) return;
-      isRunning = true;
-      const tick = () => {
-        const dur = video.duration;
-        if (dur) {
-          const next = video.currentTime + direction * SPEED;
-          video.currentTime = Math.max(0, Math.min(dur, next));
-          if (video.currentTime >= dur - 0.05) direction = -1;
-          if (video.currentTime <= 0.05) direction = 1;
-        }
-        frameId = requestAnimationFrame(tick);
-      };
-      frameId = requestAnimationFrame(tick);
-    };
-
-    const handleCanPlay = () => {
-      video.muted = true;
-      // play() then immediately pause to unlock frame decoding
-      const p = video.play();
-      if (p !== undefined) {
-        p.then(() => {
-          // Small delay to ensure first frame renders before we take control
-          setTimeout(() => {
-            video.pause();
-            startLoop();
-          }, 50);
-        }).catch(() => {
-          // Browser blocked autoplay — fall back to normal loop
-          video.autoplay = true;
-          video.loop = true;
-          video.play().catch(() => {});
-        });
-      } else {
-        startLoop();
-      }
-    };
-
-    video.preload = "auto";
-    if (video.readyState >= 3) {
-      handleCanPlay();
-    } else {
-      video.addEventListener("canplay", handleCanPlay, { once: true });
-      video.load();
-    }
-
-    return () => {
-      isRunning = false;
-      cancelAnimationFrame(frameId);
-    };
-  }, []);
 
   useEffect(() => {
     if (loading || !user) return;
     router.replace(isAdmin ? "/admin" : "/dashboard");
   }, [user, loading, isAdmin, router]);
 
-  if (user) return null; // redirect is handled by the useEffect above
+  if (user) return null;
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#09090b' }}>
@@ -100,9 +37,10 @@ export default function LoginPage() {
 
   return (
     <div className={styles.wrapper}>
-      {/* ── Video: ping-pong loop ── */}
+      {/* ── Video: autoPlay loop (most reliable cross-browser) ── */}
       <video
-        ref={videoRef}
+        autoPlay
+        loop
         muted
         playsInline
         preload="auto"
