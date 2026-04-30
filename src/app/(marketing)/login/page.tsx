@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Shield, Zap, Trophy } from "lucide-react";
@@ -19,6 +19,33 @@ const TRUST = [
 export default function LoginPage() {
   const { user, loading, isAdmin } = useUser();
   const router = useRouter();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Ping-pong: play forward then backward smoothly
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let direction = 1; // 1 = forward, -1 = backward
+    const SPEED = 0.016; // seconds per frame at ~60fps
+    let frameId: number;
+
+    const tick = () => {
+      if (!video.duration) {
+        frameId = requestAnimationFrame(tick);
+        return;
+      }
+      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + direction * SPEED));
+      if (video.currentTime >= video.duration) direction = -1;
+      if (video.currentTime <= 0) direction = 1;
+      frameId = requestAnimationFrame(tick);
+    };
+
+    video.muted = true;
+    video.load();
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
 
   useEffect(() => {
     if (loading || !user) return;
@@ -37,12 +64,12 @@ export default function LoginPage() {
 
   return (
     <div className={styles.wrapper}>
-      {/* ── Video background loop ── */}
+      {/* ── Video: ping-pong loop ── */}
       <video
-        autoPlay
-        loop
+        ref={videoRef}
         muted
         playsInline
+        preload="auto"
         className={styles.videoBg}
         src="/media/a_.mp4"
       />
