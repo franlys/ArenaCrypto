@@ -26,25 +26,46 @@ export default function LoginPage() {
     const video = videoRef.current;
     if (!video) return;
 
-    let direction = 1; // 1 = forward, -1 = backward
-    const SPEED = 0.016; // seconds per frame at ~60fps
+    let direction = 1;
+    const SPEED = 0.018; // ~60fps advancement in seconds
     let frameId: number;
 
-    const tick = () => {
-      if (!video.duration) {
+    const startLoop = () => {
+      // play() unlocks frame decoding in all browsers, then we take over manually
+      video.play().then(() => {
+        video.pause();
+        const tick = () => {
+          const dur = video.duration;
+          if (!dur) { frameId = requestAnimationFrame(tick); return; }
+          const next = video.currentTime + direction * SPEED;
+          video.currentTime = Math.max(0, Math.min(dur, next));
+          if (video.currentTime >= dur - 0.05) direction = -1;
+          if (video.currentTime <= 0.05) direction = 1;
+          frameId = requestAnimationFrame(tick);
+        };
         frameId = requestAnimationFrame(tick);
-        return;
-      }
-      video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + direction * SPEED));
-      if (video.currentTime >= video.duration) direction = -1;
-      if (video.currentTime <= 0) direction = 1;
-      frameId = requestAnimationFrame(tick);
+      }).catch(() => {
+        // fallback: just loop normally if play() is blocked
+        video.autoplay = true;
+        video.loop = true;
+        video.play().catch(() => {});
+      });
     };
 
     video.muted = true;
-    video.load();
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
+    video.preload = "auto";
+    // Wait for metadata before starting
+    if (video.readyState >= 1) {
+      startLoop();
+    } else {
+      video.addEventListener("loadedmetadata", startLoop, { once: true });
+      video.load();
+    }
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      video.pause();
+    };
   }, []);
 
   useEffect(() => {
