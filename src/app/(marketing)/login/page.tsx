@@ -27,44 +27,59 @@ export default function LoginPage() {
     if (!video) return;
 
     let direction = 1;
-    const SPEED = 0.018; // ~60fps advancement in seconds
+    const SPEED = 0.018;
     let frameId: number;
+    let isRunning = false;
 
     const startLoop = () => {
-      // play() unlocks frame decoding in all browsers, then we take over manually
-      video.play().then(() => {
-        video.pause();
-        const tick = () => {
-          const dur = video.duration;
-          if (!dur) { frameId = requestAnimationFrame(tick); return; }
+      if (isRunning) return;
+      isRunning = true;
+      const tick = () => {
+        const dur = video.duration;
+        if (dur) {
           const next = video.currentTime + direction * SPEED;
           video.currentTime = Math.max(0, Math.min(dur, next));
           if (video.currentTime >= dur - 0.05) direction = -1;
           if (video.currentTime <= 0.05) direction = 1;
-          frameId = requestAnimationFrame(tick);
-        };
+        }
         frameId = requestAnimationFrame(tick);
-      }).catch(() => {
-        // fallback: just loop normally if play() is blocked
-        video.autoplay = true;
-        video.loop = true;
-        video.play().catch(() => {});
-      });
+      };
+      frameId = requestAnimationFrame(tick);
     };
 
-    video.muted = true;
+    const handleCanPlay = () => {
+      video.muted = true;
+      // play() then immediately pause to unlock frame decoding
+      const p = video.play();
+      if (p !== undefined) {
+        p.then(() => {
+          // Small delay to ensure first frame renders before we take control
+          setTimeout(() => {
+            video.pause();
+            startLoop();
+          }, 50);
+        }).catch(() => {
+          // Browser blocked autoplay — fall back to normal loop
+          video.autoplay = true;
+          video.loop = true;
+          video.play().catch(() => {});
+        });
+      } else {
+        startLoop();
+      }
+    };
+
     video.preload = "auto";
-    // Wait for metadata before starting
-    if (video.readyState >= 1) {
-      startLoop();
+    if (video.readyState >= 3) {
+      handleCanPlay();
     } else {
-      video.addEventListener("loadedmetadata", startLoop, { once: true });
+      video.addEventListener("canplay", handleCanPlay, { once: true });
       video.load();
     }
 
     return () => {
+      isRunning = false;
       cancelAnimationFrame(frameId);
-      video.pause();
     };
   }, []);
 
